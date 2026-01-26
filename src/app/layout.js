@@ -2,6 +2,8 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Navbar from "@/components/navbar/Navbar";
 import Footer from "@/components/footer/Footer";
+import HeroSearch from "@/components/navbar/HeroSearch";
+import NavbarWrapper from "@/components/navbar/NavbarWrapper";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -26,7 +28,9 @@ export default function RootLayout({ children }) {
       >
         {/* Sticky boundary START */}
         <div className="relative">
-          <Navbar />
+          {/* <Navbar />
+          <HeroSearch/> */}
+          <NavbarWrapper/>
           <main>{children}</main>
         </div>
         {/* Sticky boundary END */}

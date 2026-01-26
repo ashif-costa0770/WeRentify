@@ -5,18 +5,18 @@ import PackageIcon from "@/components/icons/PackageIcon";
 import HomeIcon from "@/components/icons/HomeIcon";
 import UsersIcon from "@/components/icons/UsersIcon";
 import HeroSearch from "./HeroSearch";
-// import { useState } from "react";
-// import SignUpModal from "@/components/modals/SignUpModal";
-// import SignInModal from "@/components/modals/SignInModal";
-// import LanguageCurrencyModal from "@/components/modals/LanguageCurrencyModal";
+import { useState } from "react";
+import SignUpModal from "@/components/modals/SignUpModal";
+import SignInModal from "@/components/modals/SignInModal";
+import LanguageCurrencyModal from "@/components/modals/LanguageCurrencyModal";
 
 export default function Navbar() {
-  // const [showSignUp, setShowSignUp] = useState(false);
-  // const [showSignIn, setShowSignIn] = useState(false);
-  // const [showLang, setShowLang] = useState(false);
+  const [showSignUp, setShowSignUp] = useState(false);
+  const [showSignIn, setShowSignIn] = useState(false);
+  const [showLang, setShowLang] = useState(false);
 
   return (
-    <header className="sticky top-0 z-50 bg-gray-100 pb-4 shadow-lg">
+    <header>
       <div className="max-w-7xl mx-auto px-4 pb-2 flex items-center justify-between">
         {/* Logo */}
         <Logo />
@@ -57,14 +57,14 @@ export default function Navbar() {
             Sign Up
           </button>
 
-          {/* <SignUpModal
+          <SignUpModal
             open={showSignUp}
             onClose={() => setShowSignUp(false)}
             onSwitchToSignIn={() => {
               setShowSignUp(false);
               setShowSignIn(true);
             }}
-          /> */}
+          />
 
           <button
             onClick={() => setShowSignIn(true)}
@@ -73,14 +73,14 @@ export default function Navbar() {
             Login
           </button>
 
-          {/* <SignInModal
+          <SignInModal
             open={showSignIn}
             onClose={() => setShowSignIn(false)}
             onSwitchToSignUp={() => {
               setShowSignIn(false);
               setShowSignUp(true);
             }}
-          /> */}
+          />
 
           <button
             onClick={() => setShowLang(true)}
@@ -89,13 +89,13 @@ export default function Navbar() {
             🌐
           </button>
 
-          {/* <LanguageCurrencyModal
+          <LanguageCurrencyModal
             open={showLang}
             onClose={() => setShowLang(false)}
-          /> */}
+          />
         </div>
       </div>
-      <HeroSearch />
+      {/* <HeroSearch /> */}
     </header>
   );
 }
