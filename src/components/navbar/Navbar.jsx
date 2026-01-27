@@ -1,10 +1,9 @@
 "use client";
-
+import Link from "next/link";
 import Logo from "@/components/navbar/Logo";
 import PackageIcon from "@/components/icons/PackageIcon";
 import HomeIcon from "@/components/icons/HomeIcon";
 import UsersIcon from "@/components/icons/UsersIcon";
-import HeroSearch from "./HeroSearch";
 import { useState } from "react";
 import SignUpModal from "@/components/modals/SignUpModal";
 import SignInModal from "@/components/modals/SignInModal";
@@ -24,22 +23,27 @@ export default function Navbar() {
         {/* Center Navigation Tabs */}
         <div className="flex items-center gap-6">
           {/* Listings */}
-          <button className=" rounded-2xl shadow-sm  hover:shadow-2xl px-6 py-3 flex flex-col cursor-pointer items-center gap-1">
-            <div className="w-11 h-11 bg-linear-to-br from-violet-500 via-fuchsia-500 to-pink-500 rounded-xl flex items-center justify-center shadow-lg">
-              <PackageIcon size={22} className="text-white" />
-            </div>
-            <span className="text-sm font-bold text-gray-900">Listings</span>
-          </button>
+          <Link href="/">
+            <button className=" rounded-2xl shadow-sm  hover:shadow-2xl px-6 py-3 flex flex-col cursor-pointer items-center gap-1">
+              <div className="w-11 h-11 bg-linear-to-br from-violet-500 via-fuchsia-500 to-pink-500 rounded-xl flex items-center justify-center shadow-lg">
+                <PackageIcon size={22} className="text-white" />
+              </div>
+              <span className="text-sm font-bold text-gray-900">Listings</span>
+            </button>
+          </Link>
 
           {/* Community */}
-          <button className=" rounded-2xl shadow-sm  hover:shadow-2xl  px-6 py-3 flex flex-col items-center cursor-pointer gap-1">
-            <div className="w-11 h-11 bg-linear-to-br from-emerald-400 via-teal-500 to-cyan-500 rounded-xl flex items-center justify-center shadow-lg">
-              <HomeIcon size={22} className="text-white" />
-            </div>
-            <span className="text-sm font-bold text-gray-900">Community</span>
-          </button>
+          <Link href="/community">
+            <button className="rounded-2xl shadow-sm hover:shadow-2xl px-6 py-3 flex flex-col items-center cursor-pointer gap-1">
+              <div className="w-11 h-11 bg-linear-to-br from-emerald-400 via-teal-500 to-cyan-500 rounded-xl flex items-center justify-center shadow-lg">
+                <HomeIcon size={22} className="text-white" />
+              </div>
+              <span className="text-sm font-bold text-gray-900">Community</span>
+            </button>
+          </Link>
 
           {/* Services */}
+
           <button className=" rounded-2xl shadow-sm  hover:shadow-2xl px-6 py-3 flex flex-col items-center cursor-pointer gap-1">
             <div className="w-11 h-11 bg-linear-to-br from-orange-400 via-amber-500 to-yellow-400 rounded-xl flex items-center justify-center shadow-lg">
               <UsersIcon size={22} className="text-white" />
@@ -95,7 +99,6 @@ export default function Navbar() {
           />
         </div>
       </div>
-      {/* <HeroSearch /> */}
     </header>
   );
 }

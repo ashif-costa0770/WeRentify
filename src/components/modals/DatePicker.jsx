@@ -31,8 +31,8 @@ export default function DatePickerModal({ open, onClose }) {
   ];
 
   return (
-    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[10000] flex items-center justify-center px-4">
-      <div className="bg-white w-full max-w-5xl rounded-3xl shadow-2xl overflow-hidden">
+    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[10000] flex items-center  justify-center px-4">
+      <div className="bg-white w-full max-w-5xl rounded-3xl  shadow-2xl overflow-hidden">
 
         {/* Tabs */}
         <div className="flex justify-center gap-8 py-4 border-b">
@@ -40,7 +40,7 @@ export default function DatePickerModal({ open, onClose }) {
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
-              className={`px-6 py-2 rounded-full font-semibold transition ${
+              className={`px-6 py-2 cursor-pointer rounded-full font-semibold transition ${
                 activeTab === tab
                   ? 'border-2 border-black text-black'
                   : 'text-gray-500'
@@ -69,7 +69,7 @@ export default function DatePickerModal({ open, onClose }) {
                       {index === 0 ? (
                         <button
                           onClick={() => setBaseDate(new Date(year, month - 1))}
-                          className="text-xl font-bold text-black"
+                          className="text-xl ms-6 cursor-pointer font-bold text-black"
                         >
                           ◀
                         </button>
@@ -85,7 +85,7 @@ export default function DatePickerModal({ open, onClose }) {
                       {index === 1 ? (
                         <button
                           onClick={() => setBaseDate(new Date(year, month + 1))}
-                          className="text-xl font-bold text-black"
+                          className="text-xl cursor-pointer me-6 font-bold text-black"
                         >
                           ▶
                         </button>
@@ -108,7 +108,7 @@ export default function DatePickerModal({ open, onClose }) {
                               onClick={() =>
                                 setSelectedDate({ day, month: m, year: y })
                               }
-                              className={`w-10 h-10 rounded-full mx-auto flex items-center justify-center transition
+                              className={`w-10 h-10 rounded-full cursor-pointer mx-auto flex items-center justify-center transition
                                 ${
                                   selectedDate &&
                                   selectedDate.day === day &&
@@ -143,7 +143,7 @@ export default function DatePickerModal({ open, onClose }) {
               ].map(month => (
                 <div
                   key={month}
-                  className="border-2 border-gray-300 rounded-2xl py-6 text-center font-semibold text-black hover:bg-gray-50 cursor-pointer"
+                  className="border-2 border-gray-300 rounded-2xl py-6 text-center font-semibold text-gray-700 hover:border-gray-700 cursor-pointer"
                 >
                   {month}
                 </div>
@@ -164,9 +164,9 @@ export default function DatePickerModal({ open, onClose }) {
               ].map(([title, sub]) => (
                 <div
                   key={title}
-                  className="border-2 border-gray-300 rounded-2xl p-6 hover:bg-gray-50 cursor-pointer"
+                  className="border-2 border-gray-300 rounded-2xl p-6 hover:border-gray-700 cursor-pointer"
                 >
-                  <p className="font-bold text-black">{title}</p>
+                  <p className="font-bold text-gray-700">{title}</p>
                   <p className="text-gray-500">{sub}</p>
                 </div>
               ))}
@@ -179,7 +179,7 @@ export default function DatePickerModal({ open, onClose }) {
         <div className="border-t px-8 py-5 flex justify-between items-center">
           <button
             onClick={() => setSelectedDate(null)}
-            className="underline font-semibold text-gray-600"
+            className="underline cursor-pointer font-semibold text-gray-600 hover:text-gray-800"
           >
             Clear dates
           </button>
@@ -187,11 +187,11 @@ export default function DatePickerModal({ open, onClose }) {
           <div className="flex gap-3">
             <button
               onClick={onClose}
-              className="px-6 py-2 border-2 rounded-xl font-semibold border-gray-600 text-gray-600"
+              className="px-6 py-2 border-2 cursor-pointer rounded-xl font-semibold border-gray-600 text-gray-600 hover:border-gray-800"
             >
               Close
             </button>
-            <button className="px-6 py-2 rounded-xl text-white font-semibold bg-gradient-to-r from-[#5B4FE9] to-[#E95FC8]">
+            <button className="px-6 py-2 cursor-pointer rounded-xl text-white font-semibold bg-gradient-to-r from-[#5B4FE9] to-[#E95FC8]">
               Search
             </button>
           </div>
@@ -201,3 +201,4 @@ export default function DatePickerModal({ open, onClose }) {
     </div>
   );
 }
+  

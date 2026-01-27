@@ -2,7 +2,7 @@
 
 import ListingHeader from "./ListingHeader";
 import ItemCard from "./ItemCard";
-import { items as allItems } from "@/data/items";
+import { items as allItems } from "@/data/listingsData";
 
 export default function ItemGrid({
   items = allItems,
@@ -27,8 +27,8 @@ export default function ItemGrid({
       {safeItems.length > 0 ? (
         <div
           className={`grid ${
-            isMobile ? "grid-cols-2" : "grid-cols-6"
-          } gap-3 mb-4`}
+            isMobile ? "grid-cols-2" : "grid-cols-5"
+          } gap-4 mb-4`}
         >
           {safeItems.map((item) => (
             <ItemCard

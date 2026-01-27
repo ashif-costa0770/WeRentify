@@ -14,45 +14,7 @@ const LOCATION_SUGGESTIONS = [
 export default function HeroSearch() {
   const [item, setItem] = useState("");
   const [location, setLocation] = useState("");
-  // const [itemHint, setItemHint] = useState("");
-  // const [locationHint, setLocationHint] = useState("");
   const [showDatePicker, setShowDatePicker] = useState(false);
-
-  // // Typing effect (runs only when input is empty)
-  // function useTyping(texts, value, setHint) {
-  //   useEffect(() => {
-  //     if (value) {
-  //       setHint("");
-  //       return;
-  //     }
-
-  //     let wordIndex = 0;
-  //     let charIndex = 0;
-  //     let forward = true;
-
-  //     const interval = setInterval(() => {
-  //       const word = texts[wordIndex];
-
-  //       if (forward) {
-  //         setHint(word.slice(0, charIndex + 1));
-  //         charIndex++;
-  //         if (charIndex === word.length) forward = false;
-  //       } else {
-  //         setHint(word.slice(0, charIndex - 1));
-  //         charIndex--;
-  //         if (charIndex === 0) {
-  //           forward = true;
-  //           wordIndex = (wordIndex + 1) % texts.length;
-  //         }
-  //       }
-  //     }, 120);
-
-  //     return () => clearInterval(interval);
-  //   }, [value, texts, setHint]);
-  // }
-
-  // useTyping(ITEM_SUGGESTIONS, item, setItemHint);
-  // useTyping(LOCATION_SUGGESTIONS, location, setLocationHint);
 
   return (
     <>
@@ -110,10 +72,10 @@ export default function HeroSearch() {
         </div>
       </section>
 
-      {/* <DatePickerModal
+      <DatePickerModal
         open={showDatePicker}
         onClose={() => setShowDatePicker(false)}
-      /> */}
+      />
     </>
   );
 }
