@@ -1,110 +1,6 @@
 "use client";
-
+import {LANGUAGES, CURRENCIES} from "@/data/Lang-Curr";
 import { useState } from "react";
-
-const LANGUAGES = [
-  "English",
-  "Español",
-  "Français",
-  "Deutsch",
-  "Italiano",
-  "Português",
-  "Nederlands",
-  "Svenska",
-  "Dansk",
-  "Norsk",
-  "中文 (简体)",
-  "中文 (繁體)",
-  "日本語",
-  "한국어",
-  "Türkçe",
-  "Русский",
-  "Polski",
-  "Čeština",
-  "Magyar",
-  "Română",
-  "العربية",
-  "עברית",
-  "ไทย",
-  "Bahasa Indonesia",
-  "Bahasa Melayu",
-  "Tiếng Việt",
-  "Filipino",
-  "हिन्दी",
-  "Українська",
-  "Hrvatski",
-  "Slovenčina",
-  "Slovenščina",
-  "Suomi",
-  "Български",
-  "Ελληνικά",
-  "Íslenska",
-  "Latviešu",
-  "Lietuvių",
-  "Shqip",
-  "Català",
-  "Eesti",
-  "Galego",
-  "Malti",
-  "македонски",
-  "বাংলা",
-  "ქართული",
-  "Azərbaycan",
-  "Қазақ тілі",
-  "Bosanski",
-  "Српски",
-  "Mongolian",
-  "Հայերեն",
-  "ລາວ",
-  "မြန်မာဘာသာ",
-  "नेपाली",
-  "සිංහල",
-  "தமிழ்",
-  "తెలుగు",
-];
-
-const CURRENCIES = [
-  { code: "USD", name: "United States dollar", symbol: "$" },
-  { code: "EUR", name: "Euro", symbol: "€" },
-  { code: "GBP", name: "British pound", symbol: "£" },
-  { code: "CAD", name: "Canadian dollar", symbol: "C$" },
-  { code: "AUD", name: "Australian dollar", symbol: "A$" },
-  { code: "JPY", name: "Japanese yen", symbol: "¥" },
-  { code: "CNY", name: "Chinese yuan", symbol: "¥" },
-  { code: "CHF", name: "Swiss franc", symbol: "CHF" },
-  { code: "SEK", name: "Swedish krona", symbol: "kr" },
-  { code: "NZD", name: "New Zealand dollar", symbol: "NZ$" },
-  { code: "MXN", name: "Mexican peso", symbol: "MX$" },
-  { code: "SGD", name: "Singapore dollar", symbol: "S$" },
-  { code: "HKD", name: "Hong Kong dollar", symbol: "HK$" },
-  { code: "NOK", name: "Norwegian krone", symbol: "kr" },
-  { code: "KRW", name: "South Korean won", symbol: "₩" },
-  { code: "TRY", name: "Turkish lira", symbol: "₺" },
-  { code: "RUB", name: "Russian ruble", symbol: "₽" },
-  { code: "INR", name: "Indian rupee", symbol: "₹" },
-  { code: "BRL", name: "Brazilian real", symbol: "R$" },
-  { code: "ZAR", name: "South African rand", symbol: "R" },
-  { code: "DKK", name: "Danish krone", symbol: "kr" },
-  { code: "PLN", name: "Polish zloty", symbol: "zł" },
-  { code: "THB", name: "Thai baht", symbol: "฿" },
-  { code: "MYR", name: "Malaysian ringgit", symbol: "RM" },
-  { code: "IDR", name: "Indonesian rupiah", symbol: "Rp" },
-  { code: "PHP", name: "Philippine peso", symbol: "₱" },
-  { code: "CZK", name: "Czech koruna", symbol: "Kč" },
-  { code: "HUF", name: "Hungarian forint", symbol: "Ft" },
-  { code: "ILS", name: "Israeli new shekel", symbol: "₪" },
-  { code: "CLP", name: "Chilean peso", symbol: "CLP$" },
-  { code: "AED", name: "UAE dirham", symbol: "د.إ" },
-  { code: "COP", name: "Colombian peso", symbol: "COL$" },
-  { code: "SAR", name: "Saudi riyal", symbol: "SR" },
-  { code: "TWD", name: "Taiwan dollar", symbol: "NT$" },
-  { code: "RON", name: "Romanian leu", symbol: "lei" },
-  { code: "HRK", name: "Croatian kuna", symbol: "kn" },
-  { code: "BGN", name: "Bulgarian lev", symbol: "лв" },
-  { code: "ARS", name: "Argentine peso", symbol: "AR$" },
-  { code: "PEN", name: "Peruvian sol", symbol: "S/" },
-  { code: "VND", name: "Vietnamese dong", symbol: "₫" },
-];
 
 export default function LanguageCurrencyModal({ open, onClose }) {
   const [language, setLanguage] = useState("English");
@@ -144,7 +40,7 @@ export default function LanguageCurrencyModal({ open, onClose }) {
 
             <button
               onClick={() => setTranslate(!translate)}
-              className={`w-12 h-6 rounded-full relative transition ${
+              className={`w-12 h-6 cursor-pointer  rounded-full relative transition ${
                 translate ? "bg-indigo-500" : "bg-gray-300"
               }`}
             >
@@ -169,7 +65,7 @@ export default function LanguageCurrencyModal({ open, onClose }) {
               <button
                 key={lang}
                 onClick={() => setLanguage(lang)}
-                className={`rounded-xl px-4 py-3 text-sm transition border ${
+                className={`rounded-xl px-4 py-3 cursor-pointer text-sm transition border ${
                   language === lang
                     ? "bg-gradient-to-r from-[#5B4FE9] to-[#E95FC8] text-white border-transparent font-semibold"
                     : "border-gray-200 text-gray-700 hover:bg-gray-50"
@@ -188,7 +84,7 @@ export default function LanguageCurrencyModal({ open, onClose }) {
               <button
                 key={cur.code}
                 onClick={() => setCurrency(cur.code)}
-                className={`rounded-xl px-5 py-4 text-center border transition ${
+                className={`rounded-xl px-5 py-4 text-center cursor-pointer border transition ${
                   currency === cur.code
                     ? "bg-gradient-to-r from-[#5B4FE9] to-[#E95FC8] text-white border-transparent"
                     : "border-gray-200 hover:bg-gray-50"
@@ -209,7 +105,7 @@ export default function LanguageCurrencyModal({ open, onClose }) {
         <div className="px-8 py-4 border-t border-gray-200">
           <button
             onClick={onClose}
-            className="w-full py-3 rounded-xl text-white font-bold bg-gradient-to-r from-[#5B4FE9] to-[#E95FC8]"
+            className="w-full py-3 cursor-pointer rounded-xl text-white font-bold bg-gradient-to-r from-[#5B4FE9] to-[#E95FC8]"
           >
             Save
           </button>

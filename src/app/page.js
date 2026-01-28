@@ -7,46 +7,64 @@ import ItemGrid from "@/components/itemCards/ItemGrid";
 import FiltersSlicer from "@/components/modals/FiltersSlicer";
 import ProductModal from "@/components/modals/ProductModal";
 import { items } from "@/data/listingsData";
+import MessageSlider from "@/components/modals/MessageSlider";
+import OwnerProfileModal from "@/components/modals/OwnerProfileModal";
 
 export default function Home() {
-  // 🔹 Category
+  /* ---------------- CATEGORY ---------------- */
   const [selectedCategory, setSelectedCategory] = useState("all");
 
-  // 🔹 Filter slicer state
+  /* ---------------- FILTERS ---------------- */
   const [showFilters, setShowFilters] = useState(false);
   const [sortBy, setSortBy] = useState("nearest");
   const [priceRange, setPriceRange] = useState([0, 200]);
   const [distanceFilter, setDistanceFilter] = useState(10);
   const [verifiedOnly, setVerifiedOnly] = useState(false);
 
-  // 🔹 Product modal state
-  const [selectedItem, setSelectedItem] = useState(null);
-  const [showProductModal, setShowProductModal] = useState(false);
+  /* ---------------- MESSAGES ---------------- */
+  const [showMessages, setShowMessages] = useState(false);
+  const [selectedConversation, setSelectedConversation] = useState(null);
 
-  // 🔥 CATEGORY → FILTERS → SORT
+  /* ---------------- PRODUCT MODAL ---------------- */
+  const [selectedItem, setSelectedItem] = useState(null);
+
+  /* ---------------- OwnerProfile MODAL ---------------- */
+  const [showOwnerProfile, setShowOwnerProfile] = useState(false);
+  const [selectedOwner, setSelectedOwner] = useState(null);
+
+  /* ---------------- FAVORITES ---------------- */
+  const [favorites, setFavorites] = useState([]);
+
+  const toggleFavorite = (id) => {
+    setFavorites((prev) =>
+      prev.includes(id) ? prev.filter((fav) => fav !== id) : [...prev, id],
+    );
+  };
+
+  /* ---------------- FILTER + SORT LOGIC ---------------- */
   const filteredItems = useMemo(() => {
     let result = [...items];
 
-    // 1️⃣ Category filter
+    // Category
     if (selectedCategory !== "all") {
       result = result.filter((item) => item.category === selectedCategory);
     }
 
-    // 2️⃣ Daily price filter
+    // Price
     result = result.filter(
       (item) =>
         item.dailyRate >= priceRange[0] && item.dailyRate <= priceRange[1],
     );
 
-    // 3️⃣ Distance filter
+    // Distance
     result = result.filter((item) => item.distance <= distanceFilter);
 
-    // 4️⃣ Verified owners only
+    // Verified
     if (verifiedOnly) {
       result = result.filter((item) => item.verified);
     }
 
-    // 5️⃣ Sorting
+    // Sorting
     switch (sortBy) {
       case "priceLow":
         result.sort((a, b) => a.dailyRate - b.dailyRate);
@@ -71,23 +89,22 @@ export default function Home() {
     <main className="relative">
       <NavbarWrapper />
 
-      {/* Category tabs */}
+      {/* Category Tabs */}
       <ItemCategoriesSection
         selectedCategory={selectedCategory}
         onCategorySelect={setSelectedCategory}
       />
 
-      {/* Items + filter button */}
+      {/* Listings Grid */}
       <ItemGrid
         items={filteredItems}
+        favorites={favorites}
+        toggleFavorite={toggleFavorite}
         onOpenFilters={() => setShowFilters(true)}
-        onSelect={(item) => {
-          setSelectedItem(item);
-          setShowProductModal(true);
-        }}
+        onSelect={(item) => setSelectedItem(item)} // ✅ opens modal
       />
 
-      {/* Filters drawer */}
+      {/* Filters Drawer */}
       <FiltersSlicer
         showFilters={showFilters}
         onClose={() => setShowFilters(false)}
@@ -101,11 +118,38 @@ export default function Home() {
         setVerifiedOnly={setVerifiedOnly}
       />
 
-      {/* Product modal */}
-      <ProductModal
-        item={selectedItem}
-        isOpen={showProductModal}
-        onClose={() => setShowProductModal(false)}
+      {/* Product Modal */}
+      {selectedItem && (
+        <ProductModal
+          selectedItem={selectedItem}
+          setSelectedItem={setSelectedItem}
+          items={items}
+          favorites={favorites}
+          toggleFavorite={toggleFavorite}
+          setShowMessages={setShowMessages}
+          setSelectedConversation={setSelectedConversation}
+          onViewOwner={(ownerData) => {
+            setSelectedOwner(ownerData);
+            setShowOwnerProfile(true);
+          }}
+        />
+      )}
+
+      <MessageSlider
+        showMessages={showMessages}
+        setShowMessages={setShowMessages}
+        selectedConversation={selectedConversation}
+      />
+
+      <OwnerProfileModal
+        show={showOwnerProfile}
+        onClose={() => setShowOwnerProfile(false)}
+        owner={selectedOwner}
+        items={items}
+        onSelectItem={(item) => {
+          setShowOwnerProfile(false);
+          setSelectedItem(item);
+        }}
       />
     </main>
   );

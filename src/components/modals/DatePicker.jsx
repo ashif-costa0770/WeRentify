@@ -191,7 +191,9 @@ export default function DatePickerModal({ open, onClose }) {
             >
               Close
             </button>
-            <button className="px-6 py-2 cursor-pointer rounded-xl text-white font-semibold bg-gradient-to-r from-[#5B4FE9] to-[#E95FC8]">
+            <button 
+             onClick={onClose}
+             className="px-6 py-2 cursor-pointer rounded-xl text-white font-semibold bg-gradient-to-r from-[#5B4FE9] to-[#E95FC8]">
               Search
             </button>
           </div>

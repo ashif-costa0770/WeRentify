@@ -16,6 +16,7 @@ export default function ItemGrid({
 
   return (
     <section className="max-w-7xl mx-auto px-4 mt-8">
+
       {/* Header */}
       <ListingHeader
         isMobile={isMobile}
@@ -26,9 +27,13 @@ export default function ItemGrid({
       {/* Grid */}
       {safeItems.length > 0 ? (
         <div
-          className={`grid ${
-            isMobile ? "grid-cols-2" : "grid-cols-5"
-          } gap-4 mb-4`}
+          className={`grid gap-4 mb-6
+            ${
+              isMobile
+                ? "grid-cols-2"
+                : "grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5"
+            }
+          `}
         >
           {safeItems.map((item) => (
             <ItemCard
@@ -36,7 +41,7 @@ export default function ItemGrid({
               item={item}
               favorites={favorites}
               toggleFavorite={toggleFavorite}
-              onSelect={onSelect}
+              onSelect={onSelect} // 🔥 opens ProductModal
             />
           ))}
         </div>
