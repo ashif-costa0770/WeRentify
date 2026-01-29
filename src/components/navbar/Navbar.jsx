@@ -43,13 +43,14 @@ export default function Navbar() {
           </Link>
 
           {/* Services */}
-
+          <Link href="/">
           <button className=" rounded-2xl shadow-sm  hover:shadow-2xl px-6 py-3 flex flex-col items-center cursor-pointer gap-1">
             <div className="w-11 h-11 bg-linear-to-br from-orange-400 via-amber-500 to-yellow-400 rounded-xl flex items-center justify-center shadow-lg">
               <UsersIcon size={22} className="text-white" />
             </div>
             <span className="text-sm font-bold text-gray-900">Services</span>
           </button>
+          </Link>
         </div>
 
         {/* Right Actions */}

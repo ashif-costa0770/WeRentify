@@ -10,7 +10,7 @@ import { items } from "@/data/listingsData";
 import MessageSlider from "@/components/modals/MessageSlider";
 import OwnerProfileModal from "@/components/modals/OwnerProfileModal";
 
-export default function Home() {
+export default function ListingPage() {
   /* ---------------- CATEGORY ---------------- */
   const [selectedCategory, setSelectedCategory] = useState("all");
 

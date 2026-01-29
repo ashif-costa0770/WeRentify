@@ -91,3 +91,74 @@ export const services = [
         { id: 's86', name: 'Washer & Dryer Repair', category: 'appliance', hourlyRate: 75, rating: 4.8, reviews: 223, distance: 2.3, image: '🌀', imageUrl: 'https://images.unsplash.com/photo-1604335399105-a0c585fd81a1?w=400&h=300&fit=crop', verified: true, provider: 'Quick Fix Appliances', type: 'service' },
         { id: 's87', name: 'Dishwasher & Oven Repair', category: 'appliance', hourlyRate: 80, rating: 4.7, reviews: 189, distance: 3.1, image: '🍽️', imageUrl: 'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=400&h=300&fit=crop', verified: true, provider: 'Home Appliance Experts', type: 'service' },
       ];
+
+        // Categories data
+  export const categories = [
+  { id: 'all', name: 'All Services', icon: '🔍', active: true },
+  { id: 'appliance', name: 'Appliance Repair', icon: '🔧' }, // from servicesData.js (s85)
+  { id: 'beauty', name: 'Beauty (Hair, Nails, Makeup)', icon: '💇' }, // from servicesData.js (s16)
+  { id: 'childcare', name: 'Childcare', icon: '👶' }, // No direct match, using generic
+  { id: 'cleaning', name: 'Cleaning', icon: '🧹' }, // from servicesData.js (s13)
+  { id: 'senior', name: 'Senior Care', icon: '👵' }, // No direct match
+  { id: 'electrical', name: 'Electrical', icon: '⚡' }, // from servicesData.js (s60)
+  { id: 'contracting', name: 'General Contracting', icon: '👷' }, // from servicesData.js (s50)
+  { id: 'handyman', name: 'Handyman', icon: '🔨' }, // from servicesData.js (s11)
+  { id: 'health', name: 'Health & Fitness/Nutrition', icon: '💪' }, // from servicesData.js (s15)
+  { id: 'spa', name: 'Spa/Medical Treatments', icon: '🧖‍♀️' }, // No direct match
+  { id: 'hvac', name: 'HVAC', icon: '❄️' }, // from servicesData.js (s70)
+  { id: 'painting', name: 'Interior/Exterior Painting', icon: '🎨' }, // from servicesData.js (s80)
+  { id: 'lawn', name: 'Lawn Care', icon: '🌱' }, // from servicesData.js (s10)
+  { id: 'legal', name: 'Legal Service', icon: '⚖️' },
+  { id: 'mechanic', name: 'Mechanic', icon: '🔧' }, // from servicesData.js (s14)
+  { id: 'detail', name: 'Mobile Detail', icon: '🚗' }, // from servicesData.js (s35)
+  { id: 'moving', name: 'Moving/Relocation', icon: '🚚' }, // from servicesData.js (s17)
+  { id: 'notary', name: 'Notarization', icon: '📝' }, // from servicesData.js (s30)
+  { id: 'party', name: 'Party/Event Planner', icon: '🎉' }, // from servicesData.js (s18)
+  { id: 'pet', name: 'Pet Care/Boarding', icon: '🐕' }, // from servicesData.js (s20)
+  { id: 'photography', name: 'Photography', icon: '📷' }, // from servicesData.js (s1)
+  { id: 'plumbing', name: 'Plumbing', icon: '🚰' }, // from servicesData.js (s55)
+  { id: 'realestate', name: 'Real Estate/Title', icon: '🏡' }, // from servicesData.js (s90)
+];
+
+export const categoryMap = {
+  photography: "Photography",
+  landscape: "Lawn Care",
+  handyman: "Handyman",
+  other: "Other Services",
+
+  cleaning: "Cleaning",
+
+  mechanic: "Mechanic",
+  health: "Health & Fitness",
+  beauty: "Beauty (Hair, Nails, Makeup)",
+  moving: "Moving / Relocation",
+  party: "Party / Event Planner",
+
+  pet: "Pet Care / Boarding",
+
+  notary: "Notarization",
+
+  detail: "Mobile Detail",
+
+  delivery: "Delivery / Courier",
+
+  hauling: "Hauling / Junk Removal",
+
+  realestate: "Real Estate / Title",
+
+  contractor: "General Contracting",
+
+  plumbing: "Plumbing",
+
+  electrical: "Electrical",
+
+  roofing: "Roofing",
+
+  hvac: "HVAC",
+
+  flooring: "Flooring / Carpet",
+
+  painting: "Interior / Exterior Painting",
+
+  appliance: "Appliance Repair",
+};
