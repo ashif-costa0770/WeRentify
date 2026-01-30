@@ -26,6 +26,19 @@ export default function ProductModal({
 }) {
   if (!selectedItem) return null;
 
+  const handleShareClick = (e) => {
+    if (navigator.share) {
+      navigator.share({
+        title: selectedItem.name,
+        text: `Check out this ${selectedItem.name} for rent on WeRentify!`,
+        url: window.location.href,
+      });
+    } else {
+      navigator.clipboard.writeText(window.location.href);
+      alert("Link copied to clipboard!");
+    }
+  };
+
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[60] p-4">
       <div className="flex items-center justify-center min-h-full">
@@ -94,18 +107,7 @@ export default function ProductModal({
                     {/* Share + Save */}
                     <div className="flex gap-3 mt-4">
                       <button
-                        onClick={() => {
-                          if (navigator.share) {
-                            navigator.share({
-                              title: selectedItem.name,
-                              text: `Check out this ${selectedItem.name} for rent on WeRentify!`,
-                              url: window.location.href,
-                            });
-                          } else {
-                            navigator.clipboard.writeText(window.location.href);
-                            alert("Link copied to clipboard!");
-                          }
-                        }}
+                        onClick={handleShareClick}
                         className="flex items-center gap-2 px-4 py-2 border-2 border-gray-300 rounded-xl cursor-pointer font-semibold text-gray-700 hover:bg-gray-50 transition-all"
                       >
                         <svg

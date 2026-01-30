@@ -6,6 +6,9 @@ export default function ItemCard({
   toggleFavorite = () => {},
   onSelect = () => {},
 }) {
+
+ 
+
   return (
     <div
       role="button"

@@ -15,7 +15,7 @@ export default function ItemCategoryGrid({
             <button
               key={id}
               onClick={() => onCategorySelect(id)}
-              className={`h-23 rounded-xl border-2 flex flex-col items-center justify-center gap-2 transition-all
+              className={`h-23 rounded-xl border-2 cursor-pointer flex flex-col items-center justify-center gap-2 transition-all
                 ${
                   isActive
                     ? "bg-linear-to-r from-[#5B4FE9] to-[#E95FC8] text-white shadow-lg"
