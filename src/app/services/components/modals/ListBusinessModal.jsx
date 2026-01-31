@@ -10,66 +10,75 @@ import ShowcaseStep from "../listBusiness/steps/ShowcaseStep";
 import PlanSelectionStep from "../listBusiness/steps/PlanSelectionStep";
 
 export default function ListBusinessModal() {
-  const { isOpen, closeModal, currentStep, nextStep, prevStep, resetStep,formData,setFormData , submitBusiness } =  useListBusiness();
-
-// ---------------- VALIDATION ----------------
-  const validateStep = () => {
   const {
-    businessName,
-    serviceType,
-    category,
-    yearsInBusiness,
-    description,
-    location,
-    serviceRadius,
-    phone,
-    email,
-    photos,
-    hourlyRate,
-    plan,
-  } = formData;
+    isOpen,
+    closeModal,
+    currentStep,
+    nextStep,
+    prevStep,
+    resetStep,
+    formData,
+    setFormData,
+    submitBusiness,
+  } = useListBusiness();
 
-  // STEP 1
-  if (currentStep === 1) {
-    if (
-      !businessName ||
-      !serviceType ||
-      !category ||
-      !yearsInBusiness ||
-      !description
-    ) { 
-      alert("Please fill all required fields");
-      return false;
+  // ---------------- VALIDATION ----------------
+  const validateStep = () => {
+    const {
+      businessName,
+      serviceType,
+      category,
+      yearsInBusiness,
+      description,
+      location,
+      serviceRadius,
+      phone,
+      email,
+      photos,
+      hourlyRate,
+      plan,
+    } = formData;
+
+    // STEP 1
+    if (currentStep === 1) {
+      if (
+        !businessName ||
+        !serviceType ||
+        !category ||
+        !yearsInBusiness ||
+        !description
+      ) {
+        alert("Please fill all required fields");
+        return false;
+      }
     }
-  }
 
-  // STEP 2
-  if (currentStep === 2) {
-    if (!location || !serviceRadius || !phone || !email) {
-      alert("Please fill all required fields");
-      return false;
+    // STEP 2
+    if (currentStep === 2) {
+      if (!location || !serviceRadius || !phone || !email) {
+        alert("Please fill all required fields");
+        return false;
+      }
     }
-  }
 
-  // STEP 3
-  if (currentStep === 3) {
-    if (!photos || photos.length < 3 || !hourlyRate) {
-      alert("Please add at least 3 photos and set your hourly rate");
-      return false;
+    // STEP 3
+    if (currentStep === 3) {
+      if (!photos || photos.length < 3 || !hourlyRate) {
+        alert("Please add at least 3 photos and set your hourly rate");
+        return false;
+      }
     }
-  }
 
-  // STEP 4
-  if (currentStep === 4) {
-    if (!plan) {
-      alert("Please choose a plan");
-      return false;
+    // STEP 4
+    if (currentStep === 4) {
+      if (!plan) {
+        alert("Please choose a plan");
+        return false;
+      }
     }
-  }
 
-  return true;
-};
-
+    return true;
+  };
 
   if (!isOpen) return null;
 

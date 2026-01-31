@@ -132,7 +132,7 @@ export default function CommentModal({ post, isOpen, onClose, isLoggedIn, setSho
                   rows="3"
                 />
                 <div className="flex justify-end mt-2">
-                  <button className="bg-gradient-to-r from-indigo-500 to-pink-500 cursor-pointer text-white px-6 py-2 rounded-lg text-sm font-semibold hover:shadow-lg transition-all">
+                  <button   onClick={onClose} className="bg-gradient-to-r from-indigo-500 to-pink-500 cursor-pointer text-white px-6 py-2 rounded-lg text-sm font-semibold hover:shadow-lg transition-all">
                     Post Comment
                   </button>
                 </div>

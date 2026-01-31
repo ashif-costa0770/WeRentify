@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import PostCard from "./PostCards";
-import CommentModal from "./CommentModal";
+import CommentModal from "./modals/CommentModal";
+import MessageModal from "./modals/MessageModal"; // Import MessageModal
 
 export default function PostsGrid({ posts }) {
   // State management for post interactions
@@ -15,19 +16,15 @@ export default function PostsGrid({ posts }) {
   const [showPostMessage, setShowPostMessage] = useState(false);
 
   if (!posts?.length) {
-    return (
-      <p className="text-center text-gray-500 py-16">
-        No posts found
-      </p>
-    );
+    return <p className="text-center text-gray-500 py-16">No posts found</p>;
   }
 
   return (
     <>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pb-8">
         {posts.map((post) => (
-          <PostCard 
-            key={post.id} 
+          <PostCard
+            key={post.id}
             post={post}
             likedPosts={likedPosts}
             setLikedPosts={setLikedPosts}
@@ -49,6 +46,16 @@ export default function PostsGrid({ posts }) {
         onClose={() => setSelectedPost(null)}
         isLoggedIn={isLoggedIn}
         setShowLogin={setShowLogin}
+      />
+
+      {/* Message Modal - Added */}
+      <MessageModal
+        isOpen={showPostMessage}
+        onClose={() => {
+          setShowPostMessage(false);
+          setMessagePost(null);
+        }}
+        post={messagePost}
       />
     </>
   );

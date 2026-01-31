@@ -1,7 +1,7 @@
 "use client";
 
 import { useListBusiness } from "@/context/ListBusinessContext";
-
+import Image from "next/image";
 export default function ShowcaseStep() {
   const {
     formData,
@@ -14,7 +14,7 @@ export default function ShowcaseStep() {
   const videos = formData.videos || [];
 
   return (
-    <div className="space-y-1  ">
+    <div className="space-y-2">
       {/* HEADER */}
       <div>
         <h2 className="text-lg mt-2 font-bold text-gray-900">
@@ -27,7 +27,7 @@ export default function ShowcaseStep() {
 
       {/* PHOTOS */}
       <div>
-        <p className=" text-sm font-semibold text-gray-900">
+        <p className=" text-sm mb-2 font-semibold text-gray-900">
           Photos (minimum 3)
         </p>
 
@@ -51,12 +51,15 @@ export default function ShowcaseStep() {
               >
                 {file ? (
                   <>
-                    <img
+                    <Image
                       src={URL.createObjectURL(file)}
                       alt="preview"
+                      width={500}
+                      height={500}
                       className="h-full w-full rounded-xl object-cover"
                     />
                     <button
+                      type="button"
                       onClick={(e) => {
                         e.stopPropagation();
                         removeFile("photos", index);

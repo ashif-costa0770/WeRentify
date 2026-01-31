@@ -81,7 +81,7 @@ export default function ServiceModal({ service, onClose }) {
 
         {/* ACTIONS */}
         <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <button className="flex items-center cursor-pointer justify-center gap-2 rounded-xl bg-gradient-to-r from-indigo-500 to-pink-500 px-6 py-4 text-white font-semibold hover:opacity-90 transition">
+          <button className="flex items-center cursor-pointer justify-center gap-2 rounded-xl bg-linear-to-r from-indigo-500 to-pink-500 px-6 py-4 text-white font-semibold hover:opacity-90 transition">
             <Calendar size={18} />
             Book Now
           </button>

@@ -1,4 +1,5 @@
 "use client";
+import Image from "next/image";
 
 import {
   X,
@@ -40,7 +41,7 @@ export default function ProductModal({
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[60] p-4">
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 p-4">
       <div className="flex items-center justify-center min-h-full">
         <div className="relative bg-white rounded-3xl shadow-2xl max-w-5xl w-full max-h-[90vh] overflow-hidden">
           {/* Close button */}
@@ -60,9 +61,11 @@ export default function ProductModal({
                   key={idx}
                   className="aspect-square rounded-xl overflow-hidden cursor-pointer hover:scale-105 transition-transform shadow-md"
                 >
-                  <img
+                  <Image
                     src={selectedItem.imageUrl}
                     alt={selectedItem.name}
+                    width={500}
+                    height={500}
                     className="w-full h-full object-cover"
                   />
                 </div>
@@ -144,7 +147,7 @@ export default function ProductModal({
                   </div>
 
                   {selectedItem.verified && (
-                    <div className="bg-gradient-to-r from-emerald-500 to-teal-500 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-2">
+                    <div className="bg-linear-to-r from-emerald-500 to-teal-500 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-2">
                       <CheckCircle size={16} /> Verified Owner
                     </div>
                   )}
@@ -246,9 +249,11 @@ export default function ProductModal({
                           onClick={() => setSelectedItem(item)}
                           className="border rounded-xl overflow-hidden cursor-pointer hover:shadow-lg"
                         >
-                          <img
+                          <Image
                             src={item.imageUrl}
                             alt={item.name}
+                            width={300}
+                            height={300}
                             className="aspect-square object-cover"
                           />
                           <div className="p-3">
@@ -354,7 +359,7 @@ export default function ProductModal({
                       className="w-full text-left hover:bg-gray-50 p-3 rounded-xl transition-all"
                     >
                       <div className="flex items-center gap-3">
-                        <div className="w-14 h-14 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-full flex items-center justify-center text-white font-bold text-lg">
+                        <div className="w-14 h-14 bg-linear-to-br from-indigo-500 to-purple-500 rounded-full flex items-center justify-center text-white font-bold text-lg">
                           {selectedItem.owner.charAt(0)}
                         </div>
                         <div className="flex-1 min-w-0">
@@ -399,7 +404,7 @@ export default function ProductModal({
                       disabled={!selectedItem.availability}
                       className={`w-full cursor-pointer py-4 rounded-xl font-bold text-lg ${
                         selectedItem.availability
-                          ? "bg-gradient-to-r from-indigo-600 to-purple-600 text-white hover:shadow-xl"
+                          ? "bg-linear-to-r from-indigo-600 to-purple-600 text-white hover:shadow-xl"
                           : "bg-gray-300 text-gray-600 cursor-not-allowed"
                       }`}
                     >

@@ -2,6 +2,7 @@
 import React from "react";
 import { useUser } from "@/context/UserContext";
 import { Star, Heart } from "lucide-react";
+import Image from "next/image";
 
 export default function ServiceCard({ service, onClick }) {
   const { favorites, toggleFavorite } = useUser();
@@ -10,33 +11,35 @@ export default function ServiceCard({ service, onClick }) {
 
   const handleFavoriteClick = (e) => {
     e.stopPropagation(); // ✅ prevent event bubbling to parent div
-    // toggleFavorite(service.id);
+    toggleFavorite(service.id);
   };
 
   const handleShareClick = (e) => {
     e.stopPropagation(); // ✅ prevent event bubbling to parent div
-    // if (navigator.share) {
-    //   navigator.share({
-    //     title: service.name,
-    //     text: `Check out this ${service.name} for rent on WeRentify!`,
-    //     url: window.location.href,
-    //   });
-    // } else {
-    //   navigator.clipboard.writeText(window.location.href);
-    //   alert("Link copied to clipboard!");
-    // }
+    if (navigator.share) {
+      navigator.share({
+        title: service.name,
+        text: `Check out this ${service.name} for rent on WeRentify!`,
+        url: window.location.href,
+      });
+    } else {
+      navigator.clipboard.writeText(window.location.href);
+      alert("Link copied to clipboard!");
+    }
   };
 
   return (
     <div
-      // onClick={onClick} // ✅ open modal
+      onClick={onClick} // ✅ open modal
       className="bg-white rounded-2xl overflow-hidden hover:shadow-lg
                  transition-all duration-300 cursor-pointer border border-gray-200 group w-full max-w-sm"
     >
       <div className="aspect-[4/3] relative overflow-hidden">
-        <img
+        <Image
           src={service.imageUrl}
           alt={service.name}
+          width={500}
+          height={300}
           className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
         />
 

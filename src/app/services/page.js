@@ -12,7 +12,7 @@ export default function ServicesPage() {
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [sortBy, setSortBy] = useState("recommended");
 
-    /* ---------------- FAVORITES ---------------- */
+  /* ---------------- FAVORITES ---------------- */
   const [favorites, setFavorites] = useState([]);
 
   const toggleFavorite = (id) => {
@@ -24,9 +24,7 @@ export default function ServicesPage() {
   // 🔹 filter by category
   const filteredServices = useMemo(() => {
     if (selectedCategory === "all") return services;
-    return services.filter(
-      (service) => service.category === selectedCategory
-    );
+    return services.filter((service) => service.category === selectedCategory);
   }, [selectedCategory]);
 
   // 🔹 sort services
@@ -66,7 +64,7 @@ export default function ServicesPage() {
         onSortChange={setSortBy}
       />
 
-      {/* <ListBusinessModal/> */}
+      <ListBusinessModal />
     </div>
   );
 }

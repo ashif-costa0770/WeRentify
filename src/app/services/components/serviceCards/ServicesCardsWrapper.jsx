@@ -12,8 +12,7 @@ export default function ServicesCardsWrapper({
   sortBy,
   onSortChange,
 }) {
-
-    // 🔹 Modal state
+  // 🔹 Modal state
   const [selectedService, setSelectedService] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -51,7 +50,7 @@ export default function ServicesCardsWrapper({
     }
 
     return Object.entries(groupedServices).filter(
-      ([category]) => category === selectedCategory
+      ([category]) => category === selectedCategory,
     );
   }, [groupedServices, selectedCategory]);
 
@@ -59,7 +58,7 @@ export default function ServicesCardsWrapper({
   const totalServicesCount = useMemo(() => {
     return visibleCategories.reduce(
       (sum, [, group]) => sum + group.items.length,
-      0
+      0,
     );
   }, [visibleCategories]);
 
@@ -84,11 +83,7 @@ export default function ServicesCardsWrapper({
 
       {/* ✅ Service Modal (render once) */}
       {isModalOpen && selectedService && (
-        <ServiceModal
-          service={selectedService}
-          onClose={closeServiceModal}
-
-        />
+        <ServiceModal service={selectedService} onClose={closeServiceModal} />
       )}
     </div>
   );

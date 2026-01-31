@@ -82,7 +82,7 @@ export const services = [
         { id: 's77', name: 'Tile & Laminate Installation', category: 'flooring', hourlyRate: 85, rating: 4.9, reviews: 201, distance: 2.7, image: '⬛', imageUrl: 'https://images.unsplash.com/photo-1615875605825-5eb9bb5d52ac?w=400&h=300&fit=crop', verified: true, provider: 'Master Floor Installers', type: 'service' },
         
         // Painting Services
-        { id: 's80', name: 'Interior Painting', category: 'painting', hourlyRate: 65, rating: 4.8, reviews: 345, distance: 1.8, image: '🎨', imageUrl: 'https://images.unsplash.com/photo-1589939705154-a3879d4cc9da?w=400&h=300&fit=crop', verified: true, provider: 'Color Perfect Painters', type: 'service' },
+        { id: 's80', name: 'Interior Painting', category: 'painting', hourlyRate: 65, rating: 4.8, reviews: 345, distance: 1.8, image: '🎨', imageUrl: 'https://images.unsplash.com/photo-1759340875613-070b317265f8?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTB8fEludGVyaW9yJTIwJTJGJTIwRXh0ZXJpb3IlMjBQYWludGluZ3xlbnwwfHwwfHx8MA%3D%3D', verified: true, provider: 'Color Perfect Painters', type: 'service' },
         { id: 's81', name: 'Exterior House Painting', category: 'painting', hourlyRate: 75, rating: 4.9, reviews: 278, distance: 3.2, image: '🖌️', imageUrl: 'https://images.unsplash.com/photo-1562259949-e8e7689d7828?w=400&h=300&fit=crop', verified: true, provider: 'Brush & Roll Pros', type: 'service' },
         { id: 's82', name: 'Cabinet Refinishing', category: 'painting', hourlyRate: 85, rating: 5.0, reviews: 167, distance: 2.5, image: '🪵', imageUrl: 'https://images.unsplash.com/photo-1556911220-bff31c812dba?w=400&h=300&fit=crop', verified: true, provider: 'Fine Finish Painting', type: 'service' },
         
