@@ -14,7 +14,7 @@ export default function ListBusinessButton() {
           px-6 py-4
           cursor-pointer
           rounded-xl
-          mt-[-10px]
+          // mt-[-10px]
           font-bold text-sm
           text-white
           bg-linear-to-r from-[#5B4FE9] to-[#E95FC8]

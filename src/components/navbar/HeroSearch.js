@@ -20,7 +20,7 @@ export default function HeroSearch() {
     <>
       <section className="max-w-7xl mx-auto px-2 ">
         <div className="relative rounded-2xl overflow-hidden shadow-xl">
-          <div className="absolute inset-0 bg-gradient-to-r from-[#6366f1] via-[#d946ef] to-[#ec4899]" />
+          <div className="absolute inset-0 bg-linear-to-r from-[#6366f1] via-[#d946ef] to-[#ec4899]" />
 
           <div className="relative px-4 sm:px-6 md:px-8 py-2 md:py-2">
             {/* Hero Text */}
@@ -67,7 +67,7 @@ export default function HeroSearch() {
               </div>
 
               {/* Search Button */}
-              <button className="ml-2 bg-gradient-to-r from-[#5B4FE9] to-[#E95FC8] text-white rounded-full w-12 h-12 flex items-center justify-center shadow-md hover:shadow-lg transition-shadow">
+              <button className="ml-2 bg-linear-to-r from-[#5B4FE9] to-[#E95FC8] text-white rounded-full w-12 h-12 flex items-center justify-center shadow-md hover:shadow-lg transition-shadow">
                 🔍
               </button>
             </div>
@@ -106,7 +106,7 @@ export default function HeroSearch() {
               </div>
 
               {/* Search Button - Full Width on Mobile */}
-              <button className="w-full bg-gradient-to-r from-[#5B4FE9] to-[#E95FC8] text-white cursor-pointer rounded-2xl py-2 px-4 flex items-center justify-center gap-2 shadow-lg font-semibold text-base active:scale-95 transition-transform">
+              <button className="w-full bg-linear-to-r from-[#5B4FE9] to-[#E95FC8] text-white cursor-pointer rounded-2xl py-2 px-4 flex items-center justify-center gap-2 shadow-lg font-semibold text-base active:scale-95 transition-transform">
                 <span className="text-xl">🔍</span>
                 <span>Search</span>
               </button>
