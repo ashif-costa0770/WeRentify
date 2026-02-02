@@ -14,6 +14,7 @@ export default function Navbar() {
   const [showSignIn, setShowSignIn] = useState(false);
   const [showLang, setShowLang] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [login, setLogin] = useState(true);
 
   return (
     <header>
@@ -73,7 +74,25 @@ export default function Navbar() {
 
           {/* Right Actions - Desktop */}
           <div className="hidden md:flex items-center gap-2 lg:gap-3">
-            <button
+           {login ?(
+            <>
+
+              <button
+              onClick={() => setShowLang(true)}
+              className="w-10 h-10 cursor-pointer rounded-full bg-white border border-gray-200 flex items-center justify-center shadow-sm hover:shadow-md transition-shadow"
+            >
+              🌐
+            </button>
+              <button
+                onClick={() => setLogin(false)}
+                className="px-4 lg:px-6 py-2.5 cursor-pointer rounded-full font-semibold text-sm lg:text-base text-gray-800 bg-gray-50 hover:bg-gray-100 border border-gray-200 shadow-sm transition-colors"
+              > Logout 
+              </button>
+
+            </>
+            ):(
+            <>
+             <button
               onClick={() => setShowSignUp(true)}
               className="px-4 lg:px-6 py-2.5 cursor-pointer rounded-full font-semibold text-sm lg:text-base text-white bg-gradient-to-r from-[#5B4FE9] to-[#E95FC8] shadow-md hover:shadow-lg transition-shadow"
             >
@@ -93,6 +112,8 @@ export default function Navbar() {
             >
               🌐
             </button>
+            </>
+          ) }
           </div>
 
           {/* Mobile Menu Button */}
@@ -197,6 +218,7 @@ export default function Navbar() {
           setShowSignUp(false);
           setShowSignIn(true);
         }}
+        setLogin={setLogin}
       />
 
       <SignInModal
@@ -206,6 +228,7 @@ export default function Navbar() {
           setShowSignIn(false);
           setShowSignUp(true);
         }}
+         setLogin={setLogin}
       />
 
       <LanguageCurrencyModal

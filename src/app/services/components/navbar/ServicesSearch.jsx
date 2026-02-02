@@ -19,28 +19,28 @@ export default function ServicesSearch() {
         {/* Search Bar */}
         <div className="max-w-3xl mx-auto bg-white rounded-full p-1 pl-8 flex flex-col md:flex-row items-center shadow-2xl space-y-4 md:space-y-0 divider-x">
           {/* Service Needed */}
-          <div className="flex-1 w-full text-left md:border-r border-gray-200 pr-4">
-            <label className="block text-xs font-bold text-gray-800 uppercase tracking-wide ml-1 mb-1">
+          <div className="flex-1 w-full text-left md:border-r border-gray-200 pr-2">
+            <label className="block text-xs font-bold text-gray-800 uppercase tracking-wide  mb-1">
               Service needed
             </label>
             <div className="flex items-center">
               <input
                 type="text"
                 placeholder="Search Services"
-                className="w-full text-gray-600 placeholder-gray-400 focus:outline-none text-base"
+                className="w-full text-sm  text-gray-600 placeholder-gray-400 focus:outline-none text-base"
               />
             </div>
           </div>
 
           {/* Location */}
           <div className="flex-1 w-full text-left md:border-r border-gray-200 px-4">
-            <label className="block text-xs font-bold text-gray-800 uppercase tracking-wide ml-1 mb-1">
+            <label className="block text-xs font-bold text-gray-800 uppercase tracking-wide mb-1">
               Location
             </label>
             <input
               type="text"
               placeholder="City, State or Zip"
-              className="w-full text-gray-600 placeholder-gray-400 focus:outline-none text-base"
+              className="w-full text-gray-600 placeholder-gray-400 focus:outline-none text-sm"
             />
           </div>
 
@@ -49,13 +49,13 @@ export default function ServicesSearch() {
             onClick={() => setShowDatePicker(true)}
             className="flex-1 w-full cursor-pointer text-left px-4"
           >
-            <label className="block text-xs font-bold text-gray-800 uppercase tracking-wide ml-1 mb-1">
+            <label className="block text-xs font-bold text-gray-800 uppercase tracking-wide mb-1">
               Date
             </label>
             <input
               type="text"
               placeholder="Select date"
-              className="w-full text-gray-600 placeholder-gray-400 focus:outline-none text-base"
+              className="w-full text-gray-600 text-sm placeholder-gray-400 focus:outline-none"
             />
           </div>
 

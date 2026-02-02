@@ -106,7 +106,7 @@ export default function ListBusinessModal() {
       <div className="relative z-10 w-full max-w-3xl mx-4 rounded-3xl bg-white shadow-xl">
         {/* HEADER */}
         <div className="flex items-center justify-between border-b px-6 py-2">
-          <h2 className="text-lg font-semibold text-gray-900">
+          <h2 className="text-xl font-bold text-transparent bg-clip-text   bg-linear-to-r from-[#5B4FE9] to-[#E95FC8]">
             List Your Business
           </h2>
 
@@ -115,7 +115,7 @@ export default function ListBusinessModal() {
             onClick={closeModal}
             className="rounded-full cursor-pointer p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-700"
           >
-            <X size={20} />
+            <X size={22} />
           </button>
         </div>
 
@@ -146,7 +146,7 @@ export default function ListBusinessModal() {
             onClick={() => {
               if (!validateStep()) return;
               if (currentStep === 4) {
-                submitBusiness(); // ✅ alert + payload
+                submitBusiness(); //  alert + payload
                 closeModal();
                 setFormData({}); // optional (recommended)
                 resetStep(); // optional (recommended)
@@ -154,7 +154,7 @@ export default function ListBusinessModal() {
                 nextStep();
               }
             }}
-            className="rounded-xl cursor-pointer bg-gradient-to-r from-[#5B4FE9] to-[#E95FC8] px-8 py-2 text-sm font-semibold text-white hover:opacity-90"
+            className="rounded-xl cursor-pointer bg-linear-to-r from-[#5B4FE9] to-[#E95FC8] px-8 py-2 text-sm font-semibold text-white hover:opacity-90"
           >
             {currentStep === 4 ? "Start Subscription" : "Continue"}
           </button>
