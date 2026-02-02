@@ -7,19 +7,23 @@ import Image from "next/image";
 export default function ServiceCard({ service, onClick }) {
   const { favorites, toggleFavorite } = useUser();
 
-  const isFavorite = favorites.includes(service.id);
+  // ✅ Check if this service ID exists in favorites array
+  const isFavorite = favorites.some(
+    (fav) => fav.id === service.id && fav.type === "service",
+  );
 
   const handleFavoriteClick = (e) => {
-    e.stopPropagation(); // ✅ prevent event bubbling to parent div
-    toggleFavorite(service.id);
+    e.stopPropagation();
+    // ✅ Pass the FULL service object here with type
+    toggleFavorite(service, "service");
   };
 
   const handleShareClick = (e) => {
-    e.stopPropagation(); // ✅ prevent event bubbling to parent div
+    e.stopPropagation();
     if (navigator.share) {
       navigator.share({
         title: service.name,
-        text: `Check out this ${service.name} for rent on WeRentify!`,
+        text: `Check out this ${service.name} for rent!`,
         url: window.location.href,
       });
     } else {
@@ -30,23 +34,21 @@ export default function ServiceCard({ service, onClick }) {
 
   return (
     <div
-      onClick={onClick} // ✅ open modal
-      className="bg-white rounded-2xl overflow-hidden hover:shadow-lg
-                 transition-all duration-300 cursor-pointer border border-gray-200 group w-full max-w-sm"
+      onClick={onClick}
+      className="bg-white rounded-2xl overflow-hidden hover:shadow-lg transition-all duration-300 cursor-pointer border border-gray-200 group w-full max-w-sm"
     >
       <div className="aspect-[4/3] relative overflow-hidden">
         <Image
           src={service.imageUrl}
           alt={service.name}
-          width={500}
-          height={300}
-          className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
+          fill
+          className="object-cover transition-transform duration-500 group-hover:scale-110"
         />
 
         <div className="absolute right-3 top-3 flex gap-2">
           <button
             onClick={handleShareClick}
-            className="flex items-center justify-center w-9 h-9 bg-white/95 backdrop-blur-sm rounded-full cursor-pointer text-gray-700 hover:bg-white hover:scale-110 transition-all duration-200 shadow-lg"
+            className="flex items-center justify-center w-9 h-9 bg-white/95 backdrop-blur-sm rounded-full text-gray-700 hover:bg-white hover:scale-110 transition-all duration-200 shadow-lg"
           >
             <svg
               width="16"
@@ -64,7 +66,7 @@ export default function ServiceCard({ service, onClick }) {
           </button>
           <button
             onClick={handleFavoriteClick}
-            className="flex items-center justify-center w-9 h-9 bg-white/95 backdrop-blur-sm rounded-full cursor-pointer hover:bg-white hover:scale-110 transition-all duration-200 shadow-lg"
+            className="flex items-center justify-center w-9 h-9 bg-white/95 backdrop-blur-sm rounded-full hover:bg-white hover:scale-110 transition-all duration-200 shadow-lg"
           >
             <Heart
               size={16}

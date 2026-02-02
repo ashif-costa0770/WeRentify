@@ -1,6 +1,6 @@
 'use client';
 
-export default function SignInModal({ open, onClose, onSwitchToSignUp, setLogin }) {
+export default function SignInModal({ open, onClose, onSwitchToSignUp, setIsLogin }) {
   if (!open) return null;
 
   return (
@@ -33,7 +33,7 @@ export default function SignInModal({ open, onClose, onSwitchToSignUp, setLogin 
         <div className="space-y-3">
 
           {/* Email */}
-          <button onClick={() => {setLogin(true); onClose()}} 
+          <button onClick={() => {setIsLogin(true); onClose()}} 
 
           className="w-full flex items-center cursor-pointer justify-center gap-3 px-4 py-3 border-2 border-gray-300 rounded-xl font-semibold text-gray-700 hover:bg-gray-50">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -45,7 +45,7 @@ export default function SignInModal({ open, onClose, onSwitchToSignUp, setLogin 
 
           {/* Google */}
           <button
-           onClick={() => {setLogin(true); onClose()}} 
+           onClick={() => {setIsLogin(true); onClose()}} 
            className="w-full flex cursor-pointer items-center justify-center gap-3 px-4 py-3 border-2 border-gray-300 rounded-xl font-semibold text-gray-700 hover:bg-gray-50">
             <svg width="20" height="20" viewBox="0 0 24 24">
               <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8z"/>
@@ -57,7 +57,7 @@ export default function SignInModal({ open, onClose, onSwitchToSignUp, setLogin 
           </button>
 
           {/* Facebook */}
-          <button onClick={() => {setLogin(true); onClose()}} 
+          <button onClick={() => {setIsLogin(true); onClose()}} 
           
           className="w-full flex items-center cursor-pointer justify-center gap-3 px-4 py-3 rounded-xl font-semibold text-white bg-blue-600 hover:bg-blue-700">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
@@ -67,7 +67,7 @@ export default function SignInModal({ open, onClose, onSwitchToSignUp, setLogin 
           </button>
 
           {/* Apple */}
-          <button onClick={() => {setLogin(true); onClose()}} 
+          <button onClick={() => {setIsLogin(true); onClose()}} 
           
           className="w-full flex cursor-pointer items-center justify-center gap-3 px-4 py-3 rounded-xl font-semibold text-white bg-black">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">

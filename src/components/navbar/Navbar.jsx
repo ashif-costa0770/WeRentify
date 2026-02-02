@@ -8,13 +8,33 @@ import { useState } from "react";
 import SignUpModal from "@/components/modals/SignUpModal";
 import SignInModal from "@/components/modals/SignInModal";
 import LanguageCurrencyModal from "@/components/modals/LanguageCurrencyModal";
+import MessageSlider from "@/components/modals/MessageSlider";
+import { useUser } from "@/context/UserContext";
+import ProfileDropdown from "./ProfileDropdown";
+
+import { Globe } from "lucide-react";
 
 export default function Navbar() {
-  const [showSignUp, setShowSignUp] = useState(false);
-  const [showSignIn, setShowSignIn] = useState(false);
   const [showLang, setShowLang] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [login, setLogin] = useState(true);
+  const {
+    isLogin,
+    setIsLogin,
+    showSignUp,
+    setShowSignUp,
+    showSignIn,
+    setShowSignIn,
+    showMessages,
+    setShowMessages,
+    selectedConversation,
+  } = useUser();
+
+  //mock data
+  const user = {
+    name: "Alex Johnson",
+    initial: "AJ",
+    mode: "Renter", // or "Host"
+  };
 
   return (
     <header>
@@ -74,46 +94,43 @@ export default function Navbar() {
 
           {/* Right Actions - Desktop */}
           <div className="hidden md:flex items-center gap-2 lg:gap-3">
-           {login ?(
-            <>
+            {isLogin ? (
+              <>
+                <button
+                  onClick={() => setShowLang(true)}
+                  className="w-10 h-10 cursor-pointer rounded-full bg-white border border-gray-200 flex items-center justify-center shadow-sm hover:shadow-md transition-shadow"
+                >
+                  <Globe className="w-5 h-5 text-gray-600" />
+                </button>
 
-              <button
-              onClick={() => setShowLang(true)}
-              className="w-10 h-10 cursor-pointer rounded-full bg-white border border-gray-200 flex items-center justify-center shadow-sm hover:shadow-md transition-shadow"
-            >
-              🌐
-            </button>
-              <button
-                onClick={() => setLogin(false)}
-                className="px-4 lg:px-6 py-2.5 cursor-pointer rounded-full font-semibold text-sm lg:text-base text-gray-800 bg-gray-50 hover:bg-gray-100 border border-gray-200 shadow-sm transition-colors"
-              > Logout 
-              </button>
+                <div className=" text-gray-700">
+                  <ProfileDropdown user={user} />
+                </div>
+              </>
+            ) : (
+              <>
+                <button
+                  onClick={() => setShowSignUp(true)}
+                  className="px-4 lg:px-6 py-2.5 cursor-pointer rounded-full font-semibold text-sm lg:text-base text-white bg-gradient-to-r from-[#5B4FE9] to-[#E95FC8] shadow-md hover:shadow-lg transition-shadow"
+                >
+                  Sign Up
+                </button>
 
-            </>
-            ):(
-            <>
-             <button
-              onClick={() => setShowSignUp(true)}
-              className="px-4 lg:px-6 py-2.5 cursor-pointer rounded-full font-semibold text-sm lg:text-base text-white bg-gradient-to-r from-[#5B4FE9] to-[#E95FC8] shadow-md hover:shadow-lg transition-shadow"
-            >
-              Sign Up
-            </button>
+                <button
+                  onClick={() => setShowSignIn(true)}
+                  className="px-4 lg:px-6 py-2.5 cursor-pointer rounded-full font-semibold text-sm lg:text-base text-gray-800 bg-gray-50 hover:bg-gray-100 border border-gray-200 shadow-sm transition-colors"
+                >
+                  Login
+                </button>
 
-            <button
-              onClick={() => setShowSignIn(true)}
-              className="px-4 lg:px-6 py-2.5 cursor-pointer rounded-full font-semibold text-sm lg:text-base text-gray-800 bg-gray-50 hover:bg-gray-100 border border-gray-200 shadow-sm transition-colors"
-            >
-              Login
-            </button>
-
-            <button
-              onClick={() => setShowLang(true)}
-              className="w-10 h-10 cursor-pointer rounded-full bg-white border border-gray-200 flex items-center justify-center shadow-sm hover:shadow-md transition-shadow"
-            >
-              🌐
-            </button>
-            </>
-          ) }
+                <button
+                  onClick={() => setShowLang(true)}
+                  className="w-10 h-10 cursor-pointer rounded-full bg-white border border-gray-200 flex items-center justify-center shadow-sm hover:shadow-md transition-shadow"
+                >
+                  <Globe className="w-5 h-5 text-gray-600" />
+                </button>
+              </>
+            )}
           </div>
 
           {/* Mobile Menu Button */}
@@ -218,7 +235,7 @@ export default function Navbar() {
           setShowSignUp(false);
           setShowSignIn(true);
         }}
-        setLogin={setLogin}
+        setIsLogin={setIsLogin}
       />
 
       <SignInModal
@@ -228,12 +245,18 @@ export default function Navbar() {
           setShowSignIn(false);
           setShowSignUp(true);
         }}
-         setLogin={setLogin}
+        setIsLogin={setIsLogin}
       />
 
       <LanguageCurrencyModal
         open={showLang}
         onClose={() => setShowLang(false)}
+      />
+
+      <MessageSlider
+        showMessages={showMessages}
+        setShowMessages={setShowMessages}
+        selectedConversation={selectedConversation}
       />
     </header>
   );

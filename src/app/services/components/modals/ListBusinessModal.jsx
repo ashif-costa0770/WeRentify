@@ -105,7 +105,7 @@ export default function ListBusinessModal() {
       {/* MODAL */}
       <div className="relative z-10 w-full max-w-3xl mx-4 rounded-3xl bg-white shadow-xl">
         {/* HEADER */}
-        <div className="flex items-center justify-between border-b px-6 py-2">
+        <div className="flex items-center justify-between border-b border-gray-200 px-6 py-2">
           <h2 className="text-xl font-bold text-transparent bg-clip-text   bg-linear-to-r from-[#5B4FE9] to-[#E95FC8]">
             List Your Business
           </h2>
@@ -128,7 +128,7 @@ export default function ListBusinessModal() {
         <div className="px-6 py-2 mx-auto min-h-[360px]">{renderStep()}</div>
 
         {/* FOOTER */}
-        <div className="flex items-center justify-between border-t px-6 py-2">
+        <div className="flex items-center justify-between border-t border-gray-200 px-6 py-2">
           <button
             onClick={prevStep}
             disabled={currentStep === 1}

@@ -322,7 +322,7 @@ export default function CreatePostModal({ isOpen, onClose, onSubmit }) {
                     className="hidden"
                   />
                   <button
-                    type="button"
+                    
                     onClick={() => handlePhotoClick(index)}
                     className={`w-full aspect-square rounded-xl border-2 border-dashed transition-all duration-200 flex flex-col items-center justify-center gap-2 overflow-hidden ${
                       photoPreviews[index]

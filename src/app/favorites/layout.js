@@ -1,7 +1,6 @@
-import Footer from "@/components/footer/Footer";
 import Navbar from "@/components/navbar/Navbar";
 
-export default function CommunityLayout({ children }) {
+function FavoriteLayout({ children }) {
   return (
     <>
       <main className="relative">
@@ -13,3 +12,5 @@ export default function CommunityLayout({ children }) {
     </>
   );
 }
+
+export default FavoriteLayout;

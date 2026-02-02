@@ -1,5 +1,6 @@
 "use client";
 import Image from "next/image";
+import { useUser } from "@/context/UserContext";
 
 import {
   X,
@@ -17,15 +18,19 @@ export default function ProductModal({
   setSelectedItem,
   onViewOwner,
   items = [],
-  favorites = [],
-  toggleFavorite = () => {},
   isLoggedIn = false,
   setShowLogin = () => {},
   setShowBooking = () => {},
   setShowMessages = () => {},
   setSelectedConversation = () => {},
 }) {
+  const { favorites, toggleFavorite } = useUser();
+
   if (!selectedItem) return null;
+
+  const isFavorite = favorites.some(
+    (fav) => fav.id === selectedItem.id && fav.type === "item",
+  );
 
   const handleShareClick = (e) => {
     if (navigator.share) {
@@ -111,7 +116,7 @@ export default function ProductModal({
                     <div className="flex gap-3 mt-4">
                       <button
                         onClick={handleShareClick}
-                        className="flex items-center gap-2 px-4 py-2 border-2 border-gray-300 rounded-xl cursor-pointer font-semibold text-gray-700 hover:bg-gray-50 transition-all"
+                        className="flex items-center gap-2 px-4 py-2 rounded-xl cursor-pointer font-semibold text-gray-700 hover:bg-gray-50 transition-all shadow-sm"
                       >
                         <svg
                           width="16"
@@ -130,18 +135,18 @@ export default function ProductModal({
                       </button>
 
                       <button
-                        onClick={() => toggleFavorite(selectedItem.id)}
-                        className="px-4 cursor-pointer py-2 border-2 border-gray-300 rounded-xl font-semibold flex items-center gap-2 text-gray-700"
+                        onClick={() => toggleFavorite(selectedItem, "item")}
+                        className="px-4 cursor-pointer py-2 rounded-xl font-semibold flex items-center gap-2 text-gray-700 shadow-sm hover:bg-gray-50 transition-all"
                       >
                         <Heart
                           size={16}
                           className={
-                            favorites.includes(selectedItem.id)
+                            isFavorite
                               ? "fill-rose-500 text-rose-500"
                               : "text-gray-600"
                           }
                         />
-                        {favorites.includes(selectedItem.id) ? "Saved" : "Save"}
+                        {isFavorite ? "Saved" : "Save"}
                       </button>
                     </div>
                   </div>
@@ -217,7 +222,7 @@ export default function ProductModal({
                     Exact address provided after booking confirmation
                   </p>
 
-                  <div className="rounded-xl overflow-hidden border">
+                  <div className="rounded-xl overflow-hidden shadow-sm">
                     <iframe
                       width="100%"
                       height="240"
@@ -247,7 +252,7 @@ export default function ProductModal({
                         <div
                           key={item.id}
                           onClick={() => setSelectedItem(item)}
-                          className="border rounded-xl overflow-hidden cursor-pointer hover:shadow-lg"
+                          className="rounded-xl overflow-hidden cursor-pointer hover:shadow-lg shadow-sm transition-shadow"
                         >
                           <Image
                             src={item.imageUrl}
@@ -272,7 +277,7 @@ export default function ProductModal({
 
               {/* Right Column - Booking Card */}
               <div className="md:col-span-1">
-                <div className="sticky top-4 bg-white border-2 border-gray-200 rounded-2xl p-6 shadow-lg">
+                <div className="sticky top-4 bg-white border border-gray-100 rounded-2xl p-6 shadow-lg">
                   {/* Pricing */}
                   <div className="mb-6">
                     <h3 className="font-bold text-gray-900 mb-3 text-lg">
@@ -304,7 +309,7 @@ export default function ProductModal({
                   </div>
 
                   {/* Delivery Options in Sidebar */}
-                  <div className="mb-6 pb-6 border-b">
+                  <div className="mb-6 pb-6 border-b border-gray-300">
                     <h3 className="font-bold mb-3 text-gray-800 text-lg flex items-center gap-2">
                       🚚 Delivery
                     </h3>
@@ -345,7 +350,7 @@ export default function ProductModal({
                   </div>
 
                   {/* Owner Info - Clickable */}
-                  <div className="mb-6 pb-6 border-b">
+                  <div className="mb-6 pb-6 border-b border-gray-300">
                     <button
                       onClick={() =>
                         onViewOwner({
@@ -415,17 +420,17 @@ export default function ProductModal({
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
-                          toggleFavorite(selectedItem.id);
+                          toggleFavorite(selectedItem, "item");
                         }}
                         className={`py-3 cursor-pointer rounded-xl text-gray-700 font-semibold border-2 ${
-                          favorites.includes(selectedItem.id)
+                          isFavorite
                             ? "border-rose-500 bg-rose-50 text-rose-600"
                             : "border-gray-400 hover:bg-gray-50"
                         }`}
                       >
                         <Heart
                           size={18}
-                          className={`inline mr-2 ${favorites.includes(selectedItem.id) ? "fill-rose-500" : ""}`}
+                          className={`inline mr-2 ${isFavorite ? "fill-rose-500" : ""}`}
                         />
                         Save
                       </button>

@@ -32,15 +32,6 @@ export default function ListingPage() {
   const [showOwnerProfile, setShowOwnerProfile] = useState(false);
   const [selectedOwner, setSelectedOwner] = useState(null);
 
-  /* ---------------- FAVORITES ---------------- */
-  const [favorites, setFavorites] = useState([]);
-
-  const toggleFavorite = (id) => {
-    setFavorites((prev) =>
-      prev.includes(id) ? prev.filter((fav) => fav !== id) : [...prev, id],
-    );
-  };
-
   /* ---------------- FILTER + SORT LOGIC ---------------- */
   const filteredItems = useMemo(() => {
     let result = [...items];
@@ -98,8 +89,6 @@ export default function ListingPage() {
       {/* Listings Grid */}
       <ItemGrid
         items={filteredItems}
-        favorites={favorites}
-        toggleFavorite={toggleFavorite}
         onOpenFilters={() => setShowFilters(true)}
         onSelect={(item) => setSelectedItem(item)} // ✅ opens modal
       />
@@ -124,8 +113,6 @@ export default function ListingPage() {
           selectedItem={selectedItem}
           setSelectedItem={setSelectedItem}
           items={items}
-          favorites={favorites}
-          toggleFavorite={toggleFavorite}
           setShowMessages={setShowMessages}
           setSelectedConversation={setSelectedConversation}
           onViewOwner={(ownerData) => {

@@ -3,15 +3,26 @@
 
 import { useState } from "react";
 import ListItemModal from "../modals/listItemModal/ListItemModal";
+import { useUser } from "@/context/UserContext";
 
 export default function ListItemButton() {
   const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const {isLogin, setShowSignIn} = useUser();
+
+  const handleClick = () =>{
+    if(!isLogin){
+      setShowSignIn(true);
+      return;
+    }
+    setIsModalOpen(true);
+  }
 
   return (
     <>
       <div className="hidden md:flex justify-end">
         <button
-          onClick={() => setIsModalOpen(true)}
+          onClick={handleClick}
           className="
             flex items-center gap-2
             px-6 py-4

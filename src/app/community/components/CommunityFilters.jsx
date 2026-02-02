@@ -3,6 +3,7 @@
 
 import { useState } from "react";
 import CreatePostModal from "./modals/CreatePostModal";
+import { useUser } from "@/context/UserContext";
 
 export default function CommunityFilters({
   activeFilter,
@@ -13,12 +14,23 @@ export default function CommunityFilters({
 }) {
   const [showCreateModal, setShowCreateModal] = useState(false);
 
+  const {isLogin, setShowSignIn} = useUser();
+
+  const handleClick = ()=>{
+    if(!isLogin){
+      setShowSignIn(true);
+      return;
+    }
+    setShowCreateModal(true);
+
+  }
+
   const handleCreatePost = (formData) => {
-    // Handle the new post submission here
     alert("Post created successfully!");
     console.log("New post:", formData);
-    // You can add API call here to save the post
   };
+
+  
 
   return (
     <>
@@ -53,7 +65,7 @@ export default function CommunityFilters({
         {/* Right: Actions */}
         <div className="flex items-center gap-4">
           <button
-            onClick={() => setShowCreateModal(true)}
+            onClick={handleClick}
             className="px-6 py-3 cursor-pointer rounded-xl font-bold text-white
                        bg-linear-to-r from-[#5B4FE9] to-[#E95FC8]
                        shadow-md hover:shadow-lg transition-all"

@@ -7,8 +7,6 @@ import { items as allItems } from "@/data/listingsData";
 export default function ItemGrid({
   items = allItems,
   isMobile = false,
-  favorites = [],
-  toggleFavorite = () => {},
   onSelect = () => {},
   onOpenFilters = () => {},
 }) {
@@ -16,7 +14,6 @@ export default function ItemGrid({
 
   return (
     <section className="max-w-7xl mx-auto px-4 mt-8">
-
       {/* Header */}
       <ListingHeader
         isMobile={isMobile}
@@ -36,13 +33,7 @@ export default function ItemGrid({
           `}
         >
           {safeItems.map((item) => (
-            <ItemCard
-              key={item.id}
-              item={item}
-              favorites={favorites}
-              toggleFavorite={toggleFavorite}
-              onSelect={onSelect} // 🔥 opens ProductModal
-            />
+            <ItemCard key={item.id} item={item} onSelect={onSelect} />
           ))}
         </div>
       ) : (

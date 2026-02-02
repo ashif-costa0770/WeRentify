@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import DatePickerModal from "../modals/DatePicker";
+import { Search } from "lucide-react";
 
 const ITEM_SUGGESTIONS = ["Drill", "Camera", "Ladder", "Party speaker"];
 const LOCATION_SUGGESTIONS = [
@@ -67,9 +68,9 @@ export default function HeroSearch() {
               </div>
 
               {/* Search Button */}
-              <button className="ml-2 bg-linear-to-r from-[#5B4FE9] to-[#E95FC8] text-white rounded-full w-12 h-12 flex items-center justify-center shadow-md hover:shadow-lg transition-shadow">
-                🔍
-              </button>
+              <button className="bg-[#a855f7] hover:bg-[#9333ea] text-white p-4 rounded-full transition-transform hover:scale-105 flex-shrink-0">
+            <Search size={24} />
+          </button>
             </div>
 
             {/* Search Bar - Mobile (below md) */}

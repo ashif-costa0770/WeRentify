@@ -1,14 +1,24 @@
 "use client";
 
 import { useListBusiness } from "@/context/ListBusinessContext";
+import { useUser } from "@/context/UserContext";
 
 export default function ListBusinessButton() {
   const { openModal } = useListBusiness();
+  const {isLogin, setShowSignIn} = useUser();
+
+  const handleClick = () => {
+    if(!isLogin){
+      setShowSignIn(true);
+      return;
+    }
+    openModal();
+  }
 
   return (
     <div className="hidden md:flex justify-end">
       <button
-        onClick={openModal}
+        onClick={handleClick}
         className="
           flex items-center gap-2
           px-6 py-4

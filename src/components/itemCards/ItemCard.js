@@ -1,19 +1,24 @@
 import { Heart, CheckCircle, Star } from "lucide-react";
+import { useUser } from "@/context/UserContext";
 
-export default function ItemCard({
-  item,
-  favorites = [],
-  toggleFavorite = () => {},
-  onSelect = () => {},
-}) {
+export default function ItemCard({ item, onSelect = () => {} }) {
+  const { favorites, toggleFavorite } = useUser();
 
- 
+  // Check if this item is favorited
+  const isFavorite = favorites.some(
+    (fav) => fav.id === item.id && fav.type === "item",
+  );
+
+  const handleFavoriteClick = (e) => {
+    e.stopPropagation();
+    toggleFavorite(item, "item");
+  };
 
   return (
     <div
       role="button"
       tabIndex={0}
-      onClick={() => onSelect(item)}   // ✅ FIXED
+      onClick={() => onSelect(item)} // ✅ FIXED
       onKeyDown={(e) => {
         if (e.key === "Enter") onSelect(item);
       }}
@@ -40,19 +45,14 @@ export default function ItemCard({
         {/* Favorite button */}
         <button
           type="button"
-          onClick={(e) => {
-            e.stopPropagation(); // ⛔ prevents modal open
-            toggleFavorite(item.id);
-          }}
+          onClick={handleFavoriteClick}
           className="absolute cursor-pointer top-1.5 right-1.5 bg-white/95
                      rounded-full p-1.5 shadow-lg hover:scale-105 transition"
         >
           <Heart
             size={16}
             className={
-              favorites.includes(item.id)
-                ? "fill-rose-500 text-rose-500"
-                : "text-gray-600"
+              isFavorite ? "fill-rose-500 text-rose-500" : "text-gray-600"
             }
           />
         </button>
@@ -100,9 +100,7 @@ export default function ItemCard({
           <div className="flex items-center gap-1 text-[11px] text-gray-600">
             <span>${item.dailyRate}/day</span>
             <span className="text-gray-400">•</span>
-            <span>
-              ${(item.dailyRate * 7 * 0.85).toFixed(0)}/wk
-            </span>
+            <span>${(item.dailyRate * 7 * 0.85).toFixed(0)}/wk</span>
           </div>
         </div>
       </div>
