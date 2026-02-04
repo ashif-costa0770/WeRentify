@@ -1,6 +1,7 @@
 "use client";
 
 import { X, Star } from "lucide-react";
+import Image from "next/image";
 
 export default function OwnerProfileModal({
   show,
@@ -27,9 +28,9 @@ export default function OwnerProfileModal({
         </button>
 
         {/* Header */}
-        <div className="p-8 border-b">
+        <div className="p-8 border-b border-gray-200">
           <div className="flex items-center gap-6">
-            <div className="w-20 h-20  rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center text-white text-3xl font-bold">
+            <div className="w-20 h-20  rounded-full bg-linear-to-br from-indigo-500 to-purple-500 flex items-center justify-center text-white text-3xl font-bold">
               {owner.name.charAt(0)}
             </div>
 
@@ -65,7 +66,7 @@ export default function OwnerProfileModal({
 
         {/* Listings */}
         <div className="p-8">
-          <h3 className="text-xl text-gray-800 font-bold mb-6">
+          <h3 className="text-xl text-gray-800 font-bold mb-6"> 
             {owner.name}’s Listings ({ownerListings.length})
           </h3>
 
@@ -74,11 +75,13 @@ export default function OwnerProfileModal({
               <div
                 key={item.id}
                 onClick={() => onSelectItem(item)}
-                className="border rounded-2xl overflow-hidden cursor-pointer hover:shadow-lg transition"
+                className="border border-gray-200 rounded-2xl overflow-hidden cursor-pointer hover:shadow-xl transition"
               >
-                <img
+                <Image
                   src={item.imageUrl}
                   alt={item.name}
+                  width={300}
+                  height={200}
                   className="aspect-square object-cover"
                 />
 

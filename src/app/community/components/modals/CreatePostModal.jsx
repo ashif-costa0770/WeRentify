@@ -4,6 +4,7 @@ import Image from "next/image";
 
 import { useState, useRef } from "react";
 import { X, Wrench, Package, Camera, Calendar } from "lucide-react";
+import RichTextEditor from "@/components/tiptap-editor/RichTextEditor"; // Add this line
 
 export default function CreatePostModal({ isOpen, onClose, onSubmit }) {
   const [formData, setFormData] = useState({
@@ -30,6 +31,10 @@ export default function CreatePostModal({ isOpen, onClose, onSubmit }) {
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
+  };
+
+  const handleDescriptionChange = (content) => {
+    setFormData({ ...formData, description: content });
   };
 
   const handlePhotoClick = (index) => {
@@ -153,7 +158,7 @@ export default function CreatePostModal({ isOpen, onClose, onSubmit }) {
               </button>
 
               {/* Item Request Option */}
-              <button              
+              <button
                 onClick={() => handleTypeSelect("item")}
                 className={`flex flex-col cursor-pointer items-center justify-center p-6 rounded-xl border-2 transition-all duration-200 ${
                   formData.type === "item"
@@ -210,14 +215,9 @@ export default function CreatePostModal({ isOpen, onClose, onSubmit }) {
             <label className="block text-sm font-bold text-gray-900 mb-2">
               Description <span className="text-red-500">*</span>
             </label>
-            <textarea
-              name="description"
+            <RichTextEditor
               value={formData.description}
-              onChange={handleInputChange}
-              placeholder="Provide details about what you need..."
-              required
-              rows={4}
-              className="w-full text-gray-700 px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-[#5B4FE9] transition-all placeholder:text-gray-400 resize-none"
+              onChange={handleDescriptionChange}
             />
           </div>
 
@@ -322,7 +322,6 @@ export default function CreatePostModal({ isOpen, onClose, onSubmit }) {
                     className="hidden"
                   />
                   <button
-                    
                     onClick={() => handlePhotoClick(index)}
                     className={`w-full aspect-square rounded-xl border-2 border-dashed transition-all duration-200 flex flex-col items-center justify-center gap-2 overflow-hidden ${
                       photoPreviews[index]
@@ -341,7 +340,6 @@ export default function CreatePostModal({ isOpen, onClose, onSubmit }) {
                         />
                         {/* Remove Button */}
                         <button
-                    
                           onClick={(e) => {
                             e.stopPropagation(); // Prevent opening file dialog
                             handleRemovePhoto(index);

@@ -6,7 +6,8 @@ export default function ContactLocationStep() {
   const { formData, updateFormData } = useListBusiness();
 
   return (
-    <div className="space-y-2 mt-2">
+     <div className="max-h-[450px] overflow-y-auto">
+    <div className="space-y-4 mt-4">
       <h3 className="text-xl font-bold text-gray-900">
         Contact & Location
       </h3>
@@ -20,7 +21,7 @@ export default function ContactLocationStep() {
           type="text"
           value={formData.location}
           onChange={(e) => updateFormData({ location: e.target.value })}
-          className="w-full text-gray-700   text-sm rounded-xl border border-gray-300  focus:border-purple-500 focus:outline-none px-4 py-1"
+          className="w-full text-gray-700   text-sm rounded-xl border border-gray-300  focus:border-purple-500 focus:outline-none px-4 py-2"
           placeholder="City, State or Zip"
         />
       </div>
@@ -34,7 +35,7 @@ export default function ContactLocationStep() {
           type="number"
           value={formData.serviceRadius}
           onChange={(e) => updateFormData({ serviceRadius: e.target.value })}
-          className="w-full text-gray-700 text-sm  rounded-xl border border-gray-300 focus:border-purple-500 focus:outline-none px-4 py-1"
+          className="w-full text-gray-700 text-sm  rounded-xl border border-gray-300 focus:border-purple-500 focus:outline-none px-4 py-2"
           placeholder="How far do you travel to provide service? (eg. 15)"
         />
       </div>
@@ -48,7 +49,7 @@ export default function ContactLocationStep() {
           type="tel"
           value={formData.phone}
           onChange={(e) => updateFormData({ phone: e.target.value })}
-          className="w-full text-gray-700  text-sm rounded-xl border border-gray-300 focus:border-purple-500 focus:outline-none px-4 py-1"
+          className="w-full text-gray-700  text-sm rounded-xl border border-gray-300 focus:border-purple-500 focus:outline-none px-4 py-2"
           placeholder="+1 234 567 890"
         />
       </div>
@@ -62,7 +63,7 @@ export default function ContactLocationStep() {
           type="email"
           value={formData.email}
           onChange={(e) => updateFormData({ email: e.target.value })}
-          className="w-full text-gray-700 text-sm  rounded-xl border border-gray-300 focus:border-purple-500 focus:outline-none px-4 py-1"
+          className="w-full text-gray-700 text-sm  rounded-xl border border-gray-300 focus:border-purple-500 focus:outline-none px-4 py-2"
           placeholder="business@email.com"
         />
       </div>
@@ -76,7 +77,7 @@ export default function ContactLocationStep() {
           type="url"
           value={formData.website}
           onChange={(e) => updateFormData({ website: e.target.value })}
-          className="w-full text-gray-700 text-sm  rounded-xl border border-gray-300 focus:border-purple-500 focus:outline-none px-4 py-1"
+          className="w-full text-gray-700 text-sm  rounded-xl border border-gray-300 focus:border-purple-500 focus:outline-none px-4 py-2"
           placeholder="https://business.com"
         />
       </div>
@@ -90,10 +91,11 @@ export default function ContactLocationStep() {
           rows={3}
           value={formData.certifications}
           onChange={(e) => updateFormData({ certifications: e.target.value })}
-          className="w-full text-gray-700 text-sm rounded-xl border border-gray-300 px-4 py-1 focus:border-purple-500 focus:outline-none resize-none"
-          placeholder="Tell customers about your service..."
+          className="w-full text-gray-700 text-sm rounded-xl border border-gray-300 px-4 py-2 focus:border-purple-500 focus:outline-none resize-none"
+          placeholder="List any relevant certifications or licenses."
         />
       </div>
+    </div>
     </div>
   );
 }

@@ -115,7 +115,7 @@ export default function EmailSignUpModal({
           {/* Continue Button */}
           <button
             onClick={handleContinue}
-            className="w-full cursor-pointer py-3 px-4 rounded-xl font-bold text-white bg-gradient-to-r from-indigo-600 to-pink-500 hover:opacity-90 transition-opacity shadow-lg shadow-indigo-500/25"
+            className="w-full cursor-pointer py-3 px-4 rounded-xl font-bold text-white bg-linear-to-r from-indigo-600 to-pink-500 hover:opacity-90 transition-opacity shadow-lg shadow-indigo-500/25"
           >
             Continue
           </button>

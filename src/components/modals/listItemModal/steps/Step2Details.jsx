@@ -2,10 +2,16 @@
 
 import { MapPin } from "lucide-react";
 import { categories } from "@/data/listingsData";
+import RichTextEditor from "@/components/tiptap-editor/RichTextEditor";
+
 export default function Step2Details({ formData, setFormData }) {
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
+  };
+
+  const handleDescriptionChange = (content) => {
+    setFormData({ ...formData, description: content });
   };
 
   return (
@@ -64,13 +70,9 @@ export default function Step2Details({ formData, setFormData }) {
         <label className="block text-sm font-bold text-gray-900 mb-2">
           Description <span className="text-red-500">*</span>
         </label>
-        <textarea
-          name="description"
+        <RichTextEditor
           value={formData.description}
-          onChange={handleInputChange}
-          placeholder="Describe your item, its condition, and any special features..."
-          rows={4}
-          className="w-full px-4 text-gray-700 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#5B4FE9]/20 focus:border-[#5B4FE9] transition-all placeholder:text-gray-400 resize-none"
+          onChange={handleDescriptionChange}
         />
       </div>
 

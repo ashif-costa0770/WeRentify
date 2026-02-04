@@ -48,7 +48,7 @@ export default function ServiceCard({ service, onClick }) {
         <div className="absolute right-3 top-3 flex gap-2">
           <button
             onClick={handleShareClick}
-            className="flex items-center justify-center w-9 h-9 bg-white/95 backdrop-blur-sm rounded-full text-gray-700 hover:bg-white hover:scale-110 transition-all duration-200 shadow-lg"
+            className="flex items-center cursor-pointer justify-center w-9 h-9 bg-white/95 backdrop-blur-sm rounded-full text-gray-700 hover:bg-white hover:scale-110 transition-all duration-200 shadow-lg"
           >
             <svg
               width="16"
@@ -66,7 +66,7 @@ export default function ServiceCard({ service, onClick }) {
           </button>
           <button
             onClick={handleFavoriteClick}
-            className="flex items-center justify-center w-9 h-9 bg-white/95 backdrop-blur-sm rounded-full hover:bg-white hover:scale-110 transition-all duration-200 shadow-lg"
+            className="flex items-center cursor-pointer justify-center w-9 h-9 bg-white/95 backdrop-blur-sm rounded-full hover:bg-white hover:scale-110 transition-all duration-200 shadow-lg"
           >
             <Heart
               size={16}

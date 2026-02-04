@@ -15,29 +15,28 @@ import {
 } from "lucide-react";
 import { useUser } from "@/context/UserContext";
 import Link from "next/link";
-import PricingModal from "../modals/PricingModal"; // Import PricingModal
+import PricingModal from "../modals/PricingModal";
 
 export default function ProfileDropdown({
   user = { name: "Alex Johnson", initial: "AJ", mode: "Renter" },
 }) {
   const [isOpen, setIsOpen] = useState(false);
-  const [showPricing, setShowPricing] = useState(false); // Add pricing modal state
-  const [currentPlan, setCurrentPlan] = useState("basic"); // Add current plan state
+  const [showPricing, setShowPricing] = useState(false);
+  
+  // Initialize state with localStorage value
+  const [currentPlan, setCurrentPlan] = useState(() => {
+    const savedPlan = localStorage.getItem("userPlan");
+    return savedPlan || "basic";
+  });
+  
   const timeoutRef = useRef(null);
   const dropdownRef = useRef(null);
 
   const { isLogin, setIsLogin, setShowMessages } = useUser();
 
-  // Load saved plan on mount
-  useEffect(() => {
-    const savedPlan = localStorage.getItem("userPlan");
-    if (savedPlan) {
-      setCurrentPlan(savedPlan);
-    }
-  }, []);
-
   const handlePlanSelect = (planId) => {
     setCurrentPlan(planId);
+    localStorage.setItem("userPlan", planId); // Save to localStorage when plan changes
   };
 
   const handleMouseEnter = () => {
@@ -117,7 +116,7 @@ export default function ProfileDropdown({
                       setShowMessages(true);
                       setIsOpen(false);
                     }}
-                    className="w-full flex items-center justify-between px-4 py-2 hover:bg-gray-50 transition-colors group text-left"
+                    className="w-full flex cursor-pointer items-center justify-between px-4 py-2 hover:bg-gray-50 transition-colors group text-left"
                   >
                     <div className="flex items-center gap-2">
                       <item.icon
@@ -180,7 +179,7 @@ export default function ProfileDropdown({
                 setShowPricing(true);
                 setIsOpen(false);
               }}
-              className="w-full flex items-center px-4 py-3 hover:bg-gray-50 transition-colors group text-left"
+              className="w-full flex cursor-pointer items-center px-4 py-3 hover:bg-gray-50 transition-colors group text-left"
             >
               <div className="flex items-start gap-2 w-full">
                 <Crown className="w-4 h-4 text-yellow-500 mt-0.5 flex-shrink-0" />

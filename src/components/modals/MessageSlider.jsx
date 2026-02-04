@@ -80,7 +80,7 @@ export default function MessageSlider({
         ) : (
           <>
             {/* Conversation Header */}
-            <div className="p-4 border-b flex items-center gap-3">
+            <div className="p-4 border-b border-gray-200 flex items-center gap-3">
               <div className="w-10 h-10 rounded-full bg-indigo-600 text-white flex items-center justify-center font-bold">
                 {selectedConversation?.otherUser?.charAt(0) || "L"}
               </div>
@@ -117,7 +117,7 @@ export default function MessageSlider({
             </div>
 
             {/* Input */}
-            <div className="p-4 border-t  flex items-center gap-2">
+            <div className="p-4 border-t border-gray-200 flex items-center gap-2">
               <input
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
