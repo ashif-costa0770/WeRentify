@@ -1,14 +1,14 @@
-# Dependencies
+# dependencies
 node_modules/
 
-# Next.js
+# next.js
 .next/
 
-# Env files
+# env files
 .env
 .env.*
 
-# Logs / temp
+# logs / temp
 logs/
 temp/
 
