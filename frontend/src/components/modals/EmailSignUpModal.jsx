@@ -1,5 +1,6 @@
 "use client";
 
+import { loginWithPhone } from "@/services/auth.service";
 import { useState } from "react";
 
 export default function EmailSignUpModal({
@@ -26,8 +27,24 @@ export default function EmailSignUpModal({
 
   const selectedCountry = countries.find((c) => c.code === country);
 
-  const handleContinue = () => {
-    console.log("Phone:", selectedCountry.dialCode, phoneNumber);
+  const isValidPhoneNumber =
+    phoneNumber.length >= 10 && phoneNumber.length <= 12;
+
+  const handleContinue = async (e) => {
+    e.preventDefault();
+    if (!isValidPhoneNumber) return;
+    const data = {
+      mobileNumber: phoneNumber,
+      countryCode: selectedCountry.dialCode,
+    };
+    try {
+      const res = await loginWithPhone(data);
+      console.log(res.data);
+      setIsLogin(true);
+      onClose();
+    } catch (error) {
+      console.log(error);
+    }
   };
 
   if (!open) return null;
@@ -60,65 +77,84 @@ export default function EmailSignUpModal({
             Welcome to WeRentify
           </h1>
 
-          <p className="text-gray-600 mb-8">
-            Log in or sign up to continue
-          </p>
+          <p className="text-gray-600 mb-8">Log in or sign up to continue</p>
 
-          {/* Country Selector */}
-          <div className="mb-4">
-            <label className="block text-sm font-semibold text-gray-900 mb-2">
-              Country/Region
-            </label>
-            <div className="relative">
-              <select
-                value={country}
-                onChange={(e) => setCountry(e.target.value)}
-                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl font-medium text-gray-900 bg-white appearance-none cursor-pointer focus:outline-none focus:border-indigo-500 transition-colors"
-              >
-                {countries.map((c) => (
-                  <option key={c.code} value={c.code}>
-                    {c.name} ({c.dialCode})
-                  </option>
-                ))}
-              </select>
-              <svg
-                className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500 pointer-events-none"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-              >
-                <path d="M6 9l6 6 6-6" />
-              </svg>
+          {/* Phone Number Form */}
+          <form onSubmit={handleContinue} className="contents">
+            {/* Country Selector */}
+            <div className="mb-4">
+              <label className="block text-sm font-semibold text-gray-900 mb-2">
+                Country/Region
+              </label>
+              <div className="relative">
+                <select
+                  value={country}
+                  name="countryCode"
+                  onChange={(e) => setCountry(e.target.value)}
+                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl font-medium text-gray-900 bg-white appearance-none cursor-pointer focus:outline-none focus:border-indigo-500 transition-colors"
+                >
+                  {countries.map((c) => (
+                    <option key={c.code} value={c.code}>
+                      {c.name} ({c.dialCode})
+                    </option>
+                  ))}
+                </select>
+                <svg
+                  className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500 pointer-events-none"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                >
+                  <path d="M6 9l6 6 6-6" />
+                </svg>
+              </div>
             </div>
-          </div>
 
-          {/* Phone Number Input */}
-          <div className="mb-4">
-            <label className="block text-sm font-semibold text-gray-900 mb-2">
-              Phone number
-            </label>
-            <input
-              type="tel"
-              value={phoneNumber}
-              onChange={(e) => setPhoneNumber(e.target.value)}
-              placeholder="Phone number"
-              className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl font-medium text-gray-900 placeholder-gray-400 focus:outline-none focus:border-indigo-500 transition-colors"
-            />
-          </div>
+            {/* Phone Number Input */}
+            <div className="mb-4">
+              <label className="block text-sm font-semibold text-gray-900 mb-2">
+                Phone number
+              </label>
+              <input
+                type="tel"
+                value={phoneNumber}
+                name="mobileNumber"
+                minLength={10}
+                maxLength={12}
+                pattern="[0-9]{10,15}"
+                required
+                onChange={(e) => {
+                  const val = e.target.value.replace(/\D/g, "");
+                  setPhoneNumber(val);
+                }}
+                placeholder="Phone number"
+                className="peer w-full px-4 py-3 border-2 border-gray-200 rounded-xl font-medium text-gray-900 placeholder-gray-400 focus:outline-none focus:border-indigo-500 valid:border-gray-200 invalid:border-pink-500 transition-colors"
+              />
+              <p className="mt-1 text-xs text-pink-500 invisible peer-invalid:visible">
+                Please enter a valid phone number (10-12 digits).
+              </p>
+            </div>
 
-          {/* Disclaimer */}
-          <p className="text-xs text-gray-500 mb-4">
-            We will call or text you to confirm your number. Standard message and data rates apply.
-          </p>
+            {/* Disclaimer */}
+            <p className="text-xs text-gray-500 mb-4">
+              We will call or text you to confirm your number. Standard message
+              and data rates apply.
+            </p>
 
-          {/* Continue Button */}
-          <button
-            onClick={handleContinue}
-            className="w-full cursor-pointer py-3 px-4 rounded-xl font-bold text-white bg-linear-to-r from-indigo-600 to-pink-500 hover:opacity-90 transition-opacity shadow-lg shadow-indigo-500/25"
-          >
-            Continue
-          </button>
+            {/* Continue Button */}
+            <button
+              type="submit"
+              disabled={!isValidPhoneNumber}
+              className={`w-full cursor-pointer py-3 px-4 rounded-xl font-bold text-white transition-all shadow-lg shadow-indigo-500/25 ${
+                isValidPhoneNumber
+                  ? "bg-linear-to-r from-indigo-600 to-pink-500 hover:opacity-90"
+                  : "bg-gray-300 cursor-not-allowed shadow-none"
+              }`}
+            >
+              Continue
+            </button>
+          </form>
 
           {/* Divider */}
           <div className="relative my-6">
@@ -169,7 +205,12 @@ export default function EmailSignUpModal({
               }}
               className="w-full cursor-pointer flex items-center justify-center gap-3 px-4 py-3 border-2 border-gray-300 rounded-xl font-semibold text-gray-700 hover:bg-gray-50 transition-colors"
             >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+              >
                 <path d="M17.05 20.28c-.98.95-2.05.88-3.08.35-1.09-.56-2.09-.48-3.2.04-1.44.71-2.28.44-3.21-.35C3.44 16.3 4.38 9.57 9.4 9.25c1.27.07 2.22.74 2.98.8 1.14-.23 2.24-.88 3.46-.79 1.47.12 2.58.7 3.29 1.76-2.9 1.77-2.38 5.98.22 7.13-.57 1.5-1.31 2.99-2.3 4.13zm-5.85-15.1c.07-2.04 1.76-3.79 3.78-3.94.29 2.32-1.93 4.48-3.78 3.94z" />
               </svg>
               Continue with Apple

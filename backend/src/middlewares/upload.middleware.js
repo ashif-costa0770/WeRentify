@@ -1,75 +1,91 @@
-import multer from 'multer';
-import path from 'path';
+import multer from "multer";
 
-// Configure memory storage (files stored in memory as Buffer)
+// Store files in memory (Buffer)
 const storage = multer.memoryStorage();
 
-// File filter function
+// Allowed mime types
+const IMAGE_TYPES = [
+  "image/jpeg",
+  "image/jpg",
+  "image/png",
+  "image/webp",
+  "image/gif",
+];
+
+const VIDEO_TYPES = [
+  "video/mp4",
+  "video/mpeg",
+  "video/quicktime", // mov
+  "video/x-msvideo", // avi
+  "video/webm",
+];
+
+const ALLOWED_TYPES = [...IMAGE_TYPES, ...VIDEO_TYPES];
+
+// File filter based on types
 const fileFilter = (req, file, cb) => {
-  // Allowed image types
-  const allowedImageTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif'];
-  
-  // Allowed video types
-  const allowedVideoTypes = ['video/mp4', 'video/mpeg', 'video/quicktime', 'video/x-msvideo', 'video/webm'];
-
-  const allAllowedTypes = [...allowedImageTypes, ...allowedVideoTypes];
-
-  if (allAllowedTypes.includes(file.mimetype)) {
-    cb(null, true);
-  } else {
-    cb(new Error(`Invalid file type. Only images (jpeg, jpg, png, webp, gif) and videos (mp4, mpeg, mov, avi, webm) are allowed.`), false);
+  if (!ALLOWED_TYPES.includes(file.mimetype)) {
+    return cb(
+      new Error(
+        "Invalid file type. Only images (jpg, png, webp, gif) and videos (mp4, mov, avi, webm) are allowed.",
+      ),
+      false,
+    );
   }
+  cb(null, true);
 };
 
-// Configure multer
+// Multer instance
 const upload = multer({
-  storage: storage,
-  fileFilter: fileFilter,
+  storage,
+  fileFilter,
   limits: {
-    fileSize: 50 * 1024 * 1024, // 50MB max file size (for videos)
-    files: 8 // Max 8 files (6 photos + 2 videos)
-  }
+    fileSize: 50 * 1024 * 1024, // 50MB per file
+    files: 8, // total files (6 photos + 2 videos)
+  },
 });
 
-// Middleware for listing creation/update
-// Expects: photos (array, max 6) and videos (array, max 2)
+// Listing media upload middleware
 export const uploadListingMedia = upload.fields([
-  { name: 'photos', maxCount: 6 },
-  { name: 'videos', maxCount: 2 }
+  { name: "photos", maxCount: 6 },
+  { name: "videos", maxCount: 2 },
 ]);
 
-// Error handling middleware for multer
+// Multer error handler
 export const handleMulterError = (err, req, res, next) => {
+  if (!err) return next();
+
   if (err instanceof multer.MulterError) {
-    // Multer-specific errors
-    if (err.code === 'LIMIT_FILE_SIZE') {
-      return res.status(400).json({
-        success: false,
-        message: 'File size too large. Maximum size is 50MB per file.'
-      });
+    switch (err.code) {
+      case "LIMIT_FILE_SIZE":
+        return res.status(400).json({
+          success: false,
+          message: "File too large. Max size is 50MB per file.",
+        });
+
+      case "LIMIT_FILE_COUNT":
+        return res.status(400).json({
+          success: false,
+          message: "Too many files uploaded.",
+        });
+
+      case "LIMIT_UNEXPECTED_FILE":
+        return res.status(400).json({
+          success: false,
+          message: "Unexpected file field.",
+        });
+
+      default:
+        return res.status(400).json({
+          success: false,
+          message: err.message,
+        });
     }
-    if (err.code === 'LIMIT_FILE_COUNT') {
-      return res.status(400).json({
-        success: false,
-        message: 'Too many files. Maximum 6 photos and 2 videos allowed.'
-      });
-    }
-    if (err.code === 'LIMIT_UNEXPECTED_FILE') {
-      return res.status(400).json({
-        success: false,
-        message: 'Unexpected field in file upload.'
-      });
-    }
-    return res.status(400).json({
-      success: false,
-      message: err.message
-    });
-  } else if (err) {
-    // Other errors (like file type errors)
-    return res.status(400).json({
-      success: false,
-      message: err.message
-    });
   }
-  next();
+
+  // Custom / fileFilter errors
+  return res.status(400).json({
+    success: false,
+    message: err.message || "File upload failed",
+  });
 };

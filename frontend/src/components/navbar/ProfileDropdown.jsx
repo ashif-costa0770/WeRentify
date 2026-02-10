@@ -16,6 +16,7 @@ import {
 import { useUser } from "@/context/UserContext";
 import Link from "next/link";
 import PricingModal from "../modals/PricingModal";
+import { logout } from "@/services/auth.service";
 
 export default function ProfileDropdown({
   user = { name: "Alex Johnson", initial: "AJ", mode: "Renter" },
@@ -33,6 +34,18 @@ export default function ProfileDropdown({
   const dropdownRef = useRef(null);
 
   const { isLogin, setIsLogin, setShowMessages } = useUser();
+
+  // handle logout
+  const handleLogout = async () => {
+    try {
+      await logout();
+      setIsLogin(false);
+      setIsOpen(false);
+      
+    } catch (error) {
+      console.log(error);
+    }
+  };
 
   const handlePlanSelect = (planId) => {
     setCurrentPlan(planId);
@@ -233,7 +246,7 @@ export default function ProfileDropdown({
 
           {/* Logout */}
           <button
-            onClick={() => setIsLogin(false)}
+            onClick={handleLogout}
             className="w-full cursor-pointer flex items-center gap-2 px-4 py-2 hover:bg-red-50 transition-colors text-left "
           >
             <LogOut className="w-4 h-4 text-red-500" />

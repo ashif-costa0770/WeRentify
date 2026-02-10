@@ -1,6 +1,7 @@
 // app/community/modals/CreatePostModal.jsx
 "use client";
 import Image from "next/image";
+import { createPost } from "@/services/post.service";
 
 import { useState, useRef } from "react";
 import { X, Wrench, Package, Camera, Calendar } from "lucide-react";
@@ -20,6 +21,7 @@ export default function CreatePostModal({ isOpen, onClose, onSubmit }) {
   });
 
   const [photoPreviews, setPhotoPreviews] = useState([null, null, null]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const fileInputRefs = [useRef(null), useRef(null), useRef(null)];
 
   if (!isOpen) return null;
@@ -58,23 +60,57 @@ export default function CreatePostModal({ isOpen, onClose, onSubmit }) {
     }
   };
 
-  const handleSubmit = (e) => {
+  //! Handle submit
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    onSubmit?.(formData);
-    onClose();
-    // Reset form
-    setFormData({
-      type: "service",
-      title: "",
-      description: "",
-      category: "",
-      city: "",
-      state: "",
-      dateNeeded: "",
-      budget: "",
-      photos: [],
-    });
-    setPhotoPreviews([null, null, null]);
+
+     if (isSubmitting) return; // 🛑 block double clicks
+
+     setIsSubmitting(true);
+
+    try {
+      const payload = new FormData();
+
+      payload.append("type", formData.type);
+      payload.append("title", formData.title);
+      payload.append("description", formData.description);
+      payload.append("category", formData.category);
+      payload.append("location", `${formData.city}, ${formData.state}`);
+      payload.append("dateNeeded", formData.dateNeeded);
+      payload.append("budget", formData.budget);
+
+      // append photos (ONLY real files)
+      formData.photos.forEach((file) => {
+        if (file) {
+          payload.append("photos", file);
+        }
+      });
+
+      await createPost(payload);
+
+      console.log("Post created successfully!");
+      alert("Post created successfully")
+      onClose();
+
+      // reset form
+      setFormData({
+        type: "service",
+        title: "",
+        description: "",
+        category: "",
+        city: "",
+        state: "",
+        dateNeeded: "",
+        budget: "",
+        photos: [],
+      });
+      setPhotoPreviews([null, null, null]);
+    } catch (err) {
+      console.error(err);
+    } finally {
+    setIsSubmitting(false); // ✅ always release
+  }
+    
   };
 
   const handleRemovePhoto = (index) => {
@@ -159,6 +195,7 @@ export default function CreatePostModal({ isOpen, onClose, onSubmit }) {
 
               {/* Item Request Option */}
               <button
+                type="button" // 👈 this is important to prevent form submission
                 onClick={() => handleTypeSelect("item")}
                 className={`flex flex-col cursor-pointer items-center justify-center p-6 rounded-xl border-2 transition-all duration-200 ${
                   formData.type === "item"
@@ -322,6 +359,7 @@ export default function CreatePostModal({ isOpen, onClose, onSubmit }) {
                     className="hidden"
                   />
                   <button
+                    type="button" // 👈 this is important to prevent form submission
                     onClick={() => handlePhotoClick(index)}
                     className={`w-full aspect-square rounded-xl border-2 border-dashed transition-all duration-200 flex flex-col items-center justify-center gap-2 overflow-hidden ${
                       photoPreviews[index]
@@ -339,15 +377,19 @@ export default function CreatePostModal({ isOpen, onClose, onSubmit }) {
                           className="w-full h-full object-cover"
                         />
                         {/* Remove Button */}
-                        <button
+                        <div
                           onClick={(e) => {
-                            e.stopPropagation(); // Prevent opening file dialog
+                            e.stopPropagation(); // prevents file picker
                             handleRemovePhoto(index);
                           }}
-                          className="absolute -top-2 -right-2 w-5 h-5 bg-red-500 hover:bg-red-600 text-white cursor-pointer rounded-full flex items-center justify-center shadow-md transition-colors z-10"
+                          role="button"
+                          tabIndex={0}
+                          className="absolute -top-2 -right-2 w-5 h-5 bg-red-500 hover:bg-red-600 
+                                     text-white cursor-pointer rounded-full flex items-center 
+                                     justify-center shadow-md transition-colors z-10"
                         >
                           <X className="w-3 h-3" />
-                        </button>
+                        </div>
                       </>
                     ) : (
                       <>

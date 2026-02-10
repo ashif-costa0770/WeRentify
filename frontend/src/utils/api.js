@@ -1,4 +1,4 @@
-const API_URL = (process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000").replace(/\/+$/, "");
+const API_URL = (process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api").replace(/\/+$/, "");
 
 const handleResponse = async (res) => {
   const json = await res.json().catch(() => ({}));
@@ -56,7 +56,7 @@ const normalizeListing = (l) => {
 
 export const getListings = async (params = {}) => {
   const qs = new URLSearchParams(params).toString();
-  const url = `${API_URL}/api/listings${qs ? `?${qs}` : ""}`;
+  const url = `${API_URL}/listings${qs ? `?${qs}` : ""}`;
   const res = await fetch(url);
   const json = await handleResponse(res);
   if (json && Array.isArray(json.data)) {
@@ -88,7 +88,7 @@ export const createListing = async (fields = {}, files = {}) => {
     files.videos.forEach((file) => formData.append("videos", file));
   }
 
-  const res = await fetch(`${API_URL}/api/listings`, {
+  const res = await fetch(`${API_URL}/listings`, {
     method: "POST",
     body: formData,
   });
@@ -118,7 +118,7 @@ export const updateListing = async (id, fields = {}, files = {}) => {
     files.videos.forEach((file) => formData.append("videos", file));
   }
 
-  const res = await fetch(`${API_URL}/api/listings/${id}`, {
+  const res = await fetch(`${API_URL}/listings/${id}`, {
     method: "PUT",
     body: formData,
   });
@@ -128,7 +128,7 @@ export const updateListing = async (id, fields = {}, files = {}) => {
 };
 
 export const deleteListing = async (id) => {
-  const res = await fetch(`${API_URL}/api/listings/${id}`, {
+  const res = await fetch(`${API_URL}/listings/${id}`, {
     method: "DELETE",
   });
   const json = await handleResponse(res);

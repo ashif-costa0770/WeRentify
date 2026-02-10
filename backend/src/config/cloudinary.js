@@ -1,77 +1,86 @@
-import { v2 as cloudinary } from 'cloudinary';
-import dotenv from 'dotenv';
-dotenv.config();
+import { v2 as cloudinary } from "cloudinary";
+import streamifier from "streamifier";
 
-// Configure Cloudinary
+
+// 🔹 Cloudinary configuration
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
   api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET
+  api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
 /**
- * Upload file to Cloudinary
- * @param {String} filePath - Path to the file
- * @param {String} folder - Folder name in Cloudinary
- * @param {String} resourceType - 'image' or 'video'
- * @returns {Object} - Cloudinary upload result
+ * Upload buffer to Cloudinary
+ * @param {Buffer} buffer - File buffer (from multer memoryStorage)
+ * @param {String} folder - Cloudinary folder name
+ * @param {String} resourceType - image | video
  */
-export const uploadToCloudinary = async (filePath, folder = 'rental-items', resourceType = 'image') => {
-  try {
-    const result = await cloudinary.uploader.upload(filePath, {
-      folder: folder,
-      resource_type: resourceType,
-      transformation: resourceType === 'image' ? [
-        { width: 1200, height: 1200, crop: 'limit', quality: 'auto' }
-      ] : undefined
-    });
+export const uploadBufferToCloudinary = (
+  buffer,
+  folder = "rental-items",
+  resourceType = "image"
+) => {
+  return new Promise((resolve, reject) => {
+    const uploadStream = cloudinary.uploader.upload_stream(
+      {
+        folder,
+        resource_type: resourceType,
+        transformation:
+          resourceType === "image"
+            ? [{ width: 1200, height: 1200, crop: "limit", quality: "auto" }]
+            : undefined,
+      },
+      (error, result) => {
+        if (error) {
+          console.error("Cloudinary upload error:", error);
+          return reject(new Error("Failed to upload file to Cloudinary"));
+        }
 
-    return {
-      public_id: result.public_id,
-      url: result.secure_url,
-      width: result.width,
-      height: result.height,
-      format: result.format
-    };
-  } catch (error) {
-    console.error('Cloudinary upload error:', error);
-    throw new Error('Failed to upload file to Cloudinary');
-  }
+        resolve({
+          public_id: result.public_id,
+          url: result.secure_url,
+          width: result.width,
+          height: result.height,
+          format: result.format,
+        });
+      }
+    );
+
+    streamifier.createReadStream(buffer).pipe(uploadStream);
+  });
 };
 
 /**
- * Delete file from Cloudinary
- * @param {String} publicId - Public ID of the file
- * @param {String} resourceType - 'image' or 'video'
- * @returns {Object} - Deletion result
+ * Delete single file from Cloudinary
  */
-export const deleteFromCloudinary = async (publicId, resourceType = 'image') => {
+export const deleteFromCloudinary = async (
+  publicId,
+  resourceType = "image"
+) => {
   try {
-    const result = await cloudinary.uploader.destroy(publicId, {
-      resource_type: resourceType
+    return await cloudinary.uploader.destroy(publicId, {
+      resource_type: resourceType,
     });
-    return result;
   } catch (error) {
-    console.error('Cloudinary delete error:', error);
-    throw new Error('Failed to delete file from Cloudinary');
+    console.error("Cloudinary delete error:", error);
+    throw new Error("Failed to delete file from Cloudinary");
   }
 };
 
 /**
  * Delete multiple files from Cloudinary
- * @param {Array} publicIds - Array of public IDs
- * @param {String} resourceType - 'image' or 'video'
- * @returns {Object} - Deletion result
  */
-export const deleteMultipleFromCloudinary = async (publicIds, resourceType = 'image') => {
+export const deleteMultipleFromCloudinary = async (
+  publicIds,
+  resourceType = "image"
+) => {
   try {
-    const result = await cloudinary.api.delete_resources(publicIds, {
-      resource_type: resourceType
+    return await cloudinary.api.delete_resources(publicIds, {
+      resource_type: resourceType,
     });
-    return result;
   } catch (error) {
-    console.error('Cloudinary bulk delete error:', error);
-    throw new Error('Failed to delete files from Cloudinary');
+    console.error("Cloudinary bulk delete error:", error);
+    throw new Error("Failed to delete files from Cloudinary");
   }
 };
 

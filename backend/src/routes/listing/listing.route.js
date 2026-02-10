@@ -9,16 +9,16 @@ import {
   deletePhoto,
   deleteVideo,
   getListingsByCategory,
-} from "../controllers/listing.controller.js";
+} from "../../controllers/listing/listing.controller.js";
 import {
   uploadListingMedia,
   handleMulterError,
-} from "../middlewares/upload.middleware.js";
+} from "../../middlewares/upload.middleware.js";
 import {
   validateCreateListing,
   validateUpdateListing,
   validateListingId,
-} from "../middlewares/validation.middleware.js";
+} from "../../middlewares/validation.middleware.js";
 
 /**
  * @route   POST /api/listings

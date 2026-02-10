@@ -1,36 +1,16 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import CommunityFilters from "./components/CommunityFilters";
 import PostsGrid from "./components/PostsGrid";
-import { getPosts } from "@/services/post.service"; // 👈 backend API
+import { communityPosts } from "@/data/communityData";
 
 export default function CommunityPage() {
-  const [posts, setPosts] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [activeFilter, setActiveFilter] = useState("all");
   const [sortBy, setSortBy] = useState("recent");
 
-  // 🔹 Fetch posts from backend
-  useEffect(() => {
-    const fetchPosts = async () => {
-      try {
-        setLoading(true);
-        const res = await getPosts();
-        setPosts(res.data.data); // assuming successResponse format
-      } catch (error) {
-        console.error("Failed to fetch posts", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchPosts();
-  }, []);
-
-  // 🔹 Filter + sort (frontend only for now)
   const filteredAndSortedPosts = useMemo(() => {
-    let result = [...posts];
+    let result = [...communityPosts];
 
     // 1️⃣ Filter
     if (activeFilter !== "all") {
@@ -43,13 +23,13 @@ export default function CommunityPage() {
     switch (sortBy) {
       case "recent":
         result.sort(
-          (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+          (a, b) => b.timestamp - a.timestamp
         );
         break;
 
       case "oldest":
         result.sort(
-          (a, b) => new Date(a.createdAt) - new Date(b.createdAt)
+          (a, b) => a.timestamp - b.timestamp
         );
         break;
 
@@ -70,14 +50,13 @@ export default function CommunityPage() {
     }
 
     return result;
-  }, [posts, activeFilter, sortBy]);
+  }, [activeFilter, sortBy]);
 
-  // 🔹 Counts for filter tabs
   const counts = useMemo(() => ({
-    all: posts.length,
-    service: posts.filter(p => p.type === "service").length,
-    item: posts.filter(p => p.type === "item").length,
-  }), [posts]);
+    all: communityPosts.length,
+    service: communityPosts.filter(p => p.type === "service").length,
+    item: communityPosts.filter(p => p.type === "item").length,
+  }), []);
 
   return (
     <main className="bg-gray-50 min-h-screen">
@@ -91,13 +70,7 @@ export default function CommunityPage() {
           setSortBy={setSortBy}
         />
 
-        {loading ? (
-          <p className="text-center py-16 text-gray-500">
-            Loading posts...
-          </p>
-        ) : (
-          <PostsGrid posts={filteredAndSortedPosts} />
-        )}
+        <PostsGrid posts={filteredAndSortedPosts} />
 
       </div>
     </main>

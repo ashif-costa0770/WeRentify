@@ -3,20 +3,20 @@
 import { useState } from "react";
 import PostCard from "./PostCards";
 import CommentModal from "./modals/CommentModal";
-import MessageModal from "./modals/MessageModal";
+import MessageModal from "./modals/MessageModal"; // Import MessageModal
 
-export default function PostsGrid({ posts, currentUser = null }) {
+export default function PostsGrid({ posts }) {
+  // State management for post interactions
+  const [likedPosts, setLikedPosts] = useState([]);
+  const [savedPosts, setSavedPosts] = useState([]);
   const [selectedPost, setSelectedPost] = useState(null);
+  const [isLoggedIn, setIsLoggedIn] = useState(true); // Set to false if you want to test login flow
   const [showLogin, setShowLogin] = useState(false);
   const [messagePost, setMessagePost] = useState(null);
   const [showPostMessage, setShowPostMessage] = useState(false);
 
   if (!posts?.length) {
-    return (
-      <p className="text-center text-gray-500 py-16">
-        No posts found
-      </p>
-    );
+    return <p className="text-center text-gray-500 py-16">No posts found</p>;
   }
 
   return (
@@ -24,13 +24,17 @@ export default function PostsGrid({ posts, currentUser = null }) {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pb-8">
         {posts.map((post) => (
           <PostCard
-            key={post._id}
+            key={post.id}
             post={post}
-            currentUser={currentUser}
-            onOpenComments={(post) => setSelectedPost(post)}
-            onRequireLogin={() => setShowLogin(true)}
-            setShowPostMessage={setShowPostMessage}
+            likedPosts={likedPosts}
+            setLikedPosts={setLikedPosts}
+            savedPosts={savedPosts}
+            setSavedPosts={setSavedPosts}
+            setSelectedPost={setSelectedPost}
+            isLoggedIn={isLoggedIn}
+            setShowLogin={setShowLogin}
             setMessagePost={setMessagePost}
+            setShowPostMessage={setShowPostMessage}
           />
         ))}
       </div>
@@ -40,26 +44,19 @@ export default function PostsGrid({ posts, currentUser = null }) {
         post={selectedPost}
         isOpen={!!selectedPost}
         onClose={() => setSelectedPost(null)}
-        isLoggedIn={!!currentUser}
+        isLoggedIn={isLoggedIn}
         setShowLogin={setShowLogin}
       />
 
-      {/* Message Modal */}
+      {/* Message Modal - Added */}
       <MessageModal
         isOpen={showPostMessage}
-        post={messagePost}
         onClose={() => {
           setShowPostMessage(false);
           setMessagePost(null);
         }}
+        post={messagePost}
       />
-
-      {/* Login Modal (if you already have one) */}
-      {showLogin && (
-        <div>
-          {/* Your Login Modal here */}
-        </div>
-      )}
     </>
   );
 }
