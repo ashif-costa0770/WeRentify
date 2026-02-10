@@ -14,12 +14,7 @@ export const getPosts = () =>
 
 // LIKE
 export const likePost = (postId) =>
-  api.post(`/posts/${postId}/like`, {},
-    {
-      headers: {
-         "x-user-id": "65d9c91f9b1c2e0012abcd34", // ✅ valid ObjectId
-      },
-    });
+  api.post(`/posts/${postId}/like`, {});
 
 // SAVE
 export const savePost = (postId) =>

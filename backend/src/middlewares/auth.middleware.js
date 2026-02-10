@@ -1,19 +1,15 @@
 import jwt from "jsonwebtoken";
 import User from "../models/users/user.model.js";
 import { errorResponse } from "../utils/response.js";
-import { createListing } from "../controllers/listing/listing.controller.js";
 
 export const protect = async (req, res, next) => {
   let token;
 
   if (req.cookies && req.cookies.token) {
     token = req.cookies.token;
-  } else if (
-    req.headers.authorization
-  ) {
+  } else if (req.headers.authorization) {
     // Get token from header
     token = req.headers.authorization.split(" ")[1];
-    console.log(token);
   }
 
   if (token) {

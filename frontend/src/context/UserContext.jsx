@@ -3,10 +3,12 @@
 import { createContext, useContext, useState, useEffect } from "react";
 import { services } from "@/data/servicesData";
 import { items as listingItems } from "@/data/listingsData";
+import { getMe } from "@/services/auth.service";
 
 const UserContext = createContext(null);
 
 export function UserProvider({ children }) {
+  const [user, setUser] = useState(null);
   const [favorites, setFavorites] = useState([]);
   const [isLogin, setIsLogin] = useState(false);
   const [showSignUp, setShowSignUp] = useState(false);
@@ -14,6 +16,32 @@ export function UserProvider({ children }) {
   const [showMessages, setShowMessages] = useState(false);
   const [selectedConversation, setSelectedConversation] = useState(null);
   const [isLoaded, setIsLoaded] = useState(false);
+  const [isAuthLoading, setIsAuthLoading] = useState(true);
+
+  // Fetch user profile on mount or when isLogin changes
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        setIsAuthLoading(true);
+        const res = await getMe();
+        if (res.data.success) {
+          setUser(res.data.data);
+          setIsLogin(true);
+        }
+      } catch (error) {
+        // Silently handle 401 or network errors on initial load
+        if (error.response?.status !== 401) {
+          console.error("Failed to fetch user profile:", error);
+        }
+        setUser(null);
+        setIsLogin(false);
+      } finally {
+        setIsAuthLoading(false);
+      }
+    };
+
+    fetchUser();
+  }, [isLogin]);
 
   // Load favorites from localStorage on mount
   useEffect(() => {
@@ -118,6 +146,9 @@ export function UserProvider({ children }) {
       value={{
         isLogin,
         setIsLogin,
+        user,
+        setUser,
+        isAuthLoading,
         favorites,
         setFavorites,
         toggleFavorite,

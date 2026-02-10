@@ -11,26 +11,24 @@ export default function CommunityFilters({
   counts,
   sortBy,
   setSortBy,
+  onPostCreated,
 }) {
   const [showCreateModal, setShowCreateModal] = useState(false);
 
-  const {isLogin, setShowSignIn} = useUser();
+  const { isLogin, setShowSignIn } = useUser();
 
-  const handleClick = ()=>{
-    if(!isLogin){
+  const handleClick = () => {
+    if (!isLogin) {
       setShowSignIn(true);
       return;
     }
     setShowCreateModal(true);
-
-  }
+  };
 
   const handleCreatePost = (formData) => {
     alert("Post created successfully!");
     console.log("New post:", formData);
   };
-
-  
 
   return (
     <>
@@ -91,7 +89,7 @@ export default function CommunityFilters({
       <CreatePostModal
         isOpen={showCreateModal}
         onClose={() => setShowCreateModal(false)}
-        onSubmit={handleCreatePost}
+        onSubmit={onPostCreated}
       />
     </>
   );

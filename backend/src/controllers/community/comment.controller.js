@@ -1,7 +1,8 @@
-import Comment from "../../models/community/comment.model.js"
-import Post from "../../models/community/post.model.js"
+import Comment from "../../models/community/comment.model.js";
+import Post from "../../models/community/post.model.js";
 import { successResponse, errorResponse } from "../../utils/response.js";
 
+//! create comment
 export const createComment = async (req, res) => {
   const { postId } = req.params;
   const { text } = req.body;
@@ -17,7 +18,7 @@ export const createComment = async (req, res) => {
     $inc: { commentsCount: 1 },
   });
 
-return successResponse(res, 201, "Comment added successfully", comment);
+  return successResponse(res, 201, "Comment added successfully", comment);
 };
 
 //! Get all comments with pagination (Loads comments in chunks)
@@ -31,7 +32,7 @@ export const getAllComments = async (req, res) => {
     .sort({ createdAt: -1 })
     .skip(skip)
     .limit(limit)
-    .populate("user", "name email"); 
+    .populate("user", "name email");
 
   const total = await Comment.countDocuments({ post: postId });
 
@@ -46,8 +47,7 @@ export const getAllComments = async (req, res) => {
   });
 };
 
-
-//update comment
+//! update comment
 export const updateComment = async (req, res) => {
   const { commentId } = req.params;
   const { text } = req.body;
@@ -62,7 +62,7 @@ export const updateComment = async (req, res) => {
     return errorResponse(res, 404, "Comment not found");
   }
 
-//   🔐 Future auth logic (keep commented)
+  //   🔐 Future auth logic (keep commented)
   if (req.user && comment.user?.toString() !== req.user._id.toString()) {
     return errorResponse(res, 403, "Not authorized");
   }
@@ -73,8 +73,7 @@ export const updateComment = async (req, res) => {
   return successResponse(res, 200, "Comment updated successfully", comment);
 };
 
-
-//delete comment
+//! delete comment
 export const deleteComment = async (req, res) => {
   const { commentId } = req.params;
 
@@ -99,24 +98,14 @@ export const deleteComment = async (req, res) => {
   return successResponse(res, 200, "Comment deleted successfully");
 };
 
-
 //!-----------------Likes---------------------(In frontend use likes.length for likesCount)
 export const toggleLike = async (req, res) => {
-    console.log("toggleLike");
   const { postId } = req.params;
-  console.log(postId);
+  const userId = req.user?._id;
 
-   // TEMP user handling (until auth)
-  const userId =
-    req.user?._id ||
-    req.headers["x-user-id"]; // 👈 FIX
-
- if(!userId){
-    return errorResponse(res, 401, "User id missing");
- }
-//   if (!req.user) {
-//   return errorResponse(res, 401, "Login required to like a post");
-// }
+  if (!req.user) {
+    return errorResponse(res, 401, "Login required to like a post");
+  }
 
   const post = await Post.findById(postId);
   if (!post) {
@@ -132,20 +121,27 @@ export const toggleLike = async (req, res) => {
   }
 
   await post.save();
-  return successResponse(res, 200, alreadyLiked ? "Post unliked" : "Post liked", {
-    likesCount: post.likes.length,
-  });
+  const updatedPost = await Post.findById(postId).populate(
+    "author",
+    "name email",
+  );
+  return successResponse(
+    res,
+    200,
+    alreadyLiked ? "Post unliked" : "Post liked",
+    updatedPost,
+  );
 };
 
 //!-----------------Saves---------------------(In frontend use saves.length for savesCount)
 export const toggleSave = async (req, res) => {
   const { postId } = req.params;
 
-  const userId = req.user?._id || undefined;
+  const userId = req.user?._id;
 
-   if (!req.user) {
-  return errorResponse(res, 401, "Login required to save a post");
-}
+  if (!req.user) {
+    return errorResponse(res, 401, "Login required to save a post");
+  }
 
   const post = await Post.findById(postId);
   if (!post) {
@@ -161,13 +157,15 @@ export const toggleSave = async (req, res) => {
   }
 
   await post.save();
+  const updatedPost = await Post.findById(postId).populate(
+    "author",
+    "name email",
+  );
 
   return successResponse(
     res,
     200,
     alreadySaved ? "Post unsaved" : "Post saved",
-    {
-      savesCount: post.saves.length,
-    }
+    updatedPost,
   );
 };

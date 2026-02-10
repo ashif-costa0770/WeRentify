@@ -67,10 +67,10 @@ export default function SignUpModal({
 
             {/* Google */}
             <button
-              onClick={() => {
-                setIsLogin(true);
-                onClose();
-              }}
+              // onClick={() => {
+              //   setIsLogin(true);
+              //   onClose();
+              // }}
               className="w-full cursor-pointer flex items-center justify-center gap-3 px-4 py-3 border-2 border-gray-300 rounded-xl font-semibold text-gray-700 hover:bg-gray-50"
             >
               <svg width="20" height="20" viewBox="0 0 24 24">
@@ -96,10 +96,10 @@ export default function SignUpModal({
 
             {/* Facebook */}
             <button
-              onClick={() => {
-                setIsLogin(true);
-                onClose();
-              }}
+              // onClick={() => {
+              //   setIsLogin(true);
+              //   onClose();
+              // }}
               className="w-full cursor-pointer flex items-center justify-center gap-3 px-4 py-3 rounded-xl font-semibold text-white bg-blue-600 hover:bg-blue-700"
             >
               <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
@@ -110,10 +110,10 @@ export default function SignUpModal({
 
             {/* Apple */}
             <button
-              onClick={() => {
-                setIsLogin(true);
-                onClose();
-              }}
+              // onClick={() => {
+              //   setIsLogin(true);
+              //   onClose();
+              // }}
               className="w-full cursor-pointer flex items-center justify-center gap-3 px-4 py-3 rounded-xl font-semibold text-white bg-black"
             >
               <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">

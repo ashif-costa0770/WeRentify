@@ -16,10 +16,12 @@ import {
   updatePostSchema,
   postByIdSchema,
 } from "../../validations/post.validation.js";
+import { protect } from "../../middlewares/auth.middleware.js";
 const router = express.Router();
 
 router.post(
   "/",
+  protect,
   validate(createPostSchema),
   uploadListingMedia,
   handleMulterError,
@@ -29,11 +31,12 @@ router.get("/", getAllPost);
 router.get("/:id", validate(postByIdSchema), getSinglePost);
 router.put(
   "/:id",
+  protect,
   validate(updatePostSchema),
   uploadListingMedia,
   handleMulterError,
   updatePost,
 );
-router.delete("/:id", validate(postByIdSchema), deletePost);
+router.delete("/:id",protect, validate(postByIdSchema), deletePost);
 
 export default router;

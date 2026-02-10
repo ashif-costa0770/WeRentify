@@ -5,18 +5,14 @@ import PostCard from "./PostCards";
 import CommentModal from "./modals/CommentModal";
 import MessageModal from "./modals/MessageModal";
 
-export default function PostsGrid({ posts, currentUser = null }) {
+export default function PostsGrid({ posts, currentUser = null, onUpdatePost }) {
   const [selectedPost, setSelectedPost] = useState(null);
   const [showLogin, setShowLogin] = useState(false);
   const [messagePost, setMessagePost] = useState(null);
   const [showPostMessage, setShowPostMessage] = useState(false);
 
   if (!posts?.length) {
-    return (
-      <p className="text-center text-gray-500 py-16">
-        No posts found
-      </p>
-    );
+    return <p className="text-center text-gray-500 py-16">No posts found</p>;
   }
 
   return (
@@ -31,6 +27,7 @@ export default function PostsGrid({ posts, currentUser = null }) {
             onRequireLogin={() => setShowLogin(true)}
             setShowPostMessage={setShowPostMessage}
             setMessagePost={setMessagePost}
+            onUpdatePost={onUpdatePost}
           />
         ))}
       </div>
@@ -40,7 +37,7 @@ export default function PostsGrid({ posts, currentUser = null }) {
         post={selectedPost}
         isOpen={!!selectedPost}
         onClose={() => setSelectedPost(null)}
-        isLoggedIn={!!currentUser}
+        currentUser={currentUser}
         setShowLogin={setShowLogin}
       />
 
@@ -55,11 +52,7 @@ export default function PostsGrid({ posts, currentUser = null }) {
       />
 
       {/* Login Modal (if you already have one) */}
-      {showLogin && (
-        <div>
-          {/* Your Login Modal here */}
-        </div>
-      )}
+      {showLogin && <div>{/* Your Login Modal here */}</div>}
     </>
   );
 }

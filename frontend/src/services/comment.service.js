@@ -9,9 +9,9 @@ export const getComments = (postId, params) =>
   api.get(`/posts/${postId}/comments`, { params });
 
 // UPDATE COMMENT
-export const updateComment = (commentId, data) =>
-  api.put(`/comments/${commentId}`, data);
+export const updateComment = (postId, commentId, data) =>
+  api.put(`/posts/${postId}/comments/${commentId}`, data);
 
 // DELETE COMMENT
-export const deleteComment = (commentId) =>
-  api.delete(`/comments/${commentId}`);
+export const deleteComment = (postId, commentId) =>
+  api.delete(`/posts/${postId}/comments/${commentId}`);

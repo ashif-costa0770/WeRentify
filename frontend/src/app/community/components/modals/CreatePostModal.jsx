@@ -64,9 +64,9 @@ export default function CreatePostModal({ isOpen, onClose, onSubmit }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-     if (isSubmitting) return; // 🛑 block double clicks
+    if (isSubmitting) return; // 🛑 block double clicks
 
-     setIsSubmitting(true);
+    setIsSubmitting(true);
 
     try {
       const payload = new FormData();
@@ -87,9 +87,12 @@ export default function CreatePostModal({ isOpen, onClose, onSubmit }) {
       });
 
       await createPost(payload);
+      if (onSubmit) {
+        await onSubmit(); // 👈 Refresh the list
+      }
 
       console.log("Post created successfully!");
-      alert("Post created successfully")
+      alert("Post created successfully");
       onClose();
 
       // reset form
@@ -108,9 +111,8 @@ export default function CreatePostModal({ isOpen, onClose, onSubmit }) {
     } catch (err) {
       console.error(err);
     } finally {
-    setIsSubmitting(false); // ✅ always release
-  }
-    
+      setIsSubmitting(false); // ✅ always release
+    }
   };
 
   const handleRemovePhoto = (index) => {

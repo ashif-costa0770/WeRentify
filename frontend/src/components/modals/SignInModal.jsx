@@ -60,7 +60,7 @@ export default function SignInModal({ open, onClose, onSwitchToSignUp, setIsLogi
 
             {/* Google */}
             <button
-              onClick={() => {setIsLogin(true); onClose()}} 
+              // onClick={() => {setIsLogin(true); onClose()}} 
               className="w-full flex cursor-pointer items-center justify-center gap-3 px-4 py-3 border-2 border-gray-300 rounded-xl font-semibold text-gray-700 hover:bg-gray-50"
             >
               <svg width="20" height="20" viewBox="0 0 24 24">
@@ -74,7 +74,7 @@ export default function SignInModal({ open, onClose, onSwitchToSignUp, setIsLogi
 
             {/* Facebook */}
             <button 
-              onClick={() => {setIsLogin(true); onClose()}} 
+              // onClick={() => {setIsLogin(true); onClose()}} 
               className="w-full flex items-center cursor-pointer justify-center gap-3 px-4 py-3 rounded-xl font-semibold text-white bg-blue-600 hover:bg-blue-700"
             >
               <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
@@ -85,7 +85,7 @@ export default function SignInModal({ open, onClose, onSwitchToSignUp, setIsLogi
 
             {/* Apple */}
             <button 
-              onClick={() => {setIsLogin(true); onClose()}} 
+              // onClick={() => {setIsLogin(true); onClose()}} 
               className="w-full flex cursor-pointer items-center justify-center gap-3 px-4 py-3 rounded-xl font-semibold text-white bg-black"
             >
               <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">

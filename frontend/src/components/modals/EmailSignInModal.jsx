@@ -11,7 +11,6 @@ export default function SignInWithPhoneModal({
 }) {
   const [country, setCountry] = useState("United States (+1)");
   const [phone, setPhone] = useState("");
-  const [showPhoneForm, setShowPhoneForm] = useState(true);
 
   if (!open) return null;
 
@@ -34,7 +33,7 @@ export default function SignInWithPhoneModal({
   };
 
   const handleSocialLogin = () => {
-    setIsLogin(true);
+    // setIsLogin(true);
     onClose();
   };
 
