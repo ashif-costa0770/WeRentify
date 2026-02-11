@@ -2,6 +2,7 @@
 "use client";
 import Image from "next/image";
 import { createPost } from "@/services/post.service";
+import { toast } from "sonner";
 
 import { useState, useRef } from "react";
 import { X, Wrench, Package, Camera, Calendar } from "lucide-react";
@@ -91,8 +92,7 @@ export default function CreatePostModal({ isOpen, onClose, onSubmit }) {
         await onSubmit(); // 👈 Refresh the list
       }
 
-      console.log("Post created successfully!");
-      alert("Post created successfully");
+      toast.success("Post created!");
       onClose();
 
       // reset form
@@ -109,6 +109,7 @@ export default function CreatePostModal({ isOpen, onClose, onSubmit }) {
       });
       setPhotoPreviews([null, null, null]);
     } catch (err) {
+      toast.error("Failed to create post: " + err.message);
       console.error(err);
     } finally {
       setIsSubmitting(false); // ✅ always release

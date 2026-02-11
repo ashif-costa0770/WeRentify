@@ -6,9 +6,11 @@ import helmet from "helmet";
 import compression from "compression";
 import { connectDB } from "./config/index.js";
 import listingRoutes from "./routes/listing/listing.route.js";
+import serviceRoutes from "./routes/service/service.route.js"
 import postRoutes from "./routes/community/post.route.js";
 import commentRoutes from "./routes/community/comment.route.js";
 import authRoutes from "./routes/user/auth.route.js";
+import CategoryRoute from "./routes/category.route.js"
 const app = express();
 const PORT = process.env.PORT || 5000;
 
@@ -33,6 +35,10 @@ app.use("/api/listings", listingRoutes);
 // Community Routes
 app.use("/api/posts", postRoutes);
 app.use("/api/posts", commentRoutes);
+// Services Routes
+app.use("/api/services", serviceRoutes)
+// Category Routes
+app.use("/api/category", CategoryRoute)
 
 // Health check route
 app.get("/api/health", (req, res) => {

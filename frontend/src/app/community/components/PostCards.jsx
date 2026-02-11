@@ -4,6 +4,7 @@ import { Heart, MessageCircle, Share, Bookmark } from "lucide-react";
 import { timeAgo } from "@/utils/timeAgo";
 import { likePost, savePost } from "@/services/post.service";
 import { formatDate } from "@/utils/formatDate";
+import { toast } from "sonner";
 
 export default function PostCard({
   post,
@@ -41,6 +42,12 @@ export default function PostCard({
       if (res.data.success) {
         onUpdatePost(res.data.data);
       }
+      if(isSaved) {
+        toast.success("Post unsaved!");
+      } else {
+        toast.success("Post saved!");
+      }
+    
     } catch (err) {
       console.error("Save failed", err);
     }

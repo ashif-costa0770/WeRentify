@@ -40,9 +40,9 @@ const listingSchema = new mongoose.Schema({
   },
   
   category: {
-    type: String,
-    required: [true, 'Category is required'],
-    trim: true
+      type: String,
+      required: [true, 'Category is required'],
+      trim: true
   },
   
   description: {
@@ -126,7 +126,7 @@ const listingSchema = new mongoose.Schema({
   owner: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
-    // required: true  // Uncomment when user authentication is added
+    required: true 
   },
 
   views: {

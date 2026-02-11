@@ -39,6 +39,7 @@ export default function PostsGrid({ posts, currentUser = null, onUpdatePost }) {
         onClose={() => setSelectedPost(null)}
         currentUser={currentUser}
         setShowLogin={setShowLogin}
+        onUpdatePost={onUpdatePost}
       />
 
       {/* Message Modal */}

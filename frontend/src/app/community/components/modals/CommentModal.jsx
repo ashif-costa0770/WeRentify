@@ -10,6 +10,7 @@ import {
   updateComment,
   deleteComment,
 } from "@/services/comment.service";
+import { toast } from "sonner";
 
 export default function CommentModal({
   post,
@@ -17,6 +18,7 @@ export default function CommentModal({
   onClose,
   currentUser,
   setShowLogin,
+  onUpdatePost = () => {},
 }) {
   const [comments, setComments] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -62,6 +64,8 @@ export default function CommentModal({
       if (res.data.success) {
         setCommentText("");
         fetchComments();
+        const newCount = (post.commentsCount || 0) + 1;
+        onUpdatePost({ ...post, commentsCount: newCount });
       }
     } catch (error) {
       console.error("Failed to create comment:", error);
@@ -82,8 +86,10 @@ export default function CommentModal({
         setEditText("");
         fetchComments();
       }
+      toast.success("Comment updated!");
     } catch (error) {
       console.error("Failed to update comment:", error);
+      toast.error("Failed to update comment: " + error.message);
     } finally {
       setIsSubmitting(false);
     }
@@ -98,9 +104,13 @@ export default function CommentModal({
       const res = await deleteComment(post._id, commentId);
       if (res.data.success) {
         fetchComments();
+        const newCount = Math.max(0, (post.commentsCount || 0) - 1);
+        onUpdatePost({ ...post, commentsCount: newCount });
+        toast.success("Comment deleted!");
       }
     } catch (error) {
       console.error("Failed to delete comment:", error);
+      toast.error("Failed to delete comment: " + error.message);
     }
   };
 
@@ -195,19 +205,19 @@ export default function CommentModal({
             </div>
           ) : comments.length === 0 ? (
             <div className="text-center text-gray-500 py-12 bg-white rounded-2xl border border-dashed border-gray-200">
-              <MessageCircle size={48} className="mx-auto text-gray-300 mb-3" />
-              <p>No comments yet. Be the first to comment!</p>
+              <MessageCircle size={35} className="mx-auto text-gray-300 mb-3" />
+              <small>No comments yet. Be the first to comment!</small>
             </div>
           ) : (
             <div className="space-y-4">
               {comments.map((comment) => (
                 <div key={comment._id} className="flex gap-3 group">
-                  <div className="w-10 h-10 rounded-full bg-linear-to-r from-indigo-400 to-pink-400 text-white flex items-center justify-center font-bold text-sm flex-shrink-0">
+                  <div className="w-10 h-10 cursor-pointer rounded-full bg-linear-to-r from-indigo-400 to-pink-400 text-white flex items-center justify-center font-bold text-sm flex-shrink-0">
                     {comment.user?.name?.charAt(0) || "U"}
                   </div>
                   <div className="flex-1">
                     <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 hover:border-indigo-100 transition-colors">
-                      <div className="flex justify-between items-start mb-1">
+                      <div className="flex justify-between items-start">
                         <p className="font-bold text-sm text-gray-900">
                           {comment.user?.name || "User"}
                         </p>
@@ -218,14 +228,14 @@ export default function CommentModal({
                                 setEditingId(comment._id);
                                 setEditText(comment.text);
                               }}
-                              className="p-1.5 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition"
+                              className="p-1.5 cursor-pointer text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition"
                               title="Edit"
                             >
                               <Edit3 size={15} />
                             </button>
                             <button
                               onClick={() => handleDelete(comment._id)}
-                              className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition"
+                              className="p-1.5 cursor-pointer text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition"
                               title="Delete"
                             >
                               <Trash2 size={15} />
@@ -294,7 +304,7 @@ export default function CommentModal({
                   <button
                     onClick={handleCreate}
                     disabled={!commentText.trim() || isSubmitting}
-                    className="bg-linear-to-r from-indigo-600 to-pink-600 text-white px-8 py-2.5 rounded-xl text-sm font-bold hover:shadow-lg active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-md"
+                    className="bg-linear-to-r cursor-pointer from-indigo-600 to-pink-600 text-white px-8 py-2.5 rounded-xl text-sm font-bold hover:shadow-lg active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-md"
                   >
                     {isSubmitting ? "Posting..." : "Post Comment"}
                   </button>

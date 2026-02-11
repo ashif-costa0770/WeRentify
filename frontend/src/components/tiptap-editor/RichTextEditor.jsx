@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Placeholder from "@tiptap/extension-placeholder";
@@ -13,14 +14,14 @@ import {
   Redo,
 } from "lucide-react";
 
-export default function RichTextEditor({ value, onChange }) {
+export default function RichTextEditor({ value, onChange, placeholder }) {
   const editor = useEditor({
     immediatelyRender: false,
     extensions: [
       StarterKit,
       Placeholder.configure({
-        placeholder:
-          "Describe your item, its condition, and any special features...",
+          placeholder:
+            placeholder || "Describe your item, its condition, and any special features...",
       }),
     ],
     content: value,
@@ -34,6 +35,16 @@ export default function RichTextEditor({ value, onChange }) {
       },
     },
   });
+
+  // Sync value from parent into editor (e.g. when quick response is selected)
+  useEffect(() => {
+    if (!editor) return;
+    const next = value ?? "";
+    const current = editor.getHTML();
+    if (next !== current) {
+      editor.commands.setContent(next, false);
+    }
+  }, [value, editor]);
 
   if (!editor) {
     return null;

@@ -21,20 +21,20 @@ const router = express.Router();
 
 router.post(
   "/",
-  protect,
-  validate(createPostSchema),
+  protect, 
   uploadListingMedia,
   handleMulterError,
+  validate(createPostSchema),
   createPost,
 );
 router.get("/", getAllPost);
-router.get("/:id", validate(postByIdSchema), getSinglePost);
+router.get("/:id", getSinglePost);
 router.put(
   "/:id",
-  protect,
-  validate(updatePostSchema),
+  protect,    
   uploadListingMedia,
   handleMulterError,
+  validate(updatePostSchema),  
   updatePost,
 );
 router.delete("/:id",protect, validate(postByIdSchema), deletePost);

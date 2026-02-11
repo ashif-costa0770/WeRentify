@@ -12,6 +12,9 @@ import {
   Lightbulb,
 } from "lucide-react";
 import RichTextEditor from "@/components/tiptap-editor/RichTextEditor";
+import { formatDate } from "@/utils/formatDate";
+import { toast } from "sonner";
+
 
 export default function MessageModal({ isOpen, onClose, post }) {
   const [message, setMessage] = useState("");
@@ -27,7 +30,8 @@ export default function MessageModal({ isOpen, onClose, post }) {
   ];
 
   const handleQuickResponse = (text) => {
-    setMessage(text);
+    // RichTextEditor uses HTML; wrap plain text in a paragraph so it displays correctly
+    setMessage(text ? `<p>${text}</p>` : "");
   };
 
   const handleMessageChange = (content) => {
@@ -45,6 +49,7 @@ export default function MessageModal({ isOpen, onClose, post }) {
       console.log("Sending message to:", post.author, "Message:", message);
       onClose();
       setMessage("");
+      toast.success("Message sent!");
     } catch (error) {
       console.error("Error sending message:", error);
     } finally {
@@ -60,11 +65,11 @@ export default function MessageModal({ isOpen, onClose, post }) {
           <div className="flex items-start justify-between">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-pink-500 flex items-center justify-center text-white font-semibold text-lg shadow-lg">
-                {post.author?.charAt(0) || "U"}
+                {post.author?.name?.charAt(0) || "U"}
               </div>
               <div>
                 <h2 className="text-lg font-bold text-gray-900">
-                  Message {post.author}
+                  Message {post.author?.name || "User"}
                 </h2>
                 <p className="text-sm text-gray-500 truncate max-w-[250px]">
                   About: {post.title}
@@ -103,7 +108,7 @@ export default function MessageModal({ isOpen, onClose, post }) {
                 </span>
                 <span className="flex items-center gap-1">
                   <Calendar className="w-3 h-3 text-gray-400" />
-                  {post.dateNeeded}
+                  {formatDate(post.dateNeeded)}
                 </span>
                 <span className="flex items-center gap-1 font-medium text-green-600">
                   <DollarSign className="w-3 h-3" />
@@ -144,6 +149,8 @@ export default function MessageModal({ isOpen, onClose, post }) {
           </label>
           <RichTextEditor
             value={message}
+            placeholder="Type your message..."
+            name="message"
             onChange={handleMessageChange}
           />
 
