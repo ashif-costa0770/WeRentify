@@ -11,7 +11,7 @@ const postSchema = new mongoose.Schema(
       type: String,
       required: true,
       trim: true,
-      maxlength: 2000,
+      maxlength: 10000,
     },
     type: {
       type: String,
@@ -40,7 +40,7 @@ const postSchema = new mongoose.Schema(
     },
     budget: {
       type: String,
-      required: true,
+      default: "",
     },
     likes: [
       {

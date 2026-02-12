@@ -10,6 +10,7 @@ const IMAGE_TYPES = [
   "image/png",
   "image/webp",
   "image/gif",
+  "image/svg+xml"
 ];
 
 const VIDEO_TYPES = [
@@ -89,3 +90,21 @@ export const handleMulterError = (err, req, res, next) => {
     message: err.message || "File upload failed",
   });
 };
+
+// Category icon upload (single image only)
+export const uploadCategoryIcon = multer({
+  storage,
+  fileFilter: (req, file, cb) => {
+    if (!IMAGE_TYPES.includes(file.mimetype)) {
+      return cb(
+        new Error("Only image files (jpg, png, webp, gif, svg) are allowed."),
+        false
+      );
+    }
+    cb(null, true);
+  },
+  limits: {
+    fileSize: 5 * 1024 * 1024, // 5MB max for icon
+    files: 1,
+  },
+}).single("icon");

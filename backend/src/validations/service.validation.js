@@ -21,7 +21,7 @@ export const createServiceSchema = z.object({
 
   category: objectIdSchema,
 
-  yearInBusiness: z
+  yearsInBusiness: z
     .coerce.number({ invalid_type_error: "Year in business must be a number" })
     .min(0, "Year in business cannot be negative"),
 
@@ -31,16 +31,16 @@ export const createServiceSchema = z.object({
     .min(10, "Description must be at least 10 characters"),
 
   // Step 2: Contact Details
-  serviceLocation: z
+  location: z
     .string()
     .trim()
     .min(2, "Service location is required"),
 
-  serviceArea: z
+  serviceRadius: z
     .coerce.number({ invalid_type_error: "Service area must be a number" })
     .min(0, "Service area cannot be negative"),
 
-  phoneNumber: z
+  phone: z
     .string()
     .trim()
     .min(8, "Phone number is required"),
@@ -56,7 +56,7 @@ export const createServiceSchema = z.object({
     .optional()
     .or(z.literal("")),
 
-  certification: z
+  certifications: z
     .string()
     .trim()
     .optional(),

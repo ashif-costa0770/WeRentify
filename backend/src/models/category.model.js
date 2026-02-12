@@ -19,6 +19,10 @@ const categorySchema = new mongoose.Schema(
       enum: ["item", "service"],
       required: true,
     },
+    icon: {
+      url: { type: String, required: true },
+      public_id: { type: String, required: true },
+    },
     isActive: {
       type: Boolean,
       default: true,
@@ -26,6 +30,8 @@ const categorySchema = new mongoose.Schema(
   },
   { timestamps: true },
 );
+
+//!Note-> categorySchema.pre("save", function (next) this only trigger when .save is called.
 
 // Auto-generate slug from name
 categorySchema.pre("save", function (next) {
@@ -35,6 +41,20 @@ categorySchema.pre("save", function (next) {
       .replace(/[^a-z0-9]+/g, "-")
       .replace(/(^-|-$)+/g, "");
   }
+  next();
+});
+
+// on update slug auto updated
+categorySchema.pre("findOneAndUpdate", function (next) {
+  const update = this.getUpdate();
+
+  if (update.name) {
+    update.slug = update.name
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/(^-|-$)+/g, "");
+  }
+
   next();
 });
 

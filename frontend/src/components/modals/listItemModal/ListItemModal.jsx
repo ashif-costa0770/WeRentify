@@ -136,8 +136,14 @@ export default function ListItemModal({ isOpen, onClose, onListingCreated }) {
       setVideoFileNames(Array(2).fill(null));
     } catch (err) {
       console.error("Create listing failed", err);
-      const message =
+      let message =
         err?.body?.message || err.message || "Failed to create listing";
+      if (err?.status === 401) {
+        message = "Please log in to create a listing.";
+      } else if (Array.isArray(err?.body?.errors) && err.body.errors.length) {
+        const first = err.body.errors[0];
+        message = first?.message || message;
+      }
       alert(message);
     } finally {
       setIsSubmitting(false);

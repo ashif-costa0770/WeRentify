@@ -1,36 +1,49 @@
 // validations/category.validation.js
-import { z } from 'zod';
+import { z } from "zod";
 
-export const createServiceCategorySchema = z.object({
+export const createCategorySchema = z.object({
   name: z
     .string()
     .trim()
     .min(2, "Category name must be at least 2 characters")
-    .max(100, "Category name must not exceed 100 characters"),
-  
+    .max(50, "Category name cannot exceed 50 characters"),
+
+  type: z.enum(["item", "service"], {
+    errorMap: () => ({ message: "Type must be either 'item' or 'service'" }),
+  }),
+
   isActive: z
-    .boolean()
+    .union([z.boolean(), z.string()])
     .optional()
-    .default(true),
+    .transform((val) => {
+      if (val === "true") return true;
+      if (val === "false") return false;
+      return val;
+    }),
+
+  // 👇 icon handled by multer (file), not required in body
+  icon: z.any().optional(),
 });
 
-export const updateServiceCategorySchema = z.object({
+export const updateCategorySchema = z.object({
   name: z
     .string()
     .trim()
     .min(2, "Category name must be at least 2 characters")
-    .max(100, "Category name must not exceed 100 characters")
+    .max(50, "Category name cannot exceed 50 characters")
     .optional(),
-  
-  isActive: z
-    .boolean()
-    .optional(),
-}).refine((data) => Object.keys(data).length > 0, {
-  message: "At least one field must be provided for update",
-});
 
-export const categoryIdSchema = z.object({
-  id: z
-    .string()
-    .regex(/^[0-9a-fA-F]{24}$/, "Invalid category ID format"),
+  type: z.enum(["item", "service"]).optional(),
+
+  isActive: z
+    .union([z.boolean(), z.string()])
+    .optional()
+    .transform((val) => {
+      if (val === "true") return true;
+      if (val === "false") return false;
+      return val;
+    }),
+
+  // 👇 icon optional (multer file)
+  icon: z.any().optional(),
 });

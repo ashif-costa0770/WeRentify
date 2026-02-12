@@ -23,6 +23,7 @@ export const createPost = async (req, res) => {
 
     const post = await Post.create({
       ...req.body,
+      budget: req.body.budget ?? "",
       photos: uploadedPhotos,
       author: req.user._id,
     });

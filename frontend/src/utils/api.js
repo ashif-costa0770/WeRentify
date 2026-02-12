@@ -91,6 +91,7 @@ export const createListing = async (fields = {}, files = {}) => {
   const res = await fetch(`${API_URL}/listings`, {
     method: "POST",
     body: formData,
+    credentials: "include",
   });
 
   const json = await handleResponse(res);
@@ -121,6 +122,7 @@ export const updateListing = async (id, fields = {}, files = {}) => {
   const res = await fetch(`${API_URL}/listings/${id}`, {
     method: "PUT",
     body: formData,
+    credentials: "include",
   });
   const json = await handleResponse(res);
   if (json && json.data) json.data = normalizeListing(json.data);
@@ -130,6 +132,7 @@ export const updateListing = async (id, fields = {}, files = {}) => {
 export const deleteListing = async (id) => {
   const res = await fetch(`${API_URL}/listings/${id}`, {
     method: "DELETE",
+    credentials: "include",
   });
   const json = await handleResponse(res);
   return json;

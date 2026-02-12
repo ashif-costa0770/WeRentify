@@ -86,6 +86,7 @@ export const createListing = async (req, res) => {
         : rentalRules
           ? [rentalRules]
           : [],
+      owner: req.user._id,
       rating: 0,
       status: "active",
       views: 0,

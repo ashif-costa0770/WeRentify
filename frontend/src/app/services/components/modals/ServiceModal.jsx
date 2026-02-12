@@ -1,4 +1,5 @@
 "use client";
+import Image from "next/image";
 
 import {
   X,
@@ -6,6 +7,7 @@ import {
   MapPin,
   CheckCircle,
   Calendar,
+  XCircle,
   MessageCircle,
 } from "lucide-react";
 
@@ -32,14 +34,22 @@ export default function ServiceModal({ service, onClose }) {
 
         {/* HEADER */}
         <div className="flex-col items-start gap-4">
-          <div className="flex-col h-22 w-22 items-center mb-8 py-2 justify-center  rounded-xl text-8xl">
-            {service.image || "🛠️"}
+          <div className="h-25 w-25 mb-8 flex items-center justify-center rounded-xl overflow-hidden">
+            {service.image ? (
+              <Image
+                src={service.image}
+                alt={service.name}
+                height={200}
+                width={200}
+                className="h-full w-full object-contain"
+              />
+            ) : (
+              <span className="text-5xl">🛠️</span>
+            )}
           </div>
 
           <div className="px-2">
-            <h2 className="text-2xl font-bold text-gray-900">
-              {service.name}
-            </h2>
+            <h2 className="text-2xl font-bold text-gray-900">{service.name}</h2>
             <p className="text-gray-600">
               by <span className="font-medium">{service.provider}</span>
             </p>
@@ -59,10 +69,15 @@ export default function ServiceModal({ service, onClose }) {
                 <span>{service.distance} miles away</span>
               </div>
 
-              {service.verified && (
+              {service.verified ? (
                 <div className="flex items-center gap-1 text-green-600">
                   <CheckCircle size={16} />
                   <span className="font-medium">Verified Provider</span>
+                </div>
+              ) : (
+                <div className="flex items-center gap-1 text-red-600">
+                  <XCircle size={16} />
+                  <span className="font-medium">Not Verified</span>
                 </div>
               )}
             </div>
@@ -74,9 +89,10 @@ export default function ServiceModal({ service, onClose }) {
           <p className="text-3xl font-extrabold text-orange-600">
             ${service.hourlyRate}/hour
           </p>
-          <p className="mt-1 text-sm text-gray-700">
-            Professional service with guaranteed quality
-          </p>
+          <div
+            className="mt-1 text-sm text-gray-700"
+            dangerouslySetInnerHTML={{ __html: service.description }}
+          ></div>
         </div>
 
         {/* ACTIONS */}

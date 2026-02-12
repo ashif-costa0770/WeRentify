@@ -11,6 +11,8 @@ export default function ServicesCardsWrapper({
   selectedCategory,
   sortBy,
   onSortChange,
+  loading = false,
+  error = null,
 }) {
   // 🔹 Modal state
   const [selectedService, setSelectedService] = useState(null);
@@ -62,6 +64,23 @@ export default function ServicesCardsWrapper({
     );
   }, [visibleCategories]);
 
+  if (loading) {
+    return (
+      <div className="mx-auto max-w-7xl px-4 pb-16 flex flex-col items-center justify-center min-h-[300px]">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600" />
+        <p className="mt-4 text-gray-600">Loading services...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="mx-auto max-w-7xl px-4 pb-16 flex flex-col items-center justify-center min-h-[300px]">
+        <p className="text-red-600 font-medium">{error}</p>
+      </div>
+    );
+  }
+
   return (
     <div className="mx-auto max-w-7xl px-4 pb-16">
       {/* ✅ GLOBAL HEADER (only once) */}
@@ -72,14 +91,18 @@ export default function ServicesCardsWrapper({
       />
 
       {/* ✅ Category sections */}
-      {visibleCategories.map(([key, group]) => (
-        <ServiceCategoryBlock
-          key={key}
-          categoryLabel={group.name}
-          services={group.items}
-          onServiceClick={openServiceModal} // ✅ FIX
-        />
-      ))}
+      {visibleCategories.length === 0 ? (
+        <p className="text-center text-gray-500 py-12">No services found.</p>
+      ) : (
+        visibleCategories.map(([key, group]) => (
+          <ServiceCategoryBlock
+            key={key}
+            categoryLabel={group.name}
+            services={group.items}
+            onServiceClick={openServiceModal}
+          />
+        ))
+      )}
 
       {/* ✅ Service Modal (render once) */}
       {isModalOpen && selectedService && (

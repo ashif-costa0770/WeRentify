@@ -56,7 +56,8 @@ export const createService = async (req, res) => {
 export const getAllServices = async (req, res) => {
   try {
     const services = await Service.find()
-      .populate("owner", "name email")
+      .populate("owner")
+      .populate("category")
       .sort({ createdAt: -1 });
 
     if (!services) {

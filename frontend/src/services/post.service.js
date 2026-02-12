@@ -1,12 +1,7 @@
 import api from "@/lib/api";
 
-// CREATE POST
-export const createPost = (data) =>
-  api.post("/posts", data, {
-    headers: {
-      "Content-Type": "multipart/form-data",
-    },
-  });
+// CREATE POST - Do NOT set Content-Type; axios auto-sets multipart boundary for FormData
+export const createPost = (data) => api.post("/posts", data);
 
 // GET ALL POSTS
 export const getPosts = () =>

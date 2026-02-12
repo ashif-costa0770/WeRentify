@@ -109,7 +109,11 @@ export default function CreatePostModal({ isOpen, onClose, onSubmit }) {
       });
       setPhotoPreviews([null, null, null]);
     } catch (err) {
-      toast.error("Failed to create post: " + err.message);
+      const msg =
+        err?.response?.data?.message ||
+        err?.response?.data?.errors ||
+        err.message;
+      toast.error("Failed to create post: " + (typeof msg === "string" ? msg : JSON.stringify(msg)));
       console.error(err);
     } finally {
       setIsSubmitting(false); // ✅ always release

@@ -19,6 +19,7 @@ export default function ContactLocationStep() {
         </label>
         <input
           type="text"
+          name="serviceLocation"
           value={formData.location}
           onChange={(e) => updateFormData({ location: e.target.value })}
           className="w-full text-gray-700   text-sm rounded-xl border border-gray-300  focus:border-purple-500 focus:outline-none px-4 py-2"
@@ -33,6 +34,7 @@ export default function ContactLocationStep() {
         </label>
         <input
           type="number"
+          name="serviceArea"
           value={formData.serviceRadius}
           onChange={(e) => updateFormData({ serviceRadius: e.target.value })}
           className="w-full text-gray-700 text-sm  rounded-xl border border-gray-300 focus:border-purple-500 focus:outline-none px-4 py-2"
@@ -47,6 +49,7 @@ export default function ContactLocationStep() {
         </label>
         <input
           type="tel"
+          name="phoneNumber"
           value={formData.phone}
           onChange={(e) => updateFormData({ phone: e.target.value })}
           className="w-full text-gray-700  text-sm rounded-xl border border-gray-300 focus:border-purple-500 focus:outline-none px-4 py-2"
@@ -61,6 +64,7 @@ export default function ContactLocationStep() {
         </label>
         <input
           type="email"
+          name="email"
           value={formData.email}
           onChange={(e) => updateFormData({ email: e.target.value })}
           className="w-full text-gray-700 text-sm  rounded-xl border border-gray-300 focus:border-purple-500 focus:outline-none px-4 py-2"
@@ -75,6 +79,7 @@ export default function ContactLocationStep() {
         </label>
         <input
           type="url"
+          name="website"
           value={formData.website}
           onChange={(e) => updateFormData({ website: e.target.value })}
           className="w-full text-gray-700 text-sm  rounded-xl border border-gray-300 focus:border-purple-500 focus:outline-none px-4 py-2"
@@ -89,6 +94,7 @@ export default function ContactLocationStep() {
         </label>
         <textarea
           rows={3}
+          name="certification"
           value={formData.certifications}
           onChange={(e) => updateFormData({ certifications: e.target.value })}
           className="w-full text-gray-700 text-sm rounded-xl border border-gray-300 px-4 py-2 focus:border-purple-500 focus:outline-none resize-none"

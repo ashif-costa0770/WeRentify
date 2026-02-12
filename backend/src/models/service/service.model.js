@@ -15,10 +15,10 @@ const serviceSchema = new mongoose.Schema({
     },
     category:{
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'ServiceCategory',
+        ref: 'Category',
         required: true,
     },
-    yearInBusiness:{
+    yearsInBusiness:{
         type:Number,
         required: true,
         default: 0,
@@ -30,17 +30,17 @@ const serviceSchema = new mongoose.Schema({
     },
 
      // Step 2: Contact Details
-     serviceLocation:{
+     location:{
         type: String,
         required: true,
         trim: true,
      },
-     serviceArea: {
+     serviceRadius: {
         type : Number,
         required: true,
         default: 0,
      },
-     phoneNumber:{
+     phone:{
         type: String,
         required: true,
         trim: true,
@@ -57,7 +57,7 @@ const serviceSchema = new mongoose.Schema({
         trim: true,
         lowercase: true,
      },
-     certification: {
+     certifications: {
         type: String,
         trim: true,
      },
@@ -95,6 +95,12 @@ const serviceSchema = new mongoose.Schema({
      hourlyRate: {
         type: String,
         required: true,
+     },
+
+     icon:{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Category',
+        //   required: true,
      },
 
      // Step 4: Choose a Plan
@@ -135,6 +141,10 @@ const serviceSchema = new mongoose.Schema({
         enum: ['active', 'inactive', 'under_maintenance', 'pending_verification'],
         default: 'active',
      },
+     verified:{
+      type:Boolean,
+      default:false
+     }
 }, { timestamps: true });
 
 // Indexes for better query performance

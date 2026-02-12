@@ -1,18 +1,44 @@
 "use client";
 
 import ListBusinessButton from "./ListBussinessButton";
-import { categories  } from '@/data/servicesData';
-import  ServiceCategoryCard  from "./ServiceCategoryCard";
+// import { categories  } from '@/data/servicesData';
+import ServiceCategoryCard from "./ServiceCategoryCard";
+import { useEffect, useState } from "react";
+import { useListBusiness } from "@/context/ListBusinessContext";
+import { getAllCategory } from "@/services/category.service"; // ✅ adjust path if needed
 
+export default function ServicesCategoriesSection({
+  selectedCategory,
+  onSelectCategory,
+}) {
+  const [categories, setCategories] = useState([]);
+  const [loadingCategories, setLoadingCategories] = useState(true);
+  const [categoryError, setCategoryError] = useState(null);
 
+  // ✅ Fetch categories from backend
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        setLoadingCategories(true);
+        const res = await getAllCategory("service");
 
-export default function ServicesCategoriesSection({selectedCategory, onSelectCategory,}) {
+        // Adjust depending on your backend response structure
+        setCategories(res.data?.data || res.data || []);
+      } catch (error) {
+        console.error("Error fetching categories:", error);
+        setCategoryError("Failed to load categories");
+      } finally {
+        setLoadingCategories(false);
+      }
+    };
+
+    fetchCategories();
+  }, []);
 
   return (
     <section className="mx-auto max-w-7xl px-4 py-10">
       {/* Header */}
       <div className="mb-4">
-        
         <ListBusinessButton />
       </div>
 
@@ -20,15 +46,14 @@ export default function ServicesCategoriesSection({selectedCategory, onSelectCat
       <div className="hidden md:grid grid-cols-12 gap-2">
         {categories.map((cat) => (
           <ServiceCategoryCard
-            key={cat.id}
+            key={cat._id}
             name={cat.name}
             icon={cat.icon}
-            active={selectedCategory === cat.id}
-            onClick={() => onSelectCategory(cat.id)}
+            active={selectedCategory === cat._id}
+            onClick={() => onSelectCategory(cat._id)}
           />
         ))}
       </div>
     </section>
   );
 }
-

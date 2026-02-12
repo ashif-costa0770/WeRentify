@@ -84,4 +84,7 @@ export const deleteMultipleFromCloudinary = async (
   }
 };
 
+// upload single file (category icon)
+// export const uploadCategoryIcon = upload.single("icon");
+
 export { cloudinary };

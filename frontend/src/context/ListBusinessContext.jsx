@@ -1,6 +1,8 @@
 "use client";
 
+import { createService } from "@/services/services.service";
 import { createContext, useContext, useState } from "react";
+import { toast } from "sonner";
 
 const ListBusinessContext = createContext(null);
 
@@ -8,9 +10,7 @@ const ListBusinessContext = createContext(null);
 export const useListBusiness = () => {
   const context = useContext(ListBusinessContext);
   if (!context) {
-    throw new Error(
-      "useListBusiness must be used inside ListBusinessProvider"
-    );
+    throw new Error("useListBusiness must be used inside ListBusinessProvider");
   }
   return context;
 };
@@ -22,7 +22,7 @@ export function ListBusinessProvider({ children }) {
   /* ---------------- STEP STATE ---------------- */
   const [currentStep, setCurrentStep] = useState(1);
 
-/* ---------------- error ---------------- */
+  /* ---------------- error ---------------- */
   const [errors, setErrors] = useState({});
 
   /* ---------------- FORM DATA ---------------- */
@@ -64,16 +64,14 @@ export function ListBusinessProvider({ children }) {
   };
 
   /* ---------------- STEP CONTROLS ---------------- */
-  const nextStep = () =>
-    setCurrentStep((prev) => Math.min(prev + 1, 4));
+  const nextStep = () => setCurrentStep((prev) => Math.min(prev + 1, 4));
 
-  const prevStep = () =>
-    setCurrentStep((prev) => Math.max(prev - 1, 1));
+  const prevStep = () => setCurrentStep((prev) => Math.max(prev - 1, 1));
 
   const goToStep = (step) => {
     setCurrentStep(step);
   };
-   const resetStep = () => {
+  const resetStep = () => {
     setCurrentStep(1);
   };
 
@@ -85,30 +83,46 @@ export function ListBusinessProvider({ children }) {
     }));
   };
 
-   /* ---------------- file uploads ---------------- */
+  /* ---------------- file uploads ---------------- */
   const addFiles = (type, files) => {
-  setFormData((prev) => {
-    const existing = prev[type];
-    const max = type === "photos" ? 6 : 2;
+    setFormData((prev) => {
+      const existing = prev[type];
+      const max = type === "photos" ? 6 : 2;
 
-    const merged = [...existing, ...Array.from(files)].slice(0, max);
+      const merged = [...existing, ...Array.from(files)].slice(0, max);
 
-    return { ...prev, [type]: merged };
-  });
-};
+      return { ...prev, [type]: merged };
+    });
+  };
 
-const removeFile = (type, index) => {
-  setFormData((prev) => ({
-    ...prev,
-    [type]: prev[type].filter((_, i) => i !== index),
-  }));
-};
-
+  const removeFile = (type, index) => {
+    setFormData((prev) => ({
+      ...prev,
+      [type]: prev[type].filter((_, i) => i !== index),
+    }));
+  };
 
   /* ---------------- FINAL SUBMIT ---------------- */
-  const submitBusiness = () => {
-    console.log("📦 Business Listing Payload:", formData);
-    alert("🎉 Business submitted successfully!");
+  const submitBusiness = async () => {
+    try {
+      const payload = new FormData();
+
+      Object.entries(formData).forEach(([key, value]) => {
+        if (key === "photos" || key === "videos") {
+          value.forEach((file) => {
+            payload.append(key, file);
+          });
+        } else {
+          payload.append(key, value ?? "");
+        }
+      });
+
+      await createService(payload);
+      toast.success("🎉 Service added successfully!")
+    } catch (error) {
+      console.log("FULL ERROR:", error.response?.data);
+      toast.error("Error in creating service!")
+    }
   };
 
   return (

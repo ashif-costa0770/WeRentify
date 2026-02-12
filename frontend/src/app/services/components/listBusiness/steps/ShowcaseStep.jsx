@@ -79,6 +79,7 @@ export default function ShowcaseStep() {
                 <input
                   id={`photo-${index}`}
                   type="file"
+                  name="photos"
                   accept="image/*"
                   hidden
                   onChange={(e) => addFiles("photos", e.target.files)}
@@ -139,6 +140,7 @@ export default function ShowcaseStep() {
                 <input
                   id={`video-${index}`}
                   type="file"
+                  name="videos"
                   accept="video/*"
                   hidden
                   onChange={(e) => addFiles("videos", e.target.files)}

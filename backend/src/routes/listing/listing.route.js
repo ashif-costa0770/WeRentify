@@ -19,14 +19,16 @@ import {
   validateUpdateListing,
   validateListingId,
 } from "../../middlewares/validation.middleware.js";
+import { protect } from "../../middlewares/auth.middleware.js";
 
 /**
  * @route   POST /api/listings
  * @desc    Create a new listing
- * @access  Public
+ * @access  Private
  */
 router.post(
   "/",
+  protect,
   uploadListingMedia,
   handleMulterError,
   validateCreateListing,
