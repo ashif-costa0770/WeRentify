@@ -11,6 +11,7 @@ import postRoutes from "./routes/community/post.route.js";
 import commentRoutes from "./routes/community/comment.route.js";
 import authRoutes from "./routes/user/auth.route.js";
 import CategoryRoute from "./routes/category.route.js"
+import favoriteRoute from "./routes/favorite.route.js"
 const app = express();
 const PORT = process.env.PORT || 5000;
 
@@ -39,6 +40,8 @@ app.use("/api/posts", commentRoutes);
 app.use("/api/services", serviceRoutes)
 // Category Routes
 app.use("/api/category", CategoryRoute)
+// Add to favorite
+app.use("/api/favorites", favoriteRoute)
 
 // Health check route
 app.get("/api/health", (req, res) => {

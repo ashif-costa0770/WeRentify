@@ -44,6 +44,15 @@ export default function ServicesCategoriesSection({
 
       {/* Categories Grid */}
       <div className="hidden md:grid grid-cols-12 gap-2">
+        {/* 🔥 Add ALL SERVICES manually */}
+        <ServiceCategoryCard
+          name="ALL SERVICES"
+          icon={{ url: "https://res.cloudinary.com/drz08orln/image/upload/v1770956705/category-icons/gblxftbngf3csxyu1gjt.svg" }}
+          active={selectedCategory === "all"}
+          onClick={() => onSelectCategory("all")}
+        />
+
+        {/* Backend categories */}
         {categories.map((cat) => (
           <ServiceCategoryCard
             key={cat._id}

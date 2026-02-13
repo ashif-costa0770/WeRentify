@@ -1,12 +1,9 @@
 "use client";
 
 import { createContext, useContext, useState, useEffect } from "react";
+import { services } from "@/data/servicesData";
+import { items as listingItems } from "@/data/listingsData";
 import { getMe } from "@/services/auth.service";
-import {
-  getFavorites,
-  addFavorite as addFavoriteApi,
-  removeFavorite as removeFavoriteApi,
-} from "@/services/favorite.service.js";
 
 const UserContext = createContext(null);
 
@@ -23,34 +20,28 @@ export function UserProvider({ children }) {
 
   // Fetch user profile on mount or when isLogin changes
   useEffect(() => {
-    const fetchUserAndFavorites = async () => {
+    const fetchUser = async () => {
       try {
         setIsAuthLoading(true);
-
         const res = await getMe();
-
         if (res.data.success) {
           setUser(res.data.data);
           setIsLogin(true);
-
-          // 🔥 Fetch favorites after login
-          const favRes = await getFavorites();
-          setFavorites(favRes.data.data || []);
         }
       } catch (error) {
+        // Silently handle 401 or network errors on initial load
         if (error.response?.status !== 401) {
-          console.error("Failed to fetch user:", error);
+          console.error("Failed to fetch user profile:", error);
         }
         setUser(null);
         setIsLogin(false);
-        setFavorites([]);
       } finally {
         setIsAuthLoading(false);
       }
     };
 
-    fetchUserAndFavorites();
-  }, []);
+    fetchUser();
+  }, [isLogin]);
 
   // Load favorites from localStorage on mount
   useEffect(() => {
@@ -150,28 +141,6 @@ export function UserProvider({ children }) {
     });
   };
 
-  const addFavorite = async (data) => {
-    try {
-      const res = await addFavoriteApi(data);
-
-      // Add new favorite to state
-      setFavorites((prev) => [...prev, res.data.data]);
-    } catch (error) {
-      console.error("Add favorite failed:", error);
-    }
-  };
-
-  const removeFavorite = async (favoriteId) => {
-    try {
-      await removeFavoriteApi(favoriteId);
-
-      // Remove from state
-      setFavorites((prev) => prev.filter((fav) => fav._id !== favoriteId));
-    } catch (error) {
-      console.error("Remove favorite failed:", error);
-    }
-  };
-
   return (
     <UserContext.Provider
       value={{
@@ -182,8 +151,7 @@ export function UserProvider({ children }) {
         isAuthLoading,
         favorites,
         setFavorites,
-        addFavorite,
-        removeFavorite,
+        toggleFavorite,
         showSignUp,
         setShowSignUp,
         showSignIn,

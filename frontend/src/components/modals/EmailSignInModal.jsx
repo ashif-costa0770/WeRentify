@@ -2,6 +2,7 @@
 
 import { loginWithPhone } from "@/services/auth.service";
 import { useState } from "react";
+import { toast } from "sonner";
 
 export default function SignInWithPhoneModal({
   open,
@@ -24,8 +25,13 @@ export default function SignInWithPhoneModal({
       try {
         const res = await loginWithPhone(data);
         console.log(res.data);
+        toast.success("Login successful! Welcome back to WeRentify!");
         setIsLogin(true);
         onClose();
+
+        // !Fetch user favorites
+        // const favRes = await getFavorites();
+        // setFavorites(favRes.data.data); 
       } catch (error) {
         console.log(error);
       }

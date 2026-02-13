@@ -1,6 +1,6 @@
 "use client";
 
-import { X } from "lucide-react";
+import { X, Loader2 } from "lucide-react";
 import { useListBusiness } from "@/context/ListBusinessContext";
 
 import StepIndicator from "../listBusiness/StepIndicator";
@@ -16,67 +16,41 @@ export default function ListBusinessModal() {
     currentStep,
     nextStep,
     prevStep,
-    resetStep,
     formData,
-    setFormData,
+    isSubmitting, // ✅ NEW
     submitBusiness,
   } = useListBusiness();
 
-  // ---------------- VALIDATION ----------------
   const validateStep = () => {
     const {
-      businessName,
-      serviceType,
-      category,
-      yearsInBusiness,
-      description,
-      location,
-      serviceRadius,
-      phone,
-      email,
-      photos,
-      hourlyRate,
-      plan,
+      businessName, serviceType, category, yearsInBusiness, description,
+      location, serviceRadius, phone, email, photos, hourlyRate, plan,
     } = formData;
 
-    // STEP 1
     if (currentStep === 1) {
-      if (
-        !businessName ||
-        !serviceType ||
-        !category ||
-        !yearsInBusiness ||
-        !description
-      ) {
+      if (!businessName || !serviceType || !category || !yearsInBusiness || !description) {
         alert("Please fill all required fields");
         return false;
       }
     }
-
-    // STEP 2
     if (currentStep === 2) {
       if (!location || !serviceRadius || !phone || !email) {
         alert("Please fill all required fields");
         return false;
       }
     }
-
-    // STEP 3
     if (currentStep === 3) {
       if (!photos || photos.length < 3 || !hourlyRate) {
         alert("Please add at least 3 photos and set your hourly rate");
         return false;
       }
     }
-
-    // STEP 4
     if (currentStep === 4) {
       if (!plan) {
         alert("Please choose a plan");
         return false;
       }
     }
-
     return true;
   };
 
@@ -84,36 +58,28 @@ export default function ListBusinessModal() {
 
   const renderStep = () => {
     switch (currentStep) {
-      case 1:
-        return <BusinessInfoStep />;
-      case 2:
-        return <ContactLocationStep />;
-      case 3:
-        return <ShowcaseStep />;
-      case 4:
-        return <PlanSelectionStep />;
-      default:
-        return null;
+      case 1: return <BusinessInfoStep />;
+      case 2: return <ContactLocationStep />;
+      case 3: return <ShowcaseStep />;
+      case 4: return <PlanSelectionStep />;
+      default: return null;
     }
   };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
-      {/* BACKDROP (click disabled) */}
       <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
 
-      {/* MODAL */}
       <div className="relative z-10 w-full max-w-3xl mx-4 rounded-3xl bg-white shadow-xl">
         {/* HEADER */}
         <div className="flex items-center justify-between border-b border-gray-200 px-6 py-2">
-          <h2 className="text-xl font-bold text-transparent bg-clip-text   bg-linear-to-r from-[#5B4FE9] to-[#E95FC8]">
+          <h2 className="text-xl font-bold text-transparent bg-clip-text bg-linear-to-r from-[#5B4FE9] to-[#E95FC8]">
             List Your Business
           </h2>
-
-          {/* FORCE CLOSE */}
           <button
             onClick={closeModal}
-            className="rounded-full cursor-pointer p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-700"
+            disabled={isSubmitting} // ✅ block close while submitting
+            className="rounded-full cursor-pointer p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-700 disabled:opacity-40 disabled:cursor-not-allowed"
           >
             <X size={22} />
           </button>
@@ -131,32 +97,38 @@ export default function ListBusinessModal() {
         <div className="flex items-center justify-between border-t border-gray-200 px-6 py-2">
           <button
             onClick={prevStep}
-            disabled={currentStep === 1}
+            disabled={currentStep === 1 || isSubmitting} // ✅
             className={`rounded-xl cursor-pointer px-6 py-2 text-sm font-medium transition
-              ${
-                currentStep === 1
-                  ? "cursor-not-allowed text-gray-500"
-                  : "text-gray-700 hover:bg-gray-100"
+              ${currentStep === 1 || isSubmitting
+                ? "cursor-not-allowed text-gray-400"
+                : "text-gray-700 hover:bg-gray-100"
               }`}
           >
             Back
           </button>
 
           <button
+            disabled={isSubmitting} // ✅ block while loading
             onClick={() => {
               if (!validateStep()) return;
               if (currentStep === 4) {
-                submitBusiness(); //  alert + payload
-                closeModal();
-                setFormData({}); // optional (recommended)
-                resetStep(); // optional (recommended)
+                submitBusiness(); // context handles close + redirect + reset
               } else {
                 nextStep();
               }
             }}
-            className="rounded-xl cursor-pointer bg-linear-to-r from-[#5B4FE9] to-[#E95FC8] px-8 py-2 text-sm font-semibold text-white hover:opacity-90"
+            className="flex items-center gap-2 rounded-xl cursor-pointer bg-linear-to-r from-[#5B4FE9] to-[#E95FC8] px-8 py-2 text-sm font-semibold text-white hover:opacity-90 disabled:opacity-70 disabled:cursor-not-allowed"
           >
-            {currentStep === 4 ? "Start Subscription" : "Continue"}
+            {isSubmitting ? (
+              <>
+                <Loader2 size={16} className="animate-spin" />
+                Submitting...
+              </>
+            ) : currentStep === 4 ? (
+              "Start Subscription"
+            ) : (
+              "Continue"
+            )}
           </button>
         </div>
       </div>

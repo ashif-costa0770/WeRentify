@@ -5,32 +5,17 @@ import { Star, Heart } from "lucide-react";
 import Image from "next/image";
 
 export default function ServiceCard({ service, onClick }) {
-  const { favorites, addFavorite, removeFavorite } = useUser();
+  const { favorites, toggleFavorite } = useUser();
 
-  // ✅ Check using Mongo _id and productType
-  const existingFavorite = favorites.find(
-    (fav) =>
-      fav.productId?._id === service._id &&
-      fav.productType === "Service"
+  // ✅ Check if this service ID exists in favorites array
+  const isFavorite = favorites.some(
+    (fav) => fav.id === service.id && fav.type === "service",
   );
 
-  const isFavorite = !!existingFavorite;
-
-  const handleFavoriteClick = async (e) => {
+  const handleFavoriteClick = (e) => {
     e.stopPropagation();
-
-    try {
-      if (isFavorite) {
-        await removeFavorite(existingFavorite._id);
-      } else {
-        await addFavorite({
-          productId: service._id,
-          productType: "Service",
-        });
-      }
-    } catch (error) {
-      console.log(error);
-    }
+    // ✅ Pass the FULL service object here with type
+    toggleFavorite(service, "service");
   };
 
   const handleShareClick = (e) => {
@@ -38,7 +23,7 @@ export default function ServiceCard({ service, onClick }) {
     if (navigator.share) {
       navigator.share({
         title: service.name,
-        text: `Check out this ${service.name}!`,
+        text: `Check out this ${service.name} for rent!`,
         url: window.location.href,
       });
     } else {
@@ -63,21 +48,30 @@ export default function ServiceCard({ service, onClick }) {
         <div className="absolute right-3 top-3 flex gap-2">
           <button
             onClick={handleShareClick}
-            className="flex items-center justify-center w-9 h-9 bg-white/95 backdrop-blur-sm rounded-full text-gray-700 hover:bg-white hover:scale-110 transition-all duration-200 shadow-lg"
+            className="flex items-center cursor-pointer justify-center w-9 h-9 bg-white/95 backdrop-blur-sm rounded-full text-gray-700 hover:bg-white hover:scale-110 transition-all duration-200 shadow-lg"
           >
-            Share
+            <svg
+              width="16"
+              height="16"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M4 12v1a3 3 0 0 0 3 3h2a3 3 0 0 0 3-3v-1"></path>
+              <polyline points="8 2 8 8"></polyline>
+              <polyline points="5 5 8 2 11 5"></polyline>
+            </svg>
           </button>
-
           <button
             onClick={handleFavoriteClick}
-            className="flex items-center justify-center w-9 h-9 bg-white/95 backdrop-blur-sm rounded-full hover:bg-white hover:scale-110 transition-all duration-200 shadow-lg"
+            className="flex items-center cursor-pointer justify-center w-9 h-9 bg-white/95 backdrop-blur-sm rounded-full hover:bg-white hover:scale-110 transition-all duration-200 shadow-lg"
           >
             <Heart
               size={16}
               className={
-                isFavorite
-                  ? "fill-rose-500 text-rose-500"
-                  : "text-gray-700"
+                isFavorite ? "fill-rose-500 text-rose-500" : "text-gray-700"
               }
             />
           </button>

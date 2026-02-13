@@ -17,6 +17,7 @@ import { useUser } from "@/context/UserContext";
 import Link from "next/link";
 import PricingModal from "../modals/PricingModal";
 import { logout } from "@/services/auth.service";
+import { toast } from "sonner";
 
 export default function ProfileDropdown({
   user = { name: "Alex Johnson", initial: "AJ", mode: "Renter" },
@@ -41,6 +42,8 @@ export default function ProfileDropdown({
       await logout();
       setIsLogin(false);
       setIsOpen(false);
+      toast.success("Logout successfull")
+
       
     } catch (error) {
       console.log(error);

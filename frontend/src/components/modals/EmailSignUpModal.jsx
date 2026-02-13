@@ -2,6 +2,7 @@
 
 import { loginWithPhone } from "@/services/auth.service";
 import { useState } from "react";
+import { toast } from "sonner";
 
 export default function EmailSignUpModal({
   open,
@@ -39,7 +40,7 @@ export default function EmailSignUpModal({
     };
     try {
       const res = await loginWithPhone(data);
-      console.log(res.data);
+      toast.success("Registration successfull!");
       setIsLogin(true);
       onClose();
     } catch (error) {

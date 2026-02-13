@@ -30,20 +30,21 @@ export default function ServicesCardsWrapper({
 
   // 🔹 Group services by category
   const groupedServices = useMemo(() => {
-    return services.reduce((acc, service) => {
-      const key = service.category;
+  return services.reduce((acc, service) => {
+    const key = service.category; // categoryId
 
-      if (!acc[key]) {
-        acc[key] = {
-          name: categoryMap[key] || key,
-          items: [],
-        };
-      }
+    if (!acc[key]) {
+      acc[key] = {
+        name: service.categoryName || "Other", // ✅ use real name
+        items: [],
+      };
+    }
+    console.log()
 
-      acc[key].items.push(service);
-      return acc;
-    }, {});
-  }, [services]);
+    acc[key].items.push(service);
+    return acc;
+  }, {});
+}, [services]);
 
   // 🔹 Decide which categories to render
   const visibleCategories = useMemo(() => {

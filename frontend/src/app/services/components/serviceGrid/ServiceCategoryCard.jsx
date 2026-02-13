@@ -5,7 +5,7 @@ export default function ServiceCategoryCard({ icon, name, active, onClick }) {
   return (
     <div
       onClick={onClick}
-      className={`h-24 cursor-pointer rounded-xl border flex flex-col items-center justify-center gap-2 px-2 transition-all
+      className={`h-23 cursor-pointer rounded-xl border flex flex-col items-center justify-center gap-2 px-2 transition-all
         ${
           active
             ? "bg-gradient-to-r from-[#5B4FE9] to-[#E95FC8] text-white shadow-md border-transparent"
@@ -13,7 +13,7 @@ export default function ServiceCategoryCard({ icon, name, active, onClick }) {
         }`}
     >
       {/* Icon */}
-      <div className="relative w-10 h-10 flex items-center justify-center">
+      <div className="relative w-8 h-8 flex items-center justify-center">
         {icon?.url ? (
           <Image src={icon.url} alt={name} fill className="object-contain" />
         ) : (
@@ -22,7 +22,7 @@ export default function ServiceCategoryCard({ icon, name, active, onClick }) {
       </div>
 
       {/* Label */}
-      <p className="text-[11px] font-semibold text-center leading-tight">
+      <p className="text-[10px] font-semibold text-center leading-tight">
         {name}
       </p>
     </div>
