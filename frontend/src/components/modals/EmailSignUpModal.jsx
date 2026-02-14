@@ -1,7 +1,13 @@
 "use client";
 
-import { loginWithPhone } from "@/services/auth.service";
-import { useState } from "react";
+import {
+  registerAPI,
+  resendOtpAPI,
+  verifyEmailAPI,
+  verifyOtpAPI,
+} from "@/services/auth.service";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
 export default function EmailSignUpModal({
@@ -10,41 +16,134 @@ export default function EmailSignUpModal({
   onSwitchToSignIn,
   setIsLogin,
 }) {
-  const [phoneNumber, setPhoneNumber] = useState("");
-  const [country, setCountry] = useState("US");
+  const router = useRouter();
+  // 3-step registration flow:
+  // 1) generate OTP by email, 2) verify OTP, 3) set password and create account.
+  const [step, setStep] = useState(1);
+  const [email, setEmail] = useState("");
+  const [otp, setOtp] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [resendSeconds, setResendSeconds] = useState(0);
 
-  const countries = [
-    { code: "US", name: "United States", dialCode: "+1" },
-    { code: "GB", name: "United Kingdom", dialCode: "+44" },
-    { code: "CA", name: "Canada", dialCode: "+1" },
-    { code: "AU", name: "Australia", dialCode: "+61" },
-    { code: "DE", name: "Germany", dialCode: "+49" },
-    { code: "FR", name: "France", dialCode: "+33" },
-    { code: "JP", name: "Japan", dialCode: "+81" },
-    { code: "CN", name: "China", dialCode: "+86" },
-    { code: "IN", name: "India", dialCode: "+91" },
-    { code: "BR", name: "Brazil", dialCode: "+55" },
-  ];
+  const isValidEmail = /\S+@\S+\.\S+/.test(email.trim());
+  const isOtpValid = otp.trim().length >= 6;
+  const isPasswordValid = password.length >= 4;
+  const isConfirmValid = confirmPassword.length >= 4;
+  const passwordsMatch = password === confirmPassword;
 
-  const selectedCountry = countries.find((c) => c.code === country);
+  const resetForm = () => {
+    setStep(1);
+    setEmail("");
+    setOtp("");
+    setPassword("");
+    setConfirmPassword("");
+    setIsLoading(false);
+    setResendSeconds(0);
+  };
 
-  const isValidPhoneNumber =
-    phoneNumber.length >= 10 && phoneNumber.length <= 12;
+  useEffect(() => {
+    if (resendSeconds <= 0) return;
+    const timer = setInterval(() => {
+      setResendSeconds((prev) => (prev > 0 ? prev - 1 : 0));
+    }, 1000);
 
-  const handleContinue = async (e) => {
+    return () => clearInterval(timer);
+  }, [resendSeconds]);
+
+  const handleClose = () => {
+    // Ensure modal always reopens from step 1 with clean inputs.
+    resetForm();
+    onClose();
+  };
+
+  const handleGenerateOtp = async (e) => {
     e.preventDefault();
-    if (!isValidPhoneNumber) return;
-    const data = {
-      mobileNumber: phoneNumber,
-      countryCode: selectedCountry.dialCode,
-    };
+    if (!isValidEmail) {
+      toast.error("Please enter a valid email");
+      return;
+    }
+
     try {
-      const res = await loginWithPhone(data);
-      toast.success("Registration successfull!");
-      setIsLogin(true);
-      onClose();
+      setIsLoading(true);
+      // Step 1 backend call: request OTP for entered email.
+      await verifyEmailAPI(email.trim().toLowerCase());
+      toast.success("OTP generated and sent to your email");
+      setResendSeconds(60);
+      setStep(2);
     } catch (error) {
-      console.log(error);
+      toast.error(error?.response?.data?.message || "Failed to generate OTP");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleVerifyOtp = async (e) => {
+    e.preventDefault();
+    if (!isOtpValid) {
+      toast.error("Please enter a valid OTP");
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+      // Step 2 backend call: verify user-entered OTP.
+      await verifyOtpAPI(email.trim().toLowerCase(), otp.trim());
+      toast.success("Email verified successfully");
+      setStep(3);
+    } catch (error) {
+      toast.error(error?.response?.data?.message || "OTP verification failed");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleResendOtp = async () => {
+    try {
+      setIsLoading(true);
+      // Supports OTP resend without leaving step 2.
+      await resendOtpAPI(email.trim().toLowerCase());
+      toast.success("OTP resent successfully");
+      setResendSeconds(60);
+    } catch (error) {
+      toast.error(error?.response?.data?.message || "Failed to resend OTP");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleSignUp = async (e) => {
+    e.preventDefault();
+
+    if (!isPasswordValid || !isConfirmValid) {
+      toast.error("Password must be at least 4 characters");
+      return;
+    }
+    if (!passwordsMatch) {
+      toast.error("Passwords do not match");
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+      // Step 3 backend call: create user account with verified email + password.
+      await registerAPI(
+        email.trim().toLowerCase(),
+        password,
+        confirmPassword,
+      );
+      toast.success("Account created successfully");
+      // Signup is auto-login on your backend/frontend flow.
+      setIsLogin(true);
+      resetForm();
+      // Close nested signup modals and go to home page.
+      onClose();
+      router.push("/");
+    } catch (error) {
+      toast.error(error?.response?.data?.message || "Signup failed");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -53,11 +152,9 @@ export default function EmailSignUpModal({
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[10001] p-4">
       <div className="relative max-w-md w-full max-h-[90vh] bg-white rounded-3xl shadow-2xl animate-slideUp flex flex-col">
-        {/* Scrollable Content */}
         <div className="overflow-y-auto p-8 custom-scrollbar">
-          {/* Close Button */}
           <button
-            onClick={onClose}
+            onClick={handleClose}
             className="absolute cursor-pointer top-6 right-6 text-gray-400 hover:text-gray-600 transition-colors z-10"
           >
             <svg
@@ -73,188 +170,178 @@ export default function EmailSignUpModal({
             </svg>
           </button>
 
-          {/* Title */}
-          <h1 className="text-3xl font-black bg-gradient-to-r from-indigo-600 to-pink-500 bg-clip-text text-transparent mb-2">
-            Welcome to WeRentify
+          <h1 className="text-2xl font-black bg-gradient-to-r from-indigo-600 to-pink-500 bg-clip-text text-transparent">
+            Create your account
           </h1>
+          <p className="text-gray-600 mb-6">Complete all 3 steps to sign up</p>
 
-          <p className="text-gray-600 mb-8">Log in or sign up to continue</p>
-
-          {/* Phone Number Form */}
-          <form onSubmit={handleContinue} className="contents">
-            {/* Country Selector */}
-            <div className="mb-4">
-              <label className="block text-sm font-semibold text-gray-900 mb-2">
-                Country/Region
-              </label>
-              <div className="relative">
-                <select
-                  value={country}
-                  name="countryCode"
-                  onChange={(e) => setCountry(e.target.value)}
-                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl font-medium text-gray-900 bg-white appearance-none cursor-pointer focus:outline-none focus:border-indigo-500 transition-colors"
+          <div className="grid grid-cols-3 gap-2 mb-6">
+            {[1, 2, 3].map((item) => (
+              <div key={item} className="flex flex-col items-center gap-2">
+                <div
+                  className={`w-8 h-8 rounded-full text-sm font-bold flex items-center justify-center ${
+                    step >= item
+                      ? "bg-indigo-600 text-white"
+                      : "bg-gray-200 text-gray-600"
+                  }`}
                 >
-                  {countries.map((c) => (
-                    <option key={c.code} value={c.code}>
-                      {c.name} ({c.dialCode})
-                    </option>
-                  ))}
-                </select>
-                <svg
-                  className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500 pointer-events-none"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                >
-                  <path d="M6 9l6 6 6-6" />
-                </svg>
+                  {item}
+                </div>
+                <p className="text-[11px] text-gray-500">
+                  {item === 1
+                    ? "Email"
+                    : item === 2
+                      ? "OTP Verify"
+                      : "Set Password"}
+                </p>
               </div>
-            </div>
-
-            {/* Phone Number Input */}
-            <div className="mb-4">
-              <label className="block text-sm font-semibold text-gray-900 mb-2">
-                Phone number
-              </label>
-              <input
-                type="tel"
-                value={phoneNumber}
-                name="mobileNumber"
-                minLength={10}
-                maxLength={12}
-                pattern="[0-9]{10,15}"
-                required
-                onChange={(e) => {
-                  const val = e.target.value.replace(/\D/g, "");
-                  setPhoneNumber(val);
-                }}
-                placeholder="Phone number"
-                className="peer w-full px-4 py-3 border-2 border-gray-200 rounded-xl font-medium text-gray-900 placeholder-gray-400 focus:outline-none focus:border-indigo-500 valid:border-gray-200 invalid:border-pink-500 transition-colors"
-              />
-              <p className="mt-1 text-xs text-pink-500 invisible peer-invalid:visible">
-                Please enter a valid phone number (10-12 digits).
-              </p>
-            </div>
-
-            {/* Disclaimer */}
-            <p className="text-xs text-gray-500 mb-4">
-              We will call or text you to confirm your number. Standard message
-              and data rates apply.
-            </p>
-
-            {/* Continue Button */}
-            <button
-              type="submit"
-              disabled={!isValidPhoneNumber}
-              className={`w-full cursor-pointer py-3 px-4 rounded-xl font-bold text-white transition-all shadow-lg shadow-indigo-500/25 ${
-                isValidPhoneNumber
-                  ? "bg-linear-to-r from-indigo-600 to-pink-500 hover:opacity-90"
-                  : "bg-gray-300 cursor-not-allowed shadow-none"
-              }`}
-            >
-              Continue
-            </button>
-          </form>
-
-          {/* Divider */}
-          <div className="relative my-6">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-200"></div>
-            </div>
-            <div className="relative flex justify-center text-sm">
-              <span className="px-2 bg-white text-gray-500">or</span>
-            </div>
+            ))}
           </div>
 
-          {/* Social Buttons */}
-          <div className="space-y-3">
-            {/* Google */}
-            <button
-              // onClick={() => {
-              //   setIsLogin(true);
-              //   onClose();
-              // }}
-              className="w-full cursor-pointer flex items-center justify-center gap-3 px-4 py-3 border-2 border-gray-300 rounded-xl font-semibold text-gray-700 hover:bg-gray-50 transition-colors"
-            >
-              <svg width="20" height="20" viewBox="0 0 24 24">
-                <path
-                  fill="#4285F4"
-                  d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+          {step === 1 && (
+            <form onSubmit={handleGenerateOtp} className="space-y-4">
+              <div>
+                <label className="block text-sm font-semibold text-gray-900 mb-2">
+                  Email
+                </label>
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="Enter your email"
+                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl font-medium text-gray-900 placeholder-gray-400 focus:outline-none focus:border-indigo-500 transition-colors"
                 />
-                <path
-                  fill="#34A853"
-                  d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.99.66-2.26 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-                />
-                <path
-                  fill="#FBBC05"
-                  d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.1s.13-1.44.35-2.1V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.55 1.18 5.07l2.85-2.07.81-.91z"
-                />
-                <path
-                  fill="#EA4335"
-                  d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.5 2.09 14.91 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
-                />
-              </svg>
-              Continue with Google
-            </button>
+              </div>
 
-            {/* Apple */}
-            <button
-              // onClick={() => {
-              //   setIsLogin(true);
-              //   onClose();
-              // }}
-              className="w-full cursor-pointer flex items-center justify-center gap-3 px-4 py-3 border-2 border-gray-300 rounded-xl font-semibold text-gray-700 hover:bg-gray-50 transition-colors"
-            >
-              <svg
-                width="20"
-                height="20"
-                viewBox="0 0 24 24"
-                fill="currentColor"
+              <button
+                type="submit"
+                disabled={!isValidEmail || isLoading}
+                className={`w-full cursor-pointer py-3 px-4 rounded-xl font-bold text-white transition-all ${
+                  !isValidEmail || isLoading
+                    ? "bg-gray-300 cursor-not-allowed"
+                    : "bg-linear-to-r from-indigo-600 to-pink-500 hover:opacity-90"
+                }`}
               >
-                <path d="M17.05 20.28c-.98.95-2.05.88-3.08.35-1.09-.56-2.09-.48-3.2.04-1.44.71-2.28.44-3.21-.35C3.44 16.3 4.38 9.57 9.4 9.25c1.27.07 2.22.74 2.98.8 1.14-.23 2.24-.88 3.46-.79 1.47.12 2.58.7 3.29 1.76-2.9 1.77-2.38 5.98.22 7.13-.57 1.5-1.31 2.99-2.3 4.13zm-5.85-15.1c.07-2.04 1.76-3.79 3.78-3.94.29 2.32-1.93 4.48-3.78 3.94z" />
-              </svg>
-              Continue with Apple
-            </button>
+                {isLoading ? "Generating OTP..." : "Generate OTP"}
+              </button>
+            </form>
+          )}
 
-            {/* Email */}
-            <button
-              // onClick={() => {
-              //   setIsLogin(true);
-              //   onClose();
-              // }}
-              className="w-full cursor-pointer flex items-center justify-center gap-3 px-4 py-3 border-2 border-gray-300 rounded-xl font-semibold text-gray-700 hover:bg-gray-50 transition-colors"
-            >
-              <svg
-                width="20"
-                height="20"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
+          {step === 2 && (
+            <form onSubmit={handleVerifyOtp} className="space-y-4">
+              <div className="rounded-xl bg-indigo-50 border border-indigo-100 px-3 py-2 text-xs text-indigo-700">
+                OTP sent to <span className="font-semibold">{email}</span>
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-gray-900 mb-2">
+                  Enter OTP
+                </label>
+                <input
+                  type="text"
+                  value={otp}
+                  onChange={(e) =>
+                    setOtp(e.target.value.replace(/\s/g, "").slice(0, 6))
+                  }
+                  placeholder="Enter OTP"
+                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl font-medium text-gray-900 placeholder-gray-400 focus:outline-none focus:border-indigo-500 transition-colors tracking-[0.2em]"
+                />
+              </div>
+
+              <button
+                type="submit"
+                disabled={!isOtpValid || isLoading}
+                className={`w-full cursor-pointer py-3 px-4 rounded-xl font-bold text-white transition-all ${
+                  !isOtpValid || isLoading
+                    ? "bg-gray-300 cursor-not-allowed"
+                    : "bg-linear-to-r from-indigo-600 to-pink-500 hover:opacity-90"
+                }`}
               >
-                <rect x="2" y="4" width="20" height="16" rx="2" />
-                <path d="m2 7 10 6 10-6" />
-              </svg>
-              Continue with email
-            </button>
+                {isLoading ? "Verifying..." : "Verify Email"}
+              </button>
 
-            {/* Facebook */}
-            <button
-              // onClick={() => {
-              //   setIsLogin(true);
-              //   onClose();
-              // }}
-              className="w-full cursor-pointer flex items-center justify-center gap-3 px-4 py-3 border-2 border-gray-300 rounded-xl font-semibold text-gray-700 hover:bg-gray-50 transition-colors"
-            >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="#1877F2">
-                <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
-              </svg>
-              Continue with Facebook
-            </button>
-          </div>
+              <div className="flex items-center justify-between">
+                <button
+                  type="button"
+                  onClick={() => setStep(1)}
+                  className="text-sm cursor-pointer text-gray-500 hover:text-gray-700"
+                >
+                  Back
+                </button>
+                <button
+                  type="button"
+                  onClick={handleResendOtp}
+                  disabled={isLoading || resendSeconds > 0}
+                  className="text-sm cursor-pointer text-indigo-600 font-semibold hover:underline disabled:opacity-50"
+                >
+                  {resendSeconds > 0 ? `Resend OTP in ${resendSeconds}s` : "Resend OTP"}
+                </button>
+              </div>
+            </form>
+          )}
 
-          {/* Footer */}
+          {step === 3 && (
+            <form onSubmit={handleSignUp} className="space-y-4">
+              <div>
+                <label className="block text-sm font-semibold text-gray-900 mb-2">
+                  Password
+                </label>
+                <input
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Set password"
+                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl font-medium text-gray-900 placeholder-gray-400 focus:outline-none focus:border-indigo-500 transition-colors"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-gray-900 mb-2">
+                  Confirm Password
+                </label>
+                <input
+                  type="password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  placeholder="Confirm password"
+                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl font-medium text-gray-900 placeholder-gray-400 focus:outline-none focus:border-indigo-500 transition-colors"
+                />
+              </div>
+
+              {!passwordsMatch && confirmPassword.length > 0 && (
+                <p className="text-xs text-rose-500">Passwords do not match</p>
+              )}
+
+              <button
+                type="submit"
+                disabled={
+                  !isPasswordValid ||
+                  !isConfirmValid ||
+                  !passwordsMatch ||
+                  isLoading
+                }
+                className={`w-full cursor-pointer py-3 px-4 rounded-xl font-bold text-white transition-all ${
+                  !isPasswordValid ||
+                  !isConfirmValid ||
+                  !passwordsMatch ||
+                  isLoading
+                    ? "bg-gray-300 cursor-not-allowed"
+                    : "bg-linear-to-r from-indigo-600 to-pink-500 hover:opacity-90"
+                }`}
+              >
+                {isLoading ? "Signing Up..." : "Sign Up"}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setStep(2)}
+                className="w-full text-sm cursor-pointer text-gray-500 hover:text-gray-700"
+              >
+                Back
+              </button>
+            </form>
+          )}
+
           <p className="text-sm text-gray-600 mt-6 text-center pb-2">
             Already have an account?{" "}
             <button
@@ -266,25 +353,6 @@ export default function EmailSignUpModal({
           </p>
         </div>
       </div>
-
-      {/* Custom Scrollbar Styles */}
-      <style jsx>{`
-        .custom-scrollbar::-webkit-scrollbar {
-          width: 8px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-track {
-          background: transparent;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-          background-color: rgba(156, 163, 175, 0.5);
-          border-radius: 20px;
-          border: 2px solid transparent;
-          background-clip: content-box;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-          background-color: rgba(156, 163, 175, 0.8);
-        }
-      `}</style>
     </div>
   );
 }

@@ -128,6 +128,10 @@ export default function SignInModal({ open, onClose, onSwitchToSignUp, setIsLogi
         open={showEmailModal} 
         onClose={handleEmailModalClose}
         setIsLogin={setIsLogin}
+        onSwitchToSignUp={() => {
+          setShowEmailModal(false);
+          onSwitchToSignUp();
+        }}
       />
     </>
   );

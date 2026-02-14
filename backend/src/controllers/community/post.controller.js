@@ -124,13 +124,16 @@ export const updatePost = async (req, res) => {
 //! Delete Post
 export const deletePost = async (req, res) => {
   try {
+
+    if (post.author.toString() !== req.user._id.toString()) {
+      return errorResponse(res, 403, "You are not authorized to delete this post");
+    } 
+    
     const post = await Post.findByIdAndDelete(req.params.id);
     if (!post) {
       return errorResponse(res, 404, "No post found");
     }
-    if (post.author.toString() !== req.user._id.toString()) {
-      return errorResponse(res, 403, "You are not authorized to delete this post");
-    }
+    
     return successResponse(res, 200, "Post deleted successfully", post);
   } catch (error) {
     console.log("Error in deleting post", error);

@@ -52,6 +52,20 @@ export function UserProvider({ children }) {
     fetchUserAndFavorites();
   }, []);
 
+  useEffect(() => {
+    const refreshFavoritesAfterLogin = async () => {
+      if (!isLogin) return;
+      try {
+        const favRes = await getFavorites();
+        setFavorites(favRes.data.data || []);
+      } catch (error) {
+        console.error("Failed to refresh favorites after login:", error);
+      }
+    };
+
+    refreshFavoritesAfterLogin();
+  }, [isLogin]);
+
   // Load favorites from localStorage on mount
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -152,10 +166,11 @@ export function UserProvider({ children }) {
 
   const addFavorite = async (data) => {
     try {
-      const res = await addFavoriteApi(data);
+      await addFavoriteApi(data);
 
-      // Add new favorite to state
-      setFavorites((prev) => [...prev, res.data.data]);
+      // Re-fetch to always keep state in populated backend shape.
+      const favRes = await getFavorites();
+      setFavorites(favRes.data.data || []);
     } catch (error) {
       console.error("Add favorite failed:", error);
     }

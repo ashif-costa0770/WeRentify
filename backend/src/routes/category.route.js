@@ -12,7 +12,7 @@ import {
 router.post("/",protect,uploadCategoryIcon, handleMulterError, validate(createCategorySchema), createCategory);
 router.get("/", getAllCategory);
 router.get("/:id", getSingleCategory);
-router.put("/:id", protect,uploadCategoryIcon, handleMulterError,validate(createCategorySchema), updateCategory);
+router.put("/:id", protect,uploadCategoryIcon, handleMulterError,validate(updateCategorySchema), updateCategory);
 router.delete("/:id", protect,uploadCategoryIcon, handleMulterError, deleteCategory);
 
 export default router;

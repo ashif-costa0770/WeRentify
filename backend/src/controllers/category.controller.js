@@ -10,7 +10,7 @@ export const createCategory = async (req, res) => {
     
 
     // 🔎 Check duplicate
-    const existingCategory = await Category.findOne({ name: name.trim() });
+    const existingCategory = await Category.findOne({ name: name.trim(), type });
     if (existingCategory) {
       return errorResponse(
         res,

@@ -3,21 +3,26 @@
 import { useUser } from "@/context/UserContext";
 import Link from "next/link";
 import Image from "next/image";
-import { Heart, Trash2, ArrowRight } from "lucide-react";
+import { Trash2, ArrowRight } from "lucide-react";
 
 export default function FavoritesPage() {
   const { favorites, removeFavorite } = useUser();
 
-  // Separate services and listings using productType
-  const favoriteServices = favorites.filter(
+  // Keep only favorites whose referenced product still exists.
+  const validFavorites = (favorites || []).filter((fav) => {
+    return fav && fav.productId && typeof fav.productId === "object";
+  });
+
+  // Separate services and listings using productType.
+  const favoriteServices = validFavorites.filter(
     (fav) => fav.productType === "Service"
   );
 
-  const favoriteListings = favorites.filter(
+  const favoriteListings = validFavorites.filter(
     (fav) => fav.productType === "Listing"
   );
 
-  if (!favorites || favorites.length === 0) {
+  if (!validFavorites.length) {
     return (
       <div className="bg-gray-50 flex items-center justify-center py-18 px-4">
         <div className="bg-white rounded-3xl shadow-xl p-12 text-center max-w-md w-full">
@@ -52,19 +57,28 @@ export default function FavoritesPage() {
             <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3">
               {favoriteServices.map((fav) => {
                 const service = fav.productId;
+                const serviceImage = service?.photos?.[0]?.url || service?.imageUrl;
+                const serviceName =
+                  service?.businessName || service?.serviceType || service?.name;
 
                 return (
                   <div
                     key={fav._id}
                     className="bg-white rounded-2xl shadow-sm relative group overflow-hidden"
                   >
-                    <div className="relative aspect-square">
-                      <Image
-                        src={service.imageUrl}
-                        alt={service.name}
-                        fill
-                        className="object-cover"
-                      />
+                    <div className="relative aspect-square bg-gray-200">
+                      {serviceImage ? (
+                        <Image
+                          src={serviceImage}
+                          alt={serviceName || "Service"}
+                          fill
+                          className="object-cover"
+                        />
+                      ) : (
+                        <div className="flex items-center justify-center h-full text-gray-400">
+                          No image
+                        </div>
+                      )}
 
                       <button
                         onClick={() => removeFavorite(fav._id)}
@@ -76,11 +90,11 @@ export default function FavoritesPage() {
 
                     <div className="p-2">
                       <h3 className="font-bold text-xs line-clamp-1">
-                        {service.name}
+                        {serviceName || "Unnamed Service"}
                       </h3>
 
                       <p className="text-indigo-600 font-bold text-sm mt-1">
-                        ${service.hourlyRate}/hr
+                        ${service?.hourlyRate || 0}/hr
                       </p>
                     </div>
                   </div>
@@ -132,11 +146,11 @@ export default function FavoritesPage() {
 
                     <div className="p-2">
                       <h3 className="font-bold text-xs line-clamp-1">
-                        {listing.itemName || listing.name}
+                        {listing.itemName || listing.name || "Unnamed Listing"}
                       </h3>
 
                       <p className="text-indigo-600 font-bold text-sm mt-1">
-                        ${listing.dailyRate || listing.hourlyRate}/day
+                        ${listing.dailyRate || listing.hourlyRate || 0}/day
                       </p>
                     </div>
                   </div>

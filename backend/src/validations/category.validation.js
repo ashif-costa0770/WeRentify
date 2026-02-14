@@ -1,4 +1,4 @@
-// validations/category.validation.js
+
 import { z } from "zod";
 
 export const createCategorySchema = z.object({

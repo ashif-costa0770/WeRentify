@@ -7,7 +7,7 @@ import Step2Details from "./steps/Step2Details";
 import Step3Pricing from "./steps/Step3Pricing";
 import Step4Availability from "./steps/Step4Availability";
 import Step5Stripe from "./steps/Step5Stripe";
-import { createListing } from "@/utils/api";
+import { createListing } from "@/services/item.service";
 
 export default function ListItemModal({ isOpen, onClose, onListingCreated }) {
   const [currentStep, setCurrentStep] = useState(1);

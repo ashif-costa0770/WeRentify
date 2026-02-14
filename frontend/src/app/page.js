@@ -8,7 +8,7 @@ import FiltersSlicer from "@/components/modals/FiltersSlicer";
 import ProductModal from "@/components/modals/ProductModal";
 import MessageSlider from "@/components/modals/MessageSlider";
 import OwnerProfileModal from "@/components/modals/OwnerProfileModal";
-import { getListings } from "@/utils/api";
+import { getListings } from "@/services/item.service";
 
 export default function ListingPage() {
   /* ---------------- STATE: LISTINGS & FETCHING ---------------- */

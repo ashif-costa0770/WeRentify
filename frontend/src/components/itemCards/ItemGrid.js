@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import ListingHeader from "./ListingHeader";
 import ItemCard from "./ItemCard";
 import { items as allItems } from "@/data/listingsData";
-import { getListings } from "@/utils/api";
+import { getListings } from "@/services/item.service";
 
 export default function ItemGrid({
   items = undefined,

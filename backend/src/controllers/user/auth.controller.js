@@ -1,65 +1,177 @@
 import User from "../../models/users/user.model.js";
+import OTP from "../../models/users/otp.model.js";
 import { generateToken } from "../../utils/token.js";
+import { generateOtp } from "../../utils/opt.js";
 import { successResponse, errorResponse } from "../../utils/response.js";
+import { sendOtpEmail } from "../../utils/mailer.js";
+import argon2 from "argon2";
+import jwt from "jsonwebtoken";
 
+const RESEND_COOLDOWN_SECONDS = 60;
 
-export const loginWithPhone = async (req, res) => {
-  const { mobileNumber, countryCode } = req.body;
-
-  if (!mobileNumber || !countryCode) {
-    return errorResponse(
-      res,
-      400,
-      "Mobile number and country code are required",
-    );
-  }
-
+/* STEP 1 — Verify Email / Send OTP */
+export const verifyEmail = async (req, res) => {
   try {
-    // 1. Check if user exists
-    let user = await User.findOne({ mobileNumber });
+    const { email } = req.body;
 
-    let isNewUser = false;
+    const otp = generateOtp();
+    const expiresAt = new Date(Date.now() + 2 * 60 * 1000); //valid for 2 min
 
-    if (!user) {
-      // 2. Register new user if not exists
-      isNewUser = true;
-      user = await User.create({
-        mobileNumber,
-        countryCode,
-        // Default values from schema will apply (role: user, mode: renter, etc.)
-      });
-    }
+    await OTP.deleteMany({ email }); //delete old otps
 
-    // 3. Generate Token
-    const token = generateToken(user._id);
+    await OTP.create({ email, otp, expiresAt });
 
-    res.cookie("token", token, { httpOnly: true});
-
-    // 5. Return Response
-    return successResponse(
-      res,
-      200,
-      isNewUser ? "User registered successfully" : "Login successful",
-      {
-        _id: user._id,
-        name: user.name,
-        email: user.email,
-        mobileNumber: user.mobileNumber,
-        countryCode: user.countryCode,
-        role: user.role,
-        mode: user.mode,
-        avatar: user.avatar,
-        isVerified: user.isVerified,
-        isNewUser,
-        token
-      },
-    );
+    await sendOtpEmail(email, otp);
+    return successResponse(res, 200, "OTP sent successfully", otp);
   } catch (error) {
-    console.error("Login Error:", error);
-    return errorResponse(res, 500, "Server error during login");
+    console.error("email verification faild Error:", error.message);
+    return errorResponse(res, 400, "Invalid data");
   }
 };
 
+//!step 2
+export const verifyOtp = async (req, res) => {
+  try {
+    const { email, otp } = req.body;
+
+    const record = await OTP.findOne({ email, otp });
+
+    if (!record) return errorResponse(res, 400, "Invalid OTP");
+
+    if (record.expiresAt < new Date())
+      return errorResponse(res, 400, "OTP expired");
+
+    record.isVerified = true;
+    await record.save();
+    //  await OTP.deleteMany({ email });
+
+    return successResponse(res, 200, "OTP verified successfully");
+  } catch (err) {
+    return errorResponse(
+      res,
+      400,
+      "Invalid data, Opt varification failed",
+      err.message,
+    );
+  }
+};
+
+//! Otp resend with cooldown
+export const resendOtp = async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    const existingRecord = await OTP.findOne({ email });
+
+    if (!existingRecord)
+      return res.status(400).json({ message: "Request OTP first" });
+
+    const now = Date.now();
+    const lastSent = new Date(existingRecord.lastSentAt).getTime();
+    const diffSeconds = Math.floor((now - lastSent) / 1000);
+
+    if (diffSeconds < RESEND_COOLDOWN_SECONDS) {
+      return errorResponse(res, 429, "Please wait before resending OTP", {
+        retryAfter: RESEND_COOLDOWN_SECONDS - diffSeconds,
+      });
+    }
+
+    const newOtp = generateOtp();
+    const newExpiry = new Date(Date.now() + 2 * 60 * 1000);
+
+    existingRecord.otp = newOtp;
+    existingRecord.expiresAt = newExpiry;
+    existingRecord.lastSentAt = new Date();
+    existingRecord.isVerified = false;
+
+    await existingRecord.save();
+
+    await sendOtpEmail(email, newOtp);
+    return successResponse(res, 200, "OTP resent successfully");
+  } catch (err) {
+    return errorResponse(
+      res,
+      400,
+      "Invalid data, resend otp faild",
+      err.message,
+    );
+  }
+};
+
+//! Step 3
+export const createUser = async (req, res) => {
+  try {
+    const { email, password, confirmPassword } = req.body;
+
+    if (password !== confirmPassword)
+      return errorResponse(res, 400, "Passwords do not match");
+
+    const existingUser = await User.findOne({ email });
+
+    if (existingUser) return errorResponse(res, 400, "User already exists");
+
+    const otpRecord = await OTP.findOne({ email });
+
+    if (!otpRecord || !otpRecord.isVerified)
+      return errorResponse(res, 400, "Email not verified");
+
+    const hashedPassword = await argon2.hash(password);
+
+    const user = await User.create({
+      email,
+      password: hashedPassword,
+      isVerified: true,
+    });
+
+    // ✅ AUTO LOGIN LOGIC
+    const token = generateToken(user._id);
+    res.cookie("token", token, {httpOnly: true});
+
+    await OTP.deleteMany({ email });
+    return successResponse(res, 200, "Account created successfully", {
+      _id: user._id,
+      email: user.email,
+      token,
+    });
+  } catch (err) {
+    return errorResponse(
+      res,
+      400,
+      "Invalid data, Account creation failed",
+      err.message,
+    );
+  }
+};
+
+/!* LOGIN ENDPOINT */;
+export const login = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    const user = await User.findOne({ email });
+
+    if (!user)
+      return errorResponse(res, 400, "Invalid credentials, user not found");
+
+    if (!user.isVerified)
+      return errorResponse(res, 403, "Account not verified");
+
+    const isMatch = await argon2.verify(user.password, password);
+
+    if (!isMatch) return errorResponse(res, 400, "Invalid credentials");
+
+    const token = generateToken(user._id);
+    res.cookie("token", token, { httpOnly: true });
+
+    return successResponse(res, 200, "Login successful", {
+      _id: user._id,
+      email: user.email,
+      token,
+    });
+  } catch (err) {
+    return errorResponse(res, 400, "Login Failed", err.message);
+  }
+};
 
 export const getMe = async (req, res) => {
   try {
@@ -76,8 +188,8 @@ export const getMe = async (req, res) => {
   }
 };
 
-
 export const logout = async (req, res) => {
   res.clearCookie("token");
+  // console.log(req.user);
   return successResponse(res, 200, "Logged out successfully");
 };

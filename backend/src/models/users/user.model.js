@@ -3,20 +3,18 @@ import mongoose from "mongoose";
 const userSchema = new mongoose.Schema(
   {
     // 1. Core Authentication (Mobile First)
-    mobileNumber: {
+    email: {
       type: String,
-      required: [true, "Mobile number is required"],
-      trim: true,
       unique: true,
-      index: true,
-    },
-    countryCode: {
-      type: String,
-      required: [true, "Country code is required"],
+      required: true,
+      lowercase: true,
       trim: true,
     },
-
-    // 2. Verification (Placeholder for now)
+    password: {
+      type: String,
+      required: true,
+      minlength: 4,
+    },
     isVerified: {
       type: Boolean,
       default: false,
@@ -27,13 +25,6 @@ const userSchema = new mongoose.Schema(
       type: String,
       trim: true,
       default: "User",
-    },
-    email: {
-      type: String,
-      unique: true,
-      sparse: true, // Optional + Unique
-      lowercase: true,
-      trim: true,
     },
     avatar: {
       public_id: String,
@@ -95,9 +86,5 @@ const userSchema = new mongoose.Schema(
   },
 );
 
-// Compound index for uniqueness if needed, though mobileNumber is unique
-userSchema.index({ mobileNumber: 1 });
-
 const User = mongoose.model("User", userSchema);
-
 export default User;
