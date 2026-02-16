@@ -9,7 +9,6 @@ export default function CommunityLayout({ children }) {
           <Navbar />
         </Suspense>
       </div>
-
       {children}
     </main>
   );

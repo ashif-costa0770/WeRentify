@@ -4,7 +4,7 @@ import Logo from "@/components/navbar/Logo";
 import PackageIcon from "@/components/icons/PackageIcon";
 import HomeIcon from "@/components/icons/HomeIcon";
 import UsersIcon from "@/components/icons/UsersIcon";
-import { useEffect, useRef, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import SignUpModal from "@/components/modals/SignUpModal";
 import SignInModal from "@/components/modals/SignInModal";
@@ -15,22 +15,11 @@ import ProfileDropdown from "./ProfileDropdown";
 
 import { Globe } from "lucide-react";
 
-export default function Navbar() {
-  const [showLang, setShowLang] = useState(false);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+// Separated into its own component because useSearchParams() requires a Suspense boundary
+function NavbarSearchParamsHandler() {
   const searchParams = useSearchParams();
   const lastHandledAuthRef = useRef("");
-  const {
-    isLogin,
-    setIsLogin,
-    showSignUp,
-    setShowSignUp,
-    showSignIn,
-    setShowSignIn,
-    showMessages,
-    setShowMessages,
-    selectedConversation,
-  } = useUser();
+  const { isLogin, setShowSignIn } = useUser();
 
   useEffect(() => {
     const authType = searchParams.get("auth");
@@ -43,6 +32,24 @@ export default function Navbar() {
     }
   }, [isLogin, searchParams, setShowSignIn]);
 
+  return null;
+}
+
+export default function Navbar() {
+  const [showLang, setShowLang] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const {
+    isLogin,
+    setIsLogin,
+    showSignUp,
+    setShowSignUp,
+    showSignIn,
+    setShowSignIn,
+    showMessages,
+    setShowMessages,
+    selectedConversation,
+  } = useUser();
+
   //mock data
   const user = {
     name: "Alex Johnson",
@@ -52,6 +59,11 @@ export default function Navbar() {
 
   return (
     <header>
+      {/* Handles ?auth=signin query param — must be in Suspense for Next.js static builds */}
+      <Suspense fallback={null}>
+        <NavbarSearchParamsHandler />
+      </Suspense>
+
       <div className="max-w-7xl mx-auto px-4 pb-2">
         {/* Desktop & Tablet Layout */}
         <div className="flex items-center justify-between">
