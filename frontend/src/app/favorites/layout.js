@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import Navbar from "@/components/navbar/Navbar";
 
 function FavoriteLayout({ children }) {
@@ -5,7 +6,9 @@ function FavoriteLayout({ children }) {
     <>
       <main className="relative">
         <div className="sticky top-0 z-50 bg-gray-100 pb-4 shadow-lg">
-          <Navbar />
+          <Suspense fallback={null}>
+            <Navbar />
+          </Suspense>
         </div>
         {children}
       </main>
