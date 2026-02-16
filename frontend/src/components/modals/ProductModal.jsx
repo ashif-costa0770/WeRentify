@@ -2,6 +2,7 @@
 import Image from "next/image";
 import { useUser } from "@/context/UserContext";
 import DOMPurify from "dompurify";
+import { toast } from "sonner";
 
 import {
   X,
@@ -25,13 +26,67 @@ export default function ProductModal({
   setShowMessages = () => {},
   setSelectedConversation = () => {},
 }) {
-  const { favorites, toggleFavorite } = useUser();
+  const { favorites, addFavorite, removeFavorite, isLogin, setShowSignIn } =
+    useUser();
 
   if (!selectedItem) return null;
 
-  const isFavorite = favorites.some(
-    (fav) => fav.id === selectedItem.id && fav.type === "item",
+  const ownerName =
+    typeof selectedItem.owner === "object"
+      ? selectedItem.owner?.name || "Unknown Owner"
+      : selectedItem.owner || "Unknown Owner";
+  const ownerId =
+    (typeof selectedItem.owner === "object" ? selectedItem.owner?._id : null) ||
+    selectedItem.ownerId ||
+    selectedItem._id;
+  const ownerInitial = ownerName.charAt(0).toUpperCase();
+
+  const selectedCategoryId =
+    typeof selectedItem.category === "object"
+      ? selectedItem.category?._id
+      : selectedItem.category;
+
+  const selectedItemId = selectedItem._id || selectedItem.id;
+
+  const existingFavorite = favorites.find(
+    (fav) => {
+      const favoriteProductId =
+        typeof fav.productId === "string"
+          ? fav.productId
+          : fav.productId?._id || fav.productId?.id;
+
+      return (
+        String(favoriteProductId) === String(selectedItemId) &&
+        fav.productType === "Listing"
+      );
+    },
   );
+
+  const isFavorite = !!existingFavorite;
+
+  const handleFavoriteToggle = async (e) => {
+    e?.stopPropagation?.();
+
+    if (!isLogin) {
+      setShowSignIn(true);
+      return;
+    }
+
+    try {
+      if (isFavorite) {
+        await removeFavorite(existingFavorite._id);
+        toast.success("Removed from favorites");
+      } else {
+        await addFavorite({
+          productId: selectedItemId,
+          productType: "Listing",
+        });
+        toast.success("Added to favorites");
+      }
+    } catch (error) {
+      toast.error(error?.response?.data?.message || "Favorite action failed");
+    }
+  };
 
   const handleShareClick = (e) => {
     if (navigator.share) {
@@ -68,7 +123,7 @@ export default function ProductModal({
                     {selectedItem.photos.map((photo, idx) => (
                       <div
                         key={idx}
-                        className="flex-shrink-0 w-40 h-40 aspect-square rounded-xl overflow-hidden cursor-pointer hover:scale-105 transition-transform shadow-md"
+                        className="flex-shrink-0 w-50 h-50 aspect-square rounded-xl overflow-hidden cursor-pointer hover:scale-105 transition-transform shadow-md"
                       >
                         {photo?.url && (
                           <Image
@@ -78,8 +133,8 @@ export default function ProductModal({
                               selectedItem.name ||
                               "Item"
                             }
-                            width={500}
-                            height={500}
+                            width={600}
+                            height={600}
                             className="w-full h-full object-cover"
                           />
                         )}
@@ -152,7 +207,7 @@ export default function ProductModal({
                       </button>
 
                       <button
-                        onClick={() => toggleFavorite(selectedItem, "item")}
+                        onClick={handleFavoriteToggle}
                         className="px-4 cursor-pointer py-2 rounded-xl font-semibold flex items-center gap-2 text-gray-700 shadow-sm hover:bg-gray-50 transition-all"
                       >
                         <Heart
@@ -248,9 +303,35 @@ export default function ProductModal({
                   <h3 className="font-bold text-gray-900 mb-1">
                     🔄 Cancellation Policy
                   </h3>
-                  <p className="text-sm text-gray-700">
-                    {selectedItem.cancellationPolicy}
-                  </p>
+                  <div className="text-sm text-gray-700 prose prose-sm max-w-none">
+                    {selectedItem.cancellationPolicy ? (
+                      <div
+                        dangerouslySetInnerHTML={{
+                          __html: DOMPurify.sanitize(
+                            selectedItem.cancellationPolicy,
+                            {
+                              ALLOWED_TAGS: [
+                                "b",
+                                "i",
+                                "em",
+                                "strong",
+                                "p",
+                                "br",
+                                "ul",
+                                "ol",
+                                "li",
+                                "a",
+                                "span",
+                              ],
+                              ALLOWED_ATTR: ["href", "target", "rel", "class"],
+                            },
+                          ),
+                        }}
+                      />
+                    ) : (
+                      <p>No cancellation policy provided.</p>
+                    )}
+                  </div>
                 </div>
 
                 {/* Location */}
@@ -308,7 +389,9 @@ export default function ProductModal({
                         (item) =>
                           (item._id || item.id) !==
                             (selectedItem._id || selectedItem.id) &&
-                          item.category === selectedItem.category &&
+                          (typeof item.category === "object"
+                            ? item.category?._id
+                            : item.category) === selectedCategoryId &&
                           item.distance <= 5,
                       )
                       .slice(0, 4)
@@ -424,8 +507,8 @@ export default function ProductModal({
                     <button
                       onClick={() =>
                         onViewOwner({
-                          name: selectedItem.owner || "Unknown Owner",
-                          ownerId: selectedItem.ownerId || selectedItem._id,
+                          name: ownerName,
+                          ownerId: ownerId,
                           rating: selectedItem.rating || 4.5,
                           totalRentals: selectedItem.totalRentals || 0,
                           responseTime: selectedItem.responseTime || "1 hour",
@@ -435,11 +518,11 @@ export default function ProductModal({
                     >
                       <div className="flex items-center gap-3">
                         <div className="w-14 h-14 bg-linear-to-br from-indigo-500 to-purple-500 rounded-full flex items-center justify-center text-white font-bold text-lg">
-                          {(selectedItem.owner || "U").charAt(0).toUpperCase()}
+                          {ownerInitial}
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className="font-bold text-gray-800 text-base truncate">
-                            Owned by {selectedItem.owner || "Unknown Owner"}
+                            Owned by {ownerName}
                           </p>
                           <p className="text-sm text-gray-600">
                             Member since 2023
@@ -488,10 +571,7 @@ export default function ProductModal({
 
                     <div className="grid grid-cols-2 gap-3">
                       <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          toggleFavorite(selectedItem, "item");
-                        }}
+                        onClick={handleFavoriteToggle}
                         className={`py-3 cursor-pointer rounded-xl text-gray-700 font-semibold border-2 ${
                           isFavorite
                             ? "border-rose-500 bg-rose-50 text-rose-600"
@@ -508,9 +588,9 @@ export default function ProductModal({
                         onClick={() => {
                           setSelectedConversation({
                             id: Date.now(),
-                            itemId: selectedItem.id,
-                            itemName: selectedItem.name,
-                            otherUser: selectedItem.owner,
+                            itemId: selectedItem._id || selectedItem.id,
+                            itemName: selectedItem.itemName || selectedItem.name,
+                            otherUser: ownerName,
                           });
                           setShowMessages(true);
                         }}

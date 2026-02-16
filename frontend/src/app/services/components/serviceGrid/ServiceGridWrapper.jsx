@@ -1,11 +1,9 @@
 "use client";
 
-import ListBusinessButton from "./ListBussinessButton";
-// import { categories  } from '@/data/servicesData';
+import ListBusinessButton from "./ListBussinessButton"
 import ServiceCategoryCard from "./ServiceCategoryCard";
-import { useEffect, useState } from "react";
-import { useListBusiness } from "@/context/ListBusinessContext";
-import { getAllCategory } from "@/services/category.service"; // ✅ adjust path if needed
+import { useEffect, useState } from "react"
+import { getAllCategory } from "@/services/category.service.js"; 
 
 export default function ServicesCategoriesSection({
   selectedCategory,

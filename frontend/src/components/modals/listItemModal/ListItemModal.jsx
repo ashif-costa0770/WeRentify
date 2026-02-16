@@ -8,26 +8,39 @@ import Step3Pricing from "./steps/Step3Pricing";
 import Step4Availability from "./steps/Step4Availability";
 import Step5Stripe from "./steps/Step5Stripe";
 import { createListing } from "@/services/item.service";
+import { useUser } from "@/context/UserContext";
+import { toast } from "sonner";
 
 export default function ListItemModal({ isOpen, onClose, onListingCreated }) {
+  const { user } = useUser();
   const [currentStep, setCurrentStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const [formData, setFormData] = useState({
-    photos: Array(6).fill(null),
-    videos: Array(2).fill(null),
-    itemName: "",
-    category: "",
-    description: "",
-    pickupLocation: "",
-    hourlyRate: "",
-    dailyRate: "",
-    weeklyRate: "",
-    isAvailable: true,
-    offerDelivery: false,
-    deliveryFee: "",
-    stripeConnected: false,
-  });
+ const [formData, setFormData] = useState({
+  photos: Array(6).fill(null),
+  videos: Array(2).fill(null),
+
+  itemName: "",
+  category: "",
+  description: "",
+
+  features: [],             
+  rentalRules: [],         
+  cancellationPolicy: "",   
+
+  pickupLocation: "",
+
+  hourlyRate: "",
+  dailyRate: "",
+  weeklyRate: "",
+
+  isAvailable: true,
+  offerDelivery: false,
+  deliveryFee: "",
+
+  stripeConnected: false,
+});
+
 
   const [photoPreviews, setPhotoPreviews] = useState(Array(6).fill(null));
   const [videoPreviews, setVideoPreviews] = useState(Array(2).fill(null));
@@ -79,17 +92,34 @@ export default function ListItemModal({ isOpen, onClose, onListingCreated }) {
   const handleSubmit = async () => {
     setIsSubmitting(true);
     try {
+      const normalizeToArray = (value) => {
+        if (Array.isArray(value)) {
+          return value.map((item) => String(item).trim()).filter(Boolean);
+        }
+
+        if (typeof value === "string") {
+          return value
+            .split("\n")
+            .map((item) => item.trim())
+            .filter(Boolean);
+        }
+
+        return [];
+      };
+
       // Prepare fields
       const fields = {
         itemName: formData.itemName,
         category: formData.category,
         description: formData.description,
+        features: normalizeToArray(formData.features),
+        rentalRules: normalizeToArray(formData.rentalRules),
+        cancellationPolicy: formData.cancellationPolicy,
         pickupLocation: formData.pickupLocation,
         hourlyRate: formData.hourlyRate,
         dailyRate: formData.dailyRate,
         weeklyRate: formData.weeklyRate,
-        isAvailable: String(formData.isAvailable),
-        offerDelivery: String(formData.offerDelivery),
+        owner: user?._id,
         deliveryFee: formData.deliveryFee,
       };
 
@@ -106,7 +136,7 @@ export default function ListItemModal({ isOpen, onClose, onListingCreated }) {
       // Call backend API
       const res = await createListing(fields, { photos, videos });
       console.log("Create listing response:", res);
-      alert("Listing created successfully");
+      toast.success("Listing created successfully")
 
       // Trigger re-fetch of listings
       if (onListingCreated) {
@@ -122,6 +152,9 @@ export default function ListItemModal({ isOpen, onClose, onListingCreated }) {
         itemName: "",
         category: "",
         description: "",
+        features: [],
+        rentalRules: [],
+        cancellationPolicy: "",
         pickupLocation: "",
         hourlyRate: "",
         dailyRate: "",
@@ -137,11 +170,17 @@ export default function ListItemModal({ isOpen, onClose, onListingCreated }) {
     } catch (err) {
       console.error("Create listing failed", err);
       let message =
-        err?.body?.message || err.message || "Failed to create listing";
-      if (err?.status === 401) {
+        err?.response?.data?.message ||
+        err?.response?.data?.error ||
+        err?.message ||
+        "Failed to create listing";
+      if (err?.response?.status === 401) {
         message = "Please log in to create a listing.";
-      } else if (Array.isArray(err?.body?.errors) && err.body.errors.length) {
-        const first = err.body.errors[0];
+      } else if (
+        Array.isArray(err?.response?.data?.errors) &&
+        err.response.data.errors.length
+      ) {
+        const first = err.response.data.errors[0];
         message = first?.message || message;
       }
       alert(message);

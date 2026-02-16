@@ -34,27 +34,27 @@ const listingSchema = new mongoose.Schema({
   // Step 2: Item Details
   itemName: {
     type: String,
-    required: [true, 'Item name is required'],
+    required:true,
     trim: true,
-    maxlength: [100, 'Item name cannot exceed 100 characters']
+    maxlength: 100
   },
   
   category: {
-      type: String,
-      required: [true, 'Category is required'],
-      trim: true
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Category',
+    required: true 
   },
   
   description: {
     type: String,
-    required: [true, 'Description is required'],
+    required:true,
     trim: true,
-    maxlength: [5000, 'Description cannot exceed 5000 characters']
+    maxlength:5000
   },
   
   pickupLocation: {
     type: String,
-    required: [true, 'Pickup location is required'],
+    required:true,
     trim: true
   },
 
@@ -72,25 +72,29 @@ const listingSchema = new mongoose.Schema({
     _id: false // Disable _id for subdocument
   },
 
-  features: [String],
-  rentalRules: [String],
+  features: [String] ,
+  rentalRules: [String] ,
+
+  cancellationPolicy :{
+    type:String,
+  },
 
   // Step 3: Pricing
   hourlyRate: {
     type: Number,
-    min: [0, 'Hourly rate cannot be negative'],
+    min: 0,
     default: null
   },
   
   dailyRate: {
     type: Number,
-    required: [true, 'Daily rate is required'],
-    min: [0, 'Daily rate cannot be negative']
+    required: true,
+    min : 0
   },
   
   weeklyRate: {
     type: Number,
-    min: [0, 'Weekly rate cannot be negative'],
+    min : 0,
     default: null
   },
 
@@ -107,7 +111,7 @@ const listingSchema = new mongoose.Schema({
   
   deliveryFee: {
     type: Number,
-    min: [0, 'Delivery fee cannot be negative'],
+     min : 0,
     default: null
   },
 
@@ -158,13 +162,10 @@ const listingSchema = new mongoose.Schema({
   }
 
 }, {
-  timestamps: true, // Adds createdAt and updatedAt automatically
-  toJSON: { virtuals: true },
-  toObject: { virtuals: true }
+  timestamps: true
 });
 
 // Indexes for better query performance
-listingSchema.index({ category: 1, isAvailable: 1 });
 listingSchema.index({ dailyRate: 1 });
 listingSchema.index({ createdAt: -1 });
 listingSchema.index({ itemName: 'text', description: 'text' }); // For text search
@@ -185,17 +186,5 @@ listingSchema.pre('save', function(next) {
   next();
 });
 
-// Method to increment views
-listingSchema.methods.incrementViews = function() {
-  this.views += 1;
-  return this.save();
-};
-
-// Static method to find available listings
-listingSchema.statics.findAvailable = function(filters = {}) {
-  return this.find({ isAvailable: true, status: 'active', ...filters });
-};
-
 const Listing = mongoose.model('Listing', listingSchema);
-
 export default Listing;

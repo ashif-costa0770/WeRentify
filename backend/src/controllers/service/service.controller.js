@@ -1,6 +1,10 @@
 import Service from "../../models/service/service.model.js";
 import { successResponse, errorResponse } from "../../utils/response.js";
-import {  uploadBufferToCloudinary, deleteFromCloudinary} from "../../config/cloudinary.js";
+import {
+  uploadBufferToCloudinary,
+  deleteFromCloudinary,
+  deleteMultipleFromCloudinary,
+} from "../../config/cloudinary.js";
 
 export const createService = async (req, res) => {
   try {
@@ -74,11 +78,9 @@ export const getAllServices = async (req, res) => {
 //! Get single listings
 export const getSingleService = async (req, res) => {
   try {
-    const service = await Service.findById(req.params.id).populate(
-      "owner",
-      "name email",
-    );
-
+    const service = await Service.findById(req.params.id)
+      .populate("owner")
+      .populate("category");
     if (!service) {
       return errorResponse(res, 404, "No service found");
     }
@@ -179,6 +181,18 @@ export const deleteService = async (req, res) => {
     // 🔐 Only owner can delte
     if (service.owner.toString() !== req.user._id.toString()) {
       return errorResponse(res, 403, "Not authorized to delete this service");
+    }
+    if (service.photos?.length) {
+      await deleteMultipleFromCloudinary(
+        service.photos.map((p) => p.public_id),
+        "image",
+      );
+    }
+    if (service.videos?.length) {
+      await deleteMultipleFromCloudinary(
+        service.videos.map((v) => v.public_id),
+        "video",
+      );
     }
 
     await Service.findByIdAndDelete(id);

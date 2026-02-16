@@ -4,7 +4,8 @@ import Logo from "@/components/navbar/Logo";
 import PackageIcon from "@/components/icons/PackageIcon";
 import HomeIcon from "@/components/icons/HomeIcon";
 import UsersIcon from "@/components/icons/UsersIcon";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import SignUpModal from "@/components/modals/SignUpModal";
 import SignInModal from "@/components/modals/SignInModal";
 import LanguageCurrencyModal from "@/components/modals/LanguageCurrencyModal";
@@ -17,6 +18,8 @@ import { Globe } from "lucide-react";
 export default function Navbar() {
   const [showLang, setShowLang] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const searchParams = useSearchParams();
+  const lastHandledAuthRef = useRef("");
   const {
     isLogin,
     setIsLogin,
@@ -28,6 +31,17 @@ export default function Navbar() {
     setShowMessages,
     selectedConversation,
   } = useUser();
+
+  useEffect(() => {
+    const authType = searchParams.get("auth");
+    const redirect = searchParams.get("redirect") || "";
+    const key = `${authType || ""}|${redirect}`;
+
+    if (authType === "signin" && !isLogin && lastHandledAuthRef.current !== key) {
+      setShowSignIn(true);
+      lastHandledAuthRef.current = key;
+    }
+  }, [isLogin, searchParams, setShowSignIn]);
 
   //mock data
   const user = {

@@ -5,7 +5,7 @@ export default function ServiceCategoryCard({ icon, name, active, onClick }) {
   return (
     <div
       onClick={onClick}
-      className={`h-23 cursor-pointer rounded-xl border flex flex-col items-center justify-center gap-2 px-2 transition-all
+      className={`h-23 cursor-pointer rounded-xl border-2 flex flex-col items-center justify-center gap-2 px-2 transition-all
         ${
           active
             ? "bg-gradient-to-r from-[#5B4FE9] to-[#E95FC8] text-white shadow-md border-transparent"

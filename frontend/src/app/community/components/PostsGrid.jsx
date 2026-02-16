@@ -1,15 +1,24 @@
 "use client";
 
 import { useState } from "react";
+import { usePathname, useRouter } from "next/navigation";
+import { toast } from "sonner";
 import PostCard from "./PostCards";
 import CommentModal from "./modals/CommentModal";
 import MessageModal from "./modals/MessageModal";
 
 export default function PostsGrid({ posts, currentUser = null, onUpdatePost }) {
   const [selectedPost, setSelectedPost] = useState(null);
-  const [showLogin, setShowLogin] = useState(false);
   const [messagePost, setMessagePost] = useState(null);
   const [showPostMessage, setShowPostMessage] = useState(false);
+  const router = useRouter();
+  const pathname = usePathname();
+
+  const handleRequireLogin = () => {
+    toast.error("Please login first");
+    const redirectTo = pathname || "/community";
+    router.push(`/?auth=signin&redirect=${encodeURIComponent(redirectTo)}`);
+  };
 
   if (!posts?.length) {
     return <p className="text-center text-gray-500 py-16">No posts found</p>;
@@ -24,7 +33,7 @@ export default function PostsGrid({ posts, currentUser = null, onUpdatePost }) {
             post={post}
             currentUser={currentUser}
             onOpenComments={(post) => setSelectedPost(post)}
-            onRequireLogin={() => setShowLogin(true)}
+            onRequireLogin={handleRequireLogin}
             setShowPostMessage={setShowPostMessage}
             setMessagePost={setMessagePost}
             onUpdatePost={onUpdatePost}
@@ -38,7 +47,7 @@ export default function PostsGrid({ posts, currentUser = null, onUpdatePost }) {
         isOpen={!!selectedPost}
         onClose={() => setSelectedPost(null)}
         currentUser={currentUser}
-        setShowLogin={setShowLogin}
+        onRequireLogin={handleRequireLogin}
         onUpdatePost={onUpdatePost}
       />
 
@@ -52,8 +61,6 @@ export default function PostsGrid({ posts, currentUser = null, onUpdatePost }) {
         }}
       />
 
-      {/* Login Modal (if you already have one) */}
-      {showLogin && <div>{/* Your Login Modal here */}</div>}
     </>
   );
 }

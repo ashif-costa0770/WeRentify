@@ -1,19 +1,52 @@
 import { Heart, CheckCircle, Star } from "lucide-react";
 import { useUser } from "@/context/UserContext";
 import Image from "next/image";
+import { toast } from "sonner";
 
 export default function ItemCard({ item, onSelect = () => {} }) {
-  const { favorites, toggleFavorite } = useUser();
+  const { favorites, addFavorite, removeFavorite, isLogin, setShowSignIn } =
+    useUser();
 
-  // Check if this item is favorited (use _id for backend items, fallback to id)
   const itemId = item._id || item.id;
-  const isFavorite = favorites.some(
-    (fav) => (fav._id || fav.id) === itemId && fav.type === "item",
+
+  const existingFavorite = favorites.find(
+    (fav) => {
+      const favoriteProductId =
+        typeof fav.productId === "string"
+          ? fav.productId
+          : fav.productId?._id || fav.productId?.id;
+
+      return (
+        String(favoriteProductId) === String(itemId) &&
+        fav.productType === "Listing"
+      );
+    },
   );
 
-  const handleFavoriteClick = (e) => {
+  const isFavorite = !!existingFavorite;
+
+  const handleFavoriteClick = async (e) => {
     e.stopPropagation();
-    toggleFavorite(item, "item");
+
+    if (!isLogin) {
+      setShowSignIn(true);
+      return;
+    }
+
+    try {
+      if (isFavorite) {
+        await removeFavorite(existingFavorite._id);
+        toast.success("Removed from favorites");
+      } else {
+        await addFavorite({
+          productId: itemId,
+          productType: "Listing",
+        });
+        toast.success("Added to favorites");
+      }
+    } catch (error) {
+      toast.error(error?.response?.data?.message || "Favorite action failed");
+    }
   };
 
   return (

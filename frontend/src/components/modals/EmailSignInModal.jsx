@@ -1,7 +1,7 @@
 "use client";
 
 import { loginAPI } from "@/services/auth.service";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -12,6 +12,7 @@ export default function EmailSignInModal({
   setIsLogin,
 }) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   // Updated login fields to match backend auth API: email + password.
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -36,8 +37,9 @@ export default function EmailSignInModal({
       toast.success("Login successful");
       setIsLogin(true);
       onClose();
-      // Send authenticated user to home.
-      router.push("/");
+      const redirect = searchParams.get("redirect");
+      const safeRedirect = redirect && redirect.startsWith("/") ? redirect : "/";
+      router.push(safeRedirect);
     } catch (error) {
       toast.error(error?.response?.data?.message || "Login failed");
     } finally {

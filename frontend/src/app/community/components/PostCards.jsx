@@ -21,7 +21,7 @@ export default function PostCard({
 
   const isSaved = currentUser ? post.saves?.includes(currentUser._id) : false;
 
-  const handleLike = async (e) => {
+  const handleLike = async () => {
     if (!currentUser) return onRequireLogin();
 
     try {
@@ -31,6 +31,7 @@ export default function PostCard({
       }
     } catch (err) {
       console.error("Like failed", err);
+      toast.error(err?.response?.data?.message || "Failed to like post");
     }
   };
 
@@ -42,14 +43,14 @@ export default function PostCard({
       if (res.data.success) {
         onUpdatePost(res.data.data);
       }
-      if(isSaved) {
+      if (isSaved) {
         toast.success("Post unsaved!");
       } else {
         toast.success("Post saved!");
       }
-    
     } catch (err) {
       console.error("Save failed", err);
+      toast.error(err?.response?.data?.message || "Failed to save post");
     }
   };
 
@@ -162,18 +163,30 @@ export default function PostCard({
 
           {/* Share */}
           <button
-            onClick={() => {
+            onClick={async () => {
+              const shareUrl = `${window.location.origin}/community?post=${post._id}`;
+
               if (navigator.share) {
-                navigator
-                  .share({
+                try {
+                  await navigator.share({
                     title: post.title,
                     text: post.description,
-                    url: window.location.href,
-                  })
-                  .catch(console.error);
-              } else {
-                navigator.clipboard.writeText(window.location.href);
-                alert("Link copied to clipboard!");
+                    url: shareUrl,
+                  });
+                  toast.success("Post shared!");
+                } catch (error) {
+                  if (error?.name !== "AbortError") {
+                    toast.error("Unable to share post right now");
+                  }
+                }
+                return;
+              }
+
+              try {
+                await navigator.clipboard.writeText(shareUrl);
+                toast.success("Link copied to clipboard!");
+              } catch (error) {
+                toast.error("Unable to copy link right now");
               }
             }}
             className="hover:text-gray-900 transition cursor-pointer"

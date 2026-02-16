@@ -11,43 +11,40 @@ import {
   paginatedResponse,
 } from "../../utils/response.js";
 
-//! Helper: upload multiple files to Cloudinary
-const uploadFiles = async (files = [], folder, resourceType) => {
-  return Promise.all(
-    files.map((file) =>
-      uploadBufferToCloudinary(file.buffer, folder, resourceType),
-    ),
-  );
-};
-
 //! Create listing
 export const createListing = async (req, res) => {
   try {
-    const {
-      itemName,
-      category,
-      description,
-      pickupLocation,
-      hourlyRate,
-      dailyRate,
-      weeklyRate,
-      isAvailable,
-      offerDelivery,
-      deliveryFee,
-      features,
-      rentalRules,
-    } = req.body;
-
-    // Require minimum 3 photos
+    const { pickupLocation } = req.body;
+   
     if (!req.files?.photos || req.files.photos.length < 3) {
       return errorResponse(res, 400, "At least 3 photos are required");
     }
+    if (req.files.photos.length > 6) {
+      return errorResponse(res, 400, "Maximum 6 photos allowed");
+    }
 
-    // Upload media in parallel
-    const [photos, videos] = await Promise.all([
-      uploadFiles(req.files.photos, "rental-items/photos", "image"),
-      uploadFiles(req.files.videos || [], "rental-items/videos", "video"),
-    ]);
+    // 📸 Upload Photos
+    const photoUploadPromises = req.files.photos.map((photo) =>
+      uploadBufferToCloudinary(photo.buffer, "items/photos", "image"),
+    );
+
+    const uploadedPhotos = await Promise.all(photoUploadPromises);
+
+    // 🎥 Upload Videos (Optional)
+    let uploadedVideos = [];
+
+    if (req.files?.videos) {
+      // Limit max video
+      if (req.files.videos.length > 2) {
+        return errorResponse(res, 400, "Maximum 2 videos allowed");
+      }
+
+      const videoUploadPromises = req.files.videos.map((video) =>
+        uploadBufferToCloudinary(video.buffer, "items/videos", "video"),
+      );
+
+      uploadedVideos = await Promise.all(videoUploadPromises);
+    }
 
     // Geocoding (safe)
     let coordinates;
@@ -67,31 +64,11 @@ export const createListing = async (req, res) => {
     }
 
     const listing = await Listing.create({
-      itemName,
-      category,
-      description,
-      pickupLocation,
-      hourlyRate,
-      dailyRate,
-      weeklyRate,
-      deliveryFee,
-      photos,
-      videos,
-      coordinates,
-      isAvailable: isAvailable === "true" || isAvailable === true,
-      offerDelivery: offerDelivery === "true" || offerDelivery === true,
-      features: Array.isArray(features) ? features : features ? [features] : [],
-      rentalRules: Array.isArray(rentalRules)
-        ? rentalRules
-        : rentalRules
-          ? [rentalRules]
-          : [],
+      ...req.body,
+      coordinates, // ✅ THIS is for storing calculated coordinates
+      photos: uploadedPhotos,
+      videos: uploadedVideos, // optional
       owner: req.user._id,
-      rating: 0,
-      status: "active",
-      views: 0,
-      bookings: 0,
-      reviewCount: 0,
     });
 
     return successResponse(res, 201, "Listing created successfully", listing);
@@ -104,80 +81,19 @@ export const createListing = async (req, res) => {
 //! Get all listings with filters
 export const getAllListings = async (req, res) => {
   try {
-    const {
-      page = 1,
-      limit = 12,
-      category,
-      minPrice,
-      maxPrice,
-      isAvailable,
-      offerDelivery,
-      search,
-      sortBy = "createdAt",
-      order = "desc",
-    } = req.query;
+    const listings = await Listing.find()
+      .populate("owner")
+      .populate("category")
+      .sort({ createdAt: -1 });
 
-    const skip = (Number(page) - 1) * Number(limit);
-    const sortOrder = order === "asc" ? 1 : -1;
-
-    // Base query
-    const query = {
-      status: "active",
-    };
-
-    if (category) query.category = category;
-    if (isAvailable !== undefined) query.isAvailable = isAvailable === "true";
-    if (offerDelivery !== undefined)
-      query.offerDelivery = offerDelivery === "true";
-
-    // Price filter (dailyRate)
-    if (minPrice || maxPrice) {
-      query.dailyRate = {};
-      if (minPrice) query.dailyRate.$gte = Number(minPrice);
-      if (maxPrice) query.dailyRate.$lte = Number(maxPrice);
+    if (!listings) {
+      return errorResponse(res, 404, "No listings found");
     }
-
-    // Text search
-    if (search) {
-      query.$or = [
-        { itemName: { $regex: search, $options: "i" } },
-        { description: { $regex: search, $options: "i" } },
-      ];
-    }
-
-    const [listings, totalCount] = await Promise.all([
-      Listing.find(query)
-        .sort({ [sortBy]: sortOrder })
-        .skip(skip)
-        .limit(Number(limit))
-        .lean(),
-      Listing.countDocuments(query),
-    ]);
-
-    const totalPages = Math.ceil(totalCount / Number(limit));
-
-    return paginatedResponse(
-      res,
-      200,
-      "Listings retrieved successfully",
+    return successResponse(res, 200, "All listings fetched successfully", {
       listings,
-      {
-        page: Number(page),
-        limit: Number(limit),
-        totalPages,
-        totalItems: totalCount,
-        hasNextPage: Number(page) < totalPages,
-        hasPrevPage: Number(page) > 1,
-      },
-    );
+    });
   } catch (error) {
-    console.error("Get listings error:", error);
-    return errorResponse(
-      res,
-      500,
-      "Failed to retrieve listings",
-      error.message,
-    );
+    return errorResponse(res, 500, "Failed to fetch listings", error.message);
   }
 };
 
@@ -186,10 +102,7 @@ export const getListingById = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const listing = await Listing.findOne({
-      _id: id,
-      status: "active",
-    });
+    const listing = await Listing.findOne({ _id: id, status: "active" });
 
     if (!listing) {
       return errorResponse(res, 404, "Listing not found");
@@ -198,9 +111,13 @@ export const getListingById = async (req, res) => {
     // Increment views (non-blocking)
     Listing.findByIdAndUpdate(id, { $inc: { views: 1 } }).catch(() => {});
 
-    return successResponse(res, 200, "Listing retrieved successfully", listing);
+    return successResponse(
+      res,
+      200,
+      "Single Listing retrieved successfully",
+      listing,
+    );
   } catch (error) {
-    console.error("Get listing error:", error);
     return errorResponse(res, 500, "Failed to retrieve listing", error.message);
   }
 };
@@ -209,51 +126,87 @@ export const getListingById = async (req, res) => {
 export const updateListing = async (req, res) => {
   try {
     const { id } = req.params;
+    const { pickupLocation, isAvailable, offerDelivery } = req.body;
     const listing = await Listing.findById(id);
 
     if (!listing) {
       return errorResponse(res, 404, "Listing not found");
     }
+    // 🔐 Only owner can update
+    if (listing.owner.toString() !== req.user._id.toString()) {
+      return errorResponse(res, 403, "Not authorized to update this service");
+    }
 
-    const updateData = { ...req.body };
+    // 📸 HANDLE NEW PHOTOS (Optional)
+    let updatedPhotos = [...listing.photos];
 
-    if (req.files?.photos?.length) {
-      const newPhotos = await uploadFiles(
-        req.files.photos,
-        "rental-items/photos",
-        "image",
+    if (req.files?.photos) {
+      if (req.files.photos.length + updatedPhotos.length > 6) {
+        return errorResponse(res, 400, "Total photos cannot exceed 6");
+      }
+
+      const photoUploadPromises = req.files.photos.map((photo) =>
+        uploadBufferToCloudinary(photo.buffer, "item/photos", "image"),
       );
-      updateData.photos = [...listing.photos, ...newPhotos];
+
+      const newPhotos = await Promise.all(photoUploadPromises);
+      updatedPhotos = [...updatedPhotos, ...newPhotos];
     }
 
-    if (req.files?.videos?.length) {
-      const newVideos = await uploadFiles(
-        req.files.videos,
-        "rental-items/videos",
-        "video",
+    // 🎥 HANDLE NEW VIDEOS (Optional)
+    let updatedVideos = [...listing.videos];
+
+    if (req.files?.videos) {
+      if (req.files.videos.length + updatedVideos.length > 2) {
+        return errorResponse(res, 400, "Total videos cannot exceed 2");
+      }
+
+      const videoUploadPromises = req.files.videos.map((video) =>
+        uploadBufferToCloudinary(video.buffer, "item/videos", "video"),
       );
-      updateData.videos = [...listing.videos, ...newVideos];
+
+      const newVideos = await Promise.all(videoUploadPromises);
+      updatedVideos = [...updatedVideos, ...newVideos];
     }
 
-    if (updateData.isAvailable !== undefined) {
-      updateData.isAvailable =
-        updateData.isAvailable === "true" || updateData.isAvailable === true;
+    // Geocoding (safe)
+    let coordinates;
+    if (pickupLocation) {
+      try {
+        const geo = await geocodeAddress(pickupLocation);
+        if (geo) {
+          coordinates = {
+            type: "Point",
+            coordinates: [geo.longitude, geo.latitude],
+            formattedAddress: geo.formattedAddress,
+          };
+        }
+      } catch (err) {
+        console.warn("Geocoding failed:", err.message);
+      }
     }
 
-    if (updateData.offerDelivery !== undefined) {
-      updateData.offerDelivery =
-        updateData.offerDelivery === "true" ||
-        updateData.offerDelivery === true;
+    if (isAvailable !== undefined) {
+      isAvailable = isAvailable === "true" || isAvailable === true;
+    }
+    if (offerDelivery !== undefined) {
+      offerDelivery = offerDelivery === "true" || offerDelivery === true;
     }
 
-    const updated = await Listing.findByIdAndUpdate(id, updateData, {
-      new: true,
-      runValidators: true,
-    });
-
+    const updated = await Listing.findByIdAndUpdate(
+      id,
+      {
+        ...req.body,
+        isAvailable,
+        offerDelivery,
+        coordinates,
+        photos: updatedPhotos,
+        videos: updatedVideos,
+      },
+      { new: true, runValidators: true },
+    );
     return successResponse(res, 200, "Listing updated successfully", updated);
   } catch (error) {
-    console.error("Update listing error:", error);
     return errorResponse(res, 500, "Failed to update listing", error.message);
   }
 };
@@ -270,52 +223,91 @@ export const deleteListing = async (req, res) => {
         "image",
       );
     }
-
     if (listing.videos?.length) {
       await deleteMultipleFromCloudinary(
         listing.videos.map((v) => v.public_id),
         "video",
       );
     }
-
-    await listing.deleteOne();
+    await Listing.findByIdAndDelete(req.params.id) ;
     return successResponse(res, 200, "Listing deleted successfully");
   } catch (error) {
-    console.error("Delete listing error:", error);
     return errorResponse(res, 500, "Failed to delete listing", error.message);
   }
 };
 
-//! Delete photo
-export const deletePhoto = async (req, res) => {
+//! Delte phote from cloudinary + DB
+export const deleteListingPhoto = async (req, res) => {
   try {
     const { id, publicId } = req.params;
+
     const listing = await Listing.findById(id);
 
-    if (!listing) return errorResponse(res, 404, "Listing not found");
-    if (listing.photos.length <= 3)
-      return errorResponse(res, 400, "Minimum 3 photos required");
+    if (!listing) {
+      return errorResponse(res, 404, "listing not found");
+    }
 
-    listing.photos = listing.photos.filter((p) => p.public_id !== publicId);
+    // 🔐 Owner check
+    if (listing.owner.toString() !== req.user._id.toString()) {
+      return errorResponse(res, 403, "Not authorized to delete");
+    }
+
+    // 🔍 Check photo exists
+    const photoExists = listing.photos.find((p) => p.public_id === publicId);
+
+    if (!photoExists) {
+      return errorResponse(res, 404, "Photo not found");
+    }
+
+    // 🚫 Minimum 3 photos required
+    if (listing.photos.length <= 3) {
+      return errorResponse(res, 400, "Minimum 3 photos required");
+    }
+
+    // ☁️ Delete from Cloudinary FIRST
     await deleteFromCloudinary(publicId, "image");
+
+    // 🗑 Remove from DB
+    listing.photos = listing.photos.filter((p) => p.public_id !== publicId);
+
     await listing.save();
 
     return successResponse(res, 200, "Photo deleted successfully", listing);
   } catch (error) {
+    console.error("Delete photo error:", error);
     return errorResponse(res, 500, "Failed to delete photo", error.message);
   }
 };
 
-//! Delete video
-export const deleteVideo = async (req, res) => {
+//! Delete video from coudinary + db
+export const deleteListingVideo = async (req, res) => {
   try {
     const { id, publicId } = req.params;
+
     const listing = await Listing.findById(id);
 
-    if (!listing) return errorResponse(res, 404, "Listing not found");
+    if (!listing) {
+      return errorResponse(res, 404, "listing not found");
+    }
 
-    listing.videos = listing.videos.filter((v) => v.public_id !== publicId);
+    // 🔐 Owner authorization check
+    if (listing.owner.toString() !== req.user._id.toString()) {
+      return errorResponse(res, 403, "Not authorized");
+    }
+
+    // 🔍 Check if video exists
+    const videoExists = listing.videos.find((v) => v.public_id === publicId);
+
+    if (!videoExists) {
+      return errorResponse(res, 404, "Video not found");
+    }
+
+    // ☁️ Delete from Cloudinary FIRST
     await deleteFromCloudinary(publicId, "video");
+
+    // 🗑 Remove from DB
+    listing.videos = listing.videos.filter((v) => v.public_id !== publicId);
+
     await listing.save();
 
     return successResponse(res, 200, "Video deleted successfully", listing);

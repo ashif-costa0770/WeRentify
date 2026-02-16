@@ -23,13 +23,22 @@ export default function ItemGrid({
     let mounted = true;
     const fetchListings = async () => {
       setLoading(true);
+      setError(null);
+
       try {
-        const res = await getListings({ page: 1, limit: 20 });
+        const res = await getListings();
+        const list =
+          res?.data?.data?.listings ||
+          res?.data?.listings ||
+          res?.data?.data ||
+          res?.data ||
+          [];
+
         if (!mounted) return;
-        setListings(Array.isArray(res.data) ? res.data : []);
+        setListings(Array.isArray(list) ? list : []);
       } catch (err) {
         if (!mounted) return;
-        setError(err.message || "Failed to load listings");
+        setError(err?.response?.data?.message || "Failed to load listings");
         setListings([]);
       } finally {
         if (mounted) setLoading(false);
@@ -41,6 +50,12 @@ export default function ItemGrid({
     return () => {
       mounted = false;
     };
+  }, [items]);
+
+  // Keep grid updated when parent sends filtered items.
+  useEffect(() => {
+    if (items === undefined) return;
+    setListings(Array.isArray(items) ? items : []);
   }, [items]);
 
   const safeItems = Array.isArray(listings) ? listings : [];

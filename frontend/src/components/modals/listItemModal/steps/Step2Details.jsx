@@ -1,18 +1,48 @@
 "use client";
 
 import { MapPin } from "lucide-react";
-import { categories } from "@/data/listingsData";
+// import { categories } from "@/data/listingsData";
 import RichTextEditor from "@/components/tiptap-editor/RichTextEditor";
+import { useState, useEffect } from "react";
+import { getAllCategory } from "@/services/category.service";
 
 export default function Step2Details({ formData, setFormData }) {
+  const [categories, setCategories] = useState([]);
+  const [loadingCategories, setLoadingCategories] = useState(true);
+  const [categoryError, setCategoryError] = useState(null);
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
   };
 
-  const handleDescriptionChange = (content) => {
-    setFormData({ ...formData, description: content });
+  const handleRichTextChange = (field, content) => {
+    setFormData({ ...formData, [field]: content });
   };
+
+  const handleArrayFieldChange = (field, value) => {
+    // Keep raw lines while typing so Enter/new lines work normally.
+    // Cleanup is handled later during submit.
+    setFormData({ ...formData, [field]: value.split("\n") });
+  };  
+    // ✅ Fetch categories from backend
+    useEffect(() => {
+      const fetchCategories = async () => {
+        try {
+          setLoadingCategories(true);
+          const res = await getAllCategory("item");
+  
+          // Adjust depending on your backend response structure
+          setCategories(res.data?.data || res.data || []);
+        } catch (error) {
+          console.error("Error fetching categories:", error);
+          setCategoryError("Failed to load categories");
+        } finally {
+          setLoadingCategories(false);
+        }
+      };  
+      fetchCategories();
+    }, []);
 
   return (
     <div className="space-y-5">
@@ -43,7 +73,7 @@ export default function Step2Details({ formData, setFormData }) {
           >
             <option value="">Select category</option>
             {categories.map((cat) => (
-              <option key={cat.id} value={cat.id}>
+              <option key={cat._id} value={cat._id}>
                 {cat.name}
               </option>
             ))}
@@ -65,14 +95,62 @@ export default function Step2Details({ formData, setFormData }) {
           </div>
         </div>
       </div>
-
+ 
       <div>
         <label className="block text-sm font-bold text-gray-900 mb-2">
           Description <span className="text-red-500">*</span>
         </label>
         <RichTextEditor
           value={formData.description}
-          onChange={handleDescriptionChange}
+          onChange={(content) => handleRichTextChange("description", content)}
+        />
+      </div>
+
+       <div>
+        <label className="block text-sm font-bold text-gray-900 mb-2">
+          Features & Details 
+        </label>
+        <textarea
+          value={Array.isArray(formData.features) ? formData.features.join("\n") : ""}
+          onChange={(e) => handleArrayFieldChange("features", e.target.value)}
+          placeholder="Enter one feature per line"
+          rows={4}
+          className="w-full px-4 py-3 text-gray-700 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#5B4FE9]/20 focus:border-[#5B4FE9] transition-all placeholder:text-gray-400"
+        />
+        <p className="text-xs text-gray-500 mt-1">Example: Powerful motor</p>
+      </div>
+
+       <div>
+        <label className="block text-sm font-bold text-gray-900 mb-2">
+          Rental Rules 
+        </label>
+        <textarea
+          value={
+            Array.isArray(formData.rentalRules)
+              ? formData.rentalRules.join("\n")
+              : ""
+          }
+          onChange={(e) =>
+            handleArrayFieldChange("rentalRules", e.target.value)
+          }
+          placeholder="Enter one rule per line"
+          rows={4}
+          className="w-full px-4 py-3 text-gray-700 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#5B4FE9]/20 focus:border-[#5B4FE9] transition-all placeholder:text-gray-400"
+        />
+        <p className="text-xs text-gray-500 mt-1">
+          Example: Return item clean and on time
+        </p>
+      </div>
+
+      <div>
+        <label className="block text-sm font-bold text-gray-900 mb-2">
+           Cancellation Policy
+        </label>
+        <RichTextEditor
+          value={formData.cancellationPolicy}
+          onChange={(content) =>
+            handleRichTextChange("cancellationPolicy", content)
+          }
         />
       </div>
 

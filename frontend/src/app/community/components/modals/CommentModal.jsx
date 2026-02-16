@@ -17,7 +17,7 @@ export default function CommentModal({
   isOpen,
   onClose,
   currentUser,
-  setShowLogin,
+  onRequireLogin = () => {},
   onUpdatePost = () => {},
 }) {
   const [comments, setComments] = useState([]);
@@ -56,6 +56,12 @@ export default function CommentModal({
 
   // 🔹 Create Comment
   const handleCreate = async () => {
+    if (!currentUser) {
+      onClose();
+      onRequireLogin();
+      return;
+    }
+
     if (!commentText.trim() || isSubmitting) return;
 
     try {
@@ -69,6 +75,7 @@ export default function CommentModal({
       }
     } catch (error) {
       console.error("Failed to create comment:", error);
+      toast.error(error?.response?.data?.message || "Failed to create comment");
     } finally {
       setIsSubmitting(false);
     }
@@ -76,6 +83,12 @@ export default function CommentModal({
 
   // 🔹 Update Comment
   const handleUpdate = async (commentId) => {
+    if (!currentUser) {
+      onClose();
+      onRequireLogin();
+      return;
+    }
+
     if (!editText.trim() || isSubmitting) return;
 
     try {
@@ -97,6 +110,12 @@ export default function CommentModal({
 
   // 🔹 Delete Comment
   const handleDelete = async (commentId) => {
+    if (!currentUser) {
+      onClose();
+      onRequireLogin();
+      return;
+    }
+
     if (!window.confirm("Are you sure you want to delete this comment?"))
       return;
 
@@ -318,7 +337,7 @@ export default function CommentModal({
                 <button
                   onClick={() => {
                     onClose();
-                    setShowLogin(true);
+                    onRequireLogin();
                   }}
                   className="text-indigo-600 font-bold hover:underline"
                 >

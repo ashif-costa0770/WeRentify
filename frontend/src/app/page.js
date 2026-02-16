@@ -31,75 +31,92 @@ export default function ListingPage() {
   const [showOwnerProfile, setShowOwnerProfile] = useState(false);
   const [selectedOwner, setSelectedOwner] = useState(null);
 
-  /* ---------------- FETCH ITEMS FROM BACKEND ---------------- */
+  /* ---------------- FETCH ITEMS FROM BACKEND (Simple) ---------------- */
   const fetchItems = async () => {
     setBackendLoading(true);
+    setBackendError(null);
+
     try {
-      const params = {
-        page: 1,
-        limit: 100,
-      };
+      const res = await getListings();
+      const list =
+        res?.data?.data?.listings ||
+        res?.data?.listings ||
+        res?.data?.data ||
+        res?.data ||
+        [];
 
-      // Add Category
-      if (selectedCategory !== "all") {
-        params.category = selectedCategory;
-      }
-
-      // Add Price Range
-      // Assuming backend supports minPrice and maxPrice
-      if (priceRange[0] > 0) params.minPrice = priceRange[0];
-      if (priceRange[1] < 1000) params.maxPrice = priceRange[1]; // Only send max if it's reasonable, or always send if UI enforces it.
-
-      // Add Sorting
-      // Map frontend sort keys to backend keys if necessary.
-      // Backend expects: sortBy = "createdAt" | "hourlyRate" | etc.
-      // Backend expects: order = "asc" | "desc"
-      if (sortBy === "priceLow") {
-        params.sortBy = "hourlyRate";
-        params.order = "asc";
-      } else if (sortBy === "priceHigh") {
-        params.sortBy = "hourlyRate";
-        params.order = "desc";
-      } else if (sortBy === "nearest") {
-        // Backend specific field for nearest? Or handle later?
-        // If backend doesn't support geo-sorting yet, we might fallback or send it.
-        // For now, let's keep 'createdAt' or omit to use default.
-      } else if (sortBy === "rating") {
-        params.sortBy = "rating";
-        params.order = "desc";
-      }
-
-      // Add Other Filters
-      if (verifiedOnly) {
-        // Assuming backend supports this or we ignore it for now if not supported.
-        // params.verified = true;
-      }
-
-      const res = await getListings(params);
-      setItems(Array.isArray(res.data) ? res.data : []);
+      setItems(Array.isArray(list) ? list : []);
     } catch (err) {
-      setBackendError(err.message || "Failed to load items");
+      setBackendError(err?.response?.data?.message || "Failed to load items");
       setItems([]);
     } finally {
       setBackendLoading(false);
     }
   };
 
-  /* ---------------- EFFECTS ---------------- */
-  // Fetch on mount or when key filters change immediately (Category)
-  // For other filters (Price, Sort), we can decide to fetch immediately or wait for "Apply" in the Slicer.
-  // The user requirement implies "Apply" might be explicit for the slicer, but Category is usually instant.
-  // Let's stick to the plan: Category & Sort trigger fetch. Slicer 'Apply' triggers fetch.
+  /* ---------------- FILTER + SORT (Simple frontend logic) ---------------- */
+  const visibleItems = useMemo(() => {
+    let result = [...items];
 
+    // Category filter
+    if (selectedCategory !== "all") {
+      result = result.filter((item) => {
+        const catId = item?.category?._id || item?.category;
+        return String(catId) === String(selectedCategory);
+      });
+    }
+
+    // Price filter (Daily price as per filter label)
+    result = result.filter((item) => {
+      const price = Number(item?.dailyRate || item?.hourlyRate || 0);
+      return price >= priceRange[0] && price <= priceRange[1];
+    });
+
+    // Distance filter
+    result = result.filter((item) => {
+      const distance = Number.parseFloat(item?.distance ?? 0);
+      return distance <= distanceFilter;
+    });
+
+    // Verified filter
+    if (verifiedOnly) {
+      result = result.filter((item) => Boolean(item?.verified));
+    }
+
+    // Sort
+    if (sortBy === "priceLow") {
+      result.sort(
+        (a, b) =>
+          Number(a?.dailyRate || a?.hourlyRate || 0) -
+          Number(b?.dailyRate || b?.hourlyRate || 0),
+      );
+    } else if (sortBy === "priceHigh") {
+      result.sort(
+        (a, b) =>
+          Number(b?.dailyRate || b?.hourlyRate || 0) -
+          Number(a?.dailyRate || a?.hourlyRate || 0),
+      );
+    } else if (sortBy === "rating") {
+      result.sort((a, b) => Number(b?.rating || 0) - Number(a?.rating || 0));
+    } else if (sortBy === "nearest") {
+      result.sort(
+        (a, b) =>
+          Number.parseFloat(a?.distance ?? 0) -
+          Number.parseFloat(b?.distance ?? 0),
+      );
+    }
+
+    return result;
+  }, [items, selectedCategory, priceRange, distanceFilter, verifiedOnly, sortBy]);
+
+  /* ---------------- EFFECTS ---------------- */
   useEffect(() => {
     fetchItems();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedCategory, sortBy]); // Trigger re-fetch when category or sort changes
+  }, []);
 
   // Handle Apply Filters from Slicer
   const handleApplyFilters = () => {
     setShowFilters(false);
-    fetchItems();
   };
 
   return (
@@ -124,7 +141,7 @@ export default function ListingPage() {
         </div>
       ) : (
         <ItemGrid
-          items={items} // Directly use fetched items
+          items={visibleItems}
           onOpenFilters={() => setShowFilters(true)}
           onSelect={(item) => setSelectedItem(item)}
         />

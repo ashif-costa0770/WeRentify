@@ -4,9 +4,19 @@ import { useUser } from "@/context/UserContext";
 import Link from "next/link";
 import Image from "next/image";
 import { Trash2, ArrowRight } from "lucide-react";
+import { toast } from "sonner";
 
 export default function FavoritesPage() {
   const { favorites, removeFavorite } = useUser();
+
+  const handleRemoveFavorite = async (favoriteId) => {
+    try {
+      await removeFavorite(favoriteId);
+      toast.success("Removed from favorites");
+    } catch (error) {
+      toast.error(error?.response?.data?.message || "Failed to remove favorite");
+    }
+  };
 
   // Keep only favorites whose referenced product still exists.
   const validFavorites = (favorites || []).filter((fav) => {
@@ -81,7 +91,7 @@ export default function FavoritesPage() {
                       )}
 
                       <button
-                        onClick={() => removeFavorite(fav._id)}
+                        onClick={() => handleRemoveFavorite(fav._id)}
                         className="absolute top-2 right-2 p-2 rounded-full bg-white text-gray-400 hover:text-rose-500 shadow"
                       >
                         <Trash2 className="w-4 h-4" />
@@ -137,7 +147,7 @@ export default function FavoritesPage() {
                       )}
 
                       <button
-                        onClick={() => removeFavorite(fav._id)}
+                        onClick={() => handleRemoveFavorite(fav._id)}
                         className="absolute top-2 right-2 p-2 rounded-full bg-white text-gray-400 hover:text-rose-500 shadow"
                       >
                         <Trash2 className="w-4 h-4" />
