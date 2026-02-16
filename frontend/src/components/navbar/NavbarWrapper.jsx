@@ -7,8 +7,8 @@ export default function NavbarWrapper() {
     <div className="sticky top-0 z-10 bg-gray-100 pb-3 shadow-lg">
       <Suspense fallback={null}>
         <Navbar />
+        <HeroSearch />
       </Suspense>
-      <HeroSearch/>
     </div>
   );
 }
