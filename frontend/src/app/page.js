@@ -20,8 +20,8 @@ export default function ListingPage() {
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [showFilters, setShowFilters] = useState(false);
   const [sortBy, setSortBy] = useState("nearest");
-  const [priceRange, setPriceRange] = useState([0, 200]);
-  const [distanceFilter, setDistanceFilter] = useState(10);
+  const [priceRange, setPriceRange] = useState([0, 100000]);
+  const [distanceFilter, setDistanceFilter] = useState(1000);
   const [verifiedOnly, setVerifiedOnly] = useState(false);
 
   /* ---------------- STATE: UI MODALS ---------------- */

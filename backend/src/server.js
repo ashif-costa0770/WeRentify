@@ -21,8 +21,8 @@ app.use(compression()); // Compress responses
 app.use(cookieParser());
 app.use(
   cors({
-    // origin: process.env.FRONTEND_URL || "http://localhost:3000",
-    origin: process.env.FRONTEND_URL || "http://werentify-newfrontend-sb3idl-57c17f-40-160-2-18.traefik.me",
+    origin: process.env.FRONTEND_URL || "http://localhost:3000",
+    // origin: process.env.FRONTEND_URL || "http://werentify-newfrontend-sb3idl-57c17f-40-160-2-18.traefik.me",
     credentials: true,
   }),
 );

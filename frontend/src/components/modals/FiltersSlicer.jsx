@@ -95,7 +95,7 @@ export default function FiltersSlicer({
           <input
             type="range" 
             min="1"
-            max="20"
+            max="1000"
             value={distanceFilter}
             onChange={(e) =>
               setDistanceFilter(+e.target.value)
