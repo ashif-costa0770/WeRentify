@@ -2,8 +2,18 @@
 
 import { loginAPI } from "@/services/auth.service";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { toast } from "sonner";
+
+function SearchParamsRedirectHandler({ onRedirectChange }) {
+  const searchParams = useSearchParams();
+
+  useEffect(() => {
+    onRedirectChange(searchParams.get("redirect") || "");
+  }, [onRedirectChange, searchParams]);
+
+  return null;
+}
 
 export default function EmailSignInModal({
   open,
@@ -12,7 +22,7 @@ export default function EmailSignInModal({
   setIsLogin,
 }) {
   const router = useRouter();
-  const searchParams = useSearchParams();
+  const [redirectPath, setRedirectPath] = useState("");
   // Updated login fields to match backend auth API: email + password.
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -37,8 +47,8 @@ export default function EmailSignInModal({
       toast.success("Login successful");
       setIsLogin(true);
       onClose();
-      const redirect = searchParams.get("redirect");
-      const safeRedirect = redirect && redirect.startsWith("/") ? redirect : "/";
+      const safeRedirect =
+        redirectPath && redirectPath.startsWith("/") ? redirectPath : "/";
       router.push(safeRedirect);
     } catch (error) {
       toast.error(error?.response?.data?.message || "Login failed");
@@ -49,6 +59,10 @@ export default function EmailSignInModal({
 
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[10000] p-4">
+      <Suspense fallback={null}>
+        <SearchParamsRedirectHandler onRedirectChange={setRedirectPath} />
+      </Suspense>
+
       <div className="relative max-w-md w-full bg-white rounded-3xl shadow-2xl p-8 animate-slideUp overflow-y-auto max-h-[90vh]">
         {/* Close Button */}
         <button
