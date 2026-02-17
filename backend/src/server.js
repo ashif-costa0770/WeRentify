@@ -19,12 +19,19 @@ const PORT = process.env.PORT || 5000;
 app.use(helmet()); // Security headers
 app.use(compression()); // Compress responses
 app.use(cookieParser());
+// app.use(
+//   cors({
+//     origin: process.env.FRONTEND_URL || "http://localhost:3000",
+//     credentials: true,
+//   }),
+// );
 app.use(
   cors({
-    origin: process.env.FRONTEND_URL || "http://localhost:3000",
+    origin: true,          // ✅ Allow any origin dynamically
     credentials: true,
-  }),
+  })
 );
+
 app.use(express.json()); // Parse JSON bodies
 app.use(express.urlencoded({ extended: true })); // Parse URL-encoded bodies
 
