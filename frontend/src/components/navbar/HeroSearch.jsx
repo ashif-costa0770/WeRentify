@@ -20,12 +20,12 @@ export default function HeroSearch() {
   return (
     <>
       <section className="max-w-7xl mx-auto px-2 ">
-        <div className="relative rounded-2xl overflow-hidden shadow-xl">
+        <div className="relative rounded-2xl overflow-hidden shadow-xl ">
           <div className="absolute inset-0 bg-linear-to-r from-[#6366f1] via-[#d946ef] to-[#ec4899]" />
 
           <div className="relative px-4 sm:px-6 md:px-8 py-2 md:py-2">
             {/* Hero Text */}
-            <div className="text-center md:text-left mb-6 md:mb-4">
+            <div className="text-center mb-6 md:mb-4">
               <h1 className="text-xl sm:text-lg md:text-lg lg:text-xl font-extrabold text-white">
                 Borrow what you need. Lend what you don&apos;t.
               </h1>

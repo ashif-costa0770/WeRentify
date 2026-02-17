@@ -3,6 +3,7 @@ import Image from "next/image";
 import { useUser } from "@/context/UserContext";
 import DOMPurify from "dompurify";
 import { toast } from "sonner";
+import { shareOrCopyLink } from "@/utils/shareLink";
 
 import {
   X,
@@ -88,17 +89,18 @@ export default function ProductModal({
     }
   };
 
-  const handleShareClick = (e) => {
-    if (navigator.share) {
-      navigator.share({
-        title: selectedItem.name,
-        text: `Check out this ${selectedItem.name} for rent on WeRentify!`,
-        url: window.location.href,
-      });
-    } else {
-      navigator.clipboard.writeText(window.location.href);
-      alert("Link copied to clipboard!");
-    }
+  const handleShareClick = async () => {
+    const itemId = selectedItem._id || selectedItem.id;
+    const result = await shareOrCopyLink({
+      title: selectedItem.itemName || selectedItem.name,
+      text: `Check out this ${selectedItem.itemName || selectedItem.name} for rent on WeRentify!`,
+      url: itemId ? `/?item=${itemId}` : "/",
+    });
+
+    if (result === "shared") toast.success("Listing shared!");
+    else if (result === "copied") toast.success("Link copied to clipboard!");
+    else if (result !== "cancelled")
+      toast.error("Unable to share listing right now");
   };
 
   return (

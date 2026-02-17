@@ -1,43 +1,72 @@
-// app/community/modals/CreatePostModal.jsx
 "use client";
+
 import Image from "next/image";
 import { createPost } from "@/services/post.service";
 import { toast } from "sonner";
-
-import { useState, useRef } from "react";
+import { useMemo, useRef, useState } from "react";
 import { X, Wrench, Package, Camera, Calendar } from "lucide-react";
-import RichTextEditor from "@/components/tiptap-editor/RichTextEditor"; // Add this line
+import RichTextEditor from "@/components/tiptap-editor/RichTextEditor";
+
+const MAX_PHOTO_SIZE_MB = 5;
+
+const emptyForm = {
+  type: "service",
+  title: "",
+  description: "",
+  category: "",
+  city: "",
+  state: "",
+  dateNeeded: "",
+  budget: "",
+  photos: [],
+};
+
+const emptyPreviews = [null, null, null];
+
+function stripHtml(value = "") {
+  return value.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
+}
+
+function todayLocalISO() {
+  const now = new Date();
+  const tz = now.getTimezoneOffset() * 60000;
+  return new Date(now.getTime() - tz).toISOString().slice(0, 10);
+}
 
 export default function CreatePostModal({ isOpen, onClose, onSubmit }) {
-  const [formData, setFormData] = useState({
-    type: "service",
-    title: "",
-    description: "",
-    category: "",
-    city: "",
-    state: "",
-    dateNeeded: "",
-    budget: "",
-    photos: [],
-  });
-
-  const [photoPreviews, setPhotoPreviews] = useState([null, null, null]);
+  const [formData, setFormData] = useState(emptyForm);
+  const [errors, setErrors] = useState({});
+  const [photoPreviews, setPhotoPreviews] = useState(emptyPreviews);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const fileInputRefs = [useRef(null), useRef(null), useRef(null)];
 
+  const minDate = useMemo(() => todayLocalISO(), []);
+
   if (!isOpen) return null;
 
+  const closeAndReset = () => {
+    setFormData(emptyForm);
+    setErrors({});
+    setPhotoPreviews(emptyPreviews);
+    onClose();
+  };
+
+  const setField = (name, value) => {
+    setFormData((prev) => ({ ...prev, [name]: value }));
+    setErrors((prev) => ({ ...prev, [name]: undefined }));
+  };
+
   const handleTypeSelect = (type) => {
-    setFormData({ ...formData, type });
+    setField("type", type);
   };
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
+    setField(name, value);
   };
 
   const handleDescriptionChange = (content) => {
-    setFormData({ ...formData, description: content });
+    setField("description", content);
   };
 
   const handlePhotoClick = (index) => {
@@ -46,78 +75,32 @@ export default function CreatePostModal({ isOpen, onClose, onSubmit }) {
 
   const handleFileChange = (e, index) => {
     const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const newPreviews = [...photoPreviews];
-        newPreviews[index] = reader.result;
-        setPhotoPreviews(newPreviews);
+    if (!file) return;
 
-        const newPhotos = [...formData.photos];
-        newPhotos[index] = file;
-        setFormData({ ...formData, photos: newPhotos });
-      };
-      reader.readAsDataURL(file);
+    const isImage = file.type.startsWith("image/");
+    const isSizeValid = file.size <= MAX_PHOTO_SIZE_MB * 1024 * 1024;
+
+    if (!isImage) {
+      toast.error("Please upload a valid image file.");
+      return;
     }
-  };
 
-  //! Handle submit
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-
-    if (isSubmitting) return; // 🛑 block double clicks
-
-    setIsSubmitting(true);
-
-    try {
-      const payload = new FormData();
-
-      payload.append("type", formData.type);
-      payload.append("title", formData.title);
-      payload.append("description", formData.description);
-      payload.append("category", formData.category);
-      payload.append("location", `${formData.city}, ${formData.state}`);
-      payload.append("dateNeeded", formData.dateNeeded);
-      payload.append("budget", formData.budget);
-
-      // append photos (ONLY real files)
-      formData.photos.forEach((file) => {
-        if (file) {
-          payload.append("photos", file);
-        }
-      });
-
-      await createPost(payload);
-      if (onSubmit) {
-        await onSubmit(); // 👈 Refresh the list
-      }
-
-      toast.success("Post created!");
-      onClose();
-
-      // reset form
-      setFormData({
-        type: "service",
-        title: "",
-        description: "",
-        category: "",
-        city: "",
-        state: "",
-        dateNeeded: "",
-        budget: "",
-        photos: [],
-      });
-      setPhotoPreviews([null, null, null]);
-    } catch (err) {
-      const msg =
-        err?.response?.data?.message ||
-        err?.response?.data?.errors ||
-        err.message;
-      toast.error("Failed to create post: " + (typeof msg === "string" ? msg : JSON.stringify(msg)));
-      console.error(err);
-    } finally {
-      setIsSubmitting(false); // ✅ always release
+    if (!isSizeValid) {
+      toast.error(`Photo size must be ${MAX_PHOTO_SIZE_MB}MB or less.`);
+      return;
     }
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const newPreviews = [...photoPreviews];
+      newPreviews[index] = reader.result;
+      setPhotoPreviews(newPreviews);
+
+      const newPhotos = [...formData.photos];
+      newPhotos[index] = file;
+      setField("photos", newPhotos);
+    };
+    reader.readAsDataURL(file);
   };
 
   const handleRemovePhoto = (index) => {
@@ -127,296 +110,373 @@ export default function CreatePostModal({ isOpen, onClose, onSubmit }) {
 
     const newPhotos = [...formData.photos];
     newPhotos[index] = null;
-    setFormData({ ...formData, photos: newPhotos });
+    setField("photos", newPhotos);
+  };
+
+  const validateForm = () => {
+    const nextErrors = {};
+    const cleanDescription = stripHtml(formData.description);
+
+    if (!formData.type || !["service", "item"].includes(formData.type)) {
+      nextErrors.type = "Please choose request type.";
+    }
+
+    if (!formData.title.trim()) {
+      nextErrors.title = "Title is required.";
+    } else if (formData.title.trim().length < 8) {
+      nextErrors.title = "Title should be at least 8 characters.";
+    }
+
+    if (!cleanDescription) {
+      nextErrors.description = "Description is required.";
+    } else if (cleanDescription.length < 20) {
+      nextErrors.description = "Description should be at least 20 characters.";
+    }
+
+    if (!formData.category.trim()) {
+      nextErrors.category = "Category is required.";
+    }
+
+    if (!formData.city.trim()) {
+      nextErrors.city = "City is required.";
+    }
+
+    if (!formData.state.trim()) {
+      nextErrors.state = "State is required.";
+    }
+
+    if (!formData.dateNeeded) {
+      nextErrors.dateNeeded = "Date needed is required.";
+    } else if (formData.dateNeeded < minDate) {
+      nextErrors.dateNeeded = "Date needed cannot be in the past.";
+    }
+
+    if (formData.budget.trim().length > 60) {
+      nextErrors.budget = "Budget should be under 60 characters.";
+    }
+
+    const validPhotos = formData.photos.filter(Boolean);
+    if (validPhotos.some((file) => !file.type.startsWith("image/"))) {
+      nextErrors.photos = "Only image files are allowed.";
+    }
+
+    setErrors(nextErrors);
+    return Object.keys(nextErrors).length === 0;
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (isSubmitting) return;
+
+    if (!validateForm()) {
+      toast.error("Please fix the highlighted fields.");
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      const payload = new FormData();
+      payload.append("type", formData.type);
+      payload.append("title", formData.title.trim());
+      payload.append("description", formData.description);
+      payload.append("category", formData.category.trim());
+      payload.append("location", `${formData.city.trim()}, ${formData.state.trim()}`);
+      payload.append("dateNeeded", formData.dateNeeded);
+      payload.append("budget", formData.budget.trim());
+
+      formData.photos.forEach((file) => {
+        if (file) payload.append("photos", file);
+      });
+
+      await createPost(payload);
+      if (onSubmit) await onSubmit();
+
+      toast.success("Post created successfully!");
+      closeAndReset();
+    } catch (err) {
+      const msg =
+        err?.response?.data?.message ||
+        err?.response?.data?.errors ||
+        err.message ||
+        "Failed to create post";
+      toast.error(
+        "Failed to create post: " +
+          (typeof msg === "string" ? msg : JSON.stringify(msg)),
+      );
+      console.error(err);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
-      <div className="relative w-full max-w-2xl bg-white rounded-3xl shadow-2xl max-h-[90vh] overflow-y-auto">
-        {/* Header */}
-        <div className="sticky top-0 bg-white px-8 pt-8 pb-4 border-b border-gray-100 z-10">
-          <div className="flex items-start justify-between">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-3 backdrop-blur-sm sm:p-4">
+      <div className="relative flex h-[92dvh] w-full max-w-2xl flex-col overflow-hidden rounded-3xl bg-white shadow-2xl sm:h-auto sm:max-h-[92vh]">
+        <div className="shrink-0 border-b border-gray-100 bg-gradient-to-r from-indigo-50 to-pink-50 px-5 py-4 sm:px-8 sm:py-5">
+          <div className="flex items-start justify-between gap-3">
             <div>
-              <h2 className="text-3xl font-bold bg-gradient-to-r from-[#5B4FE9] to-[#E95FC8] bg-clip-text text-transparent">
+              <h2 className="text-2xl font-black bg-gradient-to-r from-[#5B4FE9] to-[#E95FC8] bg-clip-text text-transparent sm:text-3xl">
                 Create Post
               </h2>
-              <p className="text-gray-500 mt-1">
+              <p className="mt-1 text-sm text-gray-600">
                 Request a service or item from your community
               </p>
             </div>
             <button
-              onClick={onClose}
-              className="p-2 hover:bg-gray-100 cursor-pointer rounded-full transition-colors duration-200 group"
+              onClick={closeAndReset}
+              className="rounded-full cursor-pointer p-2 transition-colors hover:bg-white/80"
+              aria-label="Close"
             >
-              <X className="w-5 h-5 text-gray-400 group-hover:text-gray-600" />
+              <X className="h-5 w-5 text-gray-500" />
             </button>
           </div>
         </div>
 
-        {/* Form */}
-        <form onSubmit={handleSubmit} className="px-8 py-6 space-y-6">
-          {/* Type Selection */}
-          <div>
-            <label className="block text-sm font-bold text-gray-900 mb-3">
-              What are you looking for? <span className="text-red-500">*</span>
-            </label>
-            <div className="grid grid-cols-2 gap-4">
-              {/* Service Request Option */}
-              <button
-                type="button"
-                onClick={() => handleTypeSelect("service")}
-                className={`flex flex-col cursor-pointer items-center justify-center p-6 rounded-xl border-2 transition-all duration-200 ${
-                  formData.type === "service"
-                    ? "border-[#5B4FE9] bg-purple-50/50 shadow-md"
-                    : "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
-                }`}
-              >
-                <div
-                  className={`p-3 rounded-full mb-3 ${
+        <form onSubmit={handleSubmit} className="min-h-0 flex-1 overflow-y-auto px-5 py-5 sm:px-8 sm:py-6">
+          <div className="space-y-6">
+            <div>
+              <label className="mb-3 block text-sm font-bold text-gray-900">
+                What are you looking for? <span className="text-rose-500">*</span>
+              </label>
+              <div className="grid  grid-cols-1 gap-3 sm:grid-cols-2">
+                <button
+                  type="button"
+                  onClick={() => handleTypeSelect("service")}
+                  className={`rounded-2xl border-2 cursor-pointer p-5 text-left transition-all ${
                     formData.type === "service"
-                      ? "bg-purple-100"
-                      : "bg-gray-100"
+                      ? "border-[#5B4FE9] bg-purple-50 shadow-sm"
+                      : "border-gray-200 hover:border-gray-300"
                   }`}
                 >
-                  <Wrench
-                    className={`w-8 h-8 ${
-                      formData.type === "service"
-                        ? "text-[#5B4FE9]"
-                        : "text-gray-600"
-                    }`}
-                  />
-                </div>
-                <span
-                  className={`font-bold mb-1 ${
-                    formData.type === "service"
-                      ? "text-gray-900"
-                      : "text-gray-700"
-                  }`}
-                >
-                  Service Request
-                </span>
-                <span className="text-xs text-gray-500 text-center">
-                  Photographer, makeup artist, etc.
-                </span>
-              </button>
+                  <div className="mb-2 inline-flex rounded-full bg-white p-2 shadow-sm">
+                    <Wrench className="h-5 w-5 text-[#5B4FE9]" />
+                  </div>
+                  <p className="font-bold text-gray-900">Service Request</p>
+                  <p className="text-xs text-gray-500">Photographer, makeup artist, etc.</p>
+                </button>
 
-              {/* Item Request Option */}
-              <button
-                type="button" // 👈 this is important to prevent form submission
-                onClick={() => handleTypeSelect("item")}
-                className={`flex flex-col cursor-pointer items-center justify-center p-6 rounded-xl border-2 transition-all duration-200 ${
+                <button
+                  type="button"
+                  onClick={() => handleTypeSelect("item")}
+                  className={`rounded-2xl border-2 cursor-pointer p-5 text-left transition-all ${
+                    formData.type === "item"
+                      ? "border-[#5B4FE9] bg-purple-50 shadow-sm"
+                      : "border-gray-200 hover:border-gray-300"
+                  }`}
+                >
+                  <div className="mb-2 inline-flex rounded-full bg-white p-2 shadow-sm">
+                    <Package className="h-5 w-5 text-[#5B4FE9]" />
+                  </div>
+                  <p className="font-bold text-gray-900">Item Request</p>
+                  <p className="text-xs text-gray-500">Power washer, camera, etc.</p>
+                </button>
+              </div>
+              {errors.type && <p className="mt-1 text-xs text-rose-600">{errors.type}</p>}
+            </div>
+
+            <div>
+              <label className="mb-2 block text-sm font-bold text-gray-900">
+                Title <span className="text-rose-500">*</span>
+              </label>
+              <input
+                type="text"
+                name="title"
+                value={formData.title}
+                onChange={handleInputChange}
+                placeholder={
                   formData.type === "item"
-                    ? "border-[#5B4FE9] bg-purple-50/50 shadow-md"
-                    : "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
+                    ? "e.g., Looking for power washer"
+                    : "e.g., Need photographer for wedding"
+                }
+                className={`w-full rounded-xl border px-4 py-3 text-gray-700 transition-all placeholder:text-gray-400 focus:outline-none ${
+                  errors.title
+                    ? "border-rose-400 ring-2 ring-rose-100"
+                    : "border-gray-200 focus:border-[#5B4FE9] focus:ring-2 focus:ring-purple-500/20"
                 }`}
-              >
-                <div
-                  className={`p-3 rounded-full mb-3 ${
-                    formData.type === "item" ? "bg-purple-100" : "bg-gray-100"
-                  }`}
-                >
-                  <Package
-                    className={`w-8 h-8 ${
-                      formData.type === "item"
-                        ? "text-[#5B4FE9]"
-                        : "text-gray-600"
-                    }`}
-                  />
-                </div>
-                <span
-                  className={`font-bold mb-1 ${
-                    formData.type === "item" ? "text-gray-900" : "text-gray-700"
-                  }`}
-                >
-                  Item Request
-                </span>
-                <span className="text-xs text-gray-500 text-center">
-                  Power washer, camera, etc.
-                </span>
-              </button>
+              />
+              {errors.title && <p className="mt-1 text-xs text-rose-600">{errors.title}</p>}
             </div>
-          </div>
 
-          {/* Title */}
-          <div>
-            <label className="block text-sm font-bold text-gray-900 mb-2">
-              Title <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="text"
-              name="title"
-              value={formData.title}
-              onChange={handleInputChange}
-              //   placeholder="e.g., Need photographer for wedding"
-              placeholder={`${formData.type === "item" ? "e.g., Looking for power washer" : "e.g., Need photographer for wedding"}`}
-              required
-              className="w-full px-4 py-3 text-gray-700 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-[#5B4FE9] transition-all placeholder:text-gray-400"
-            />
-          </div>
-
-          {/* Description */}
-          <div>
-            <label className="block text-sm font-bold text-gray-900 mb-2">
-              Description <span className="text-red-500">*</span>
-            </label>
-            <RichTextEditor
-              value={formData.description}
-              onChange={handleDescriptionChange}
-            />
-          </div>
-
-          {/* Category */}
-          <div>
-            <label className="block text-sm font-bold text-gray-900 mb-2">
-              Category <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="text"
-              name="category"
-              value={formData.category}
-              onChange={handleInputChange}
-              placeholder="e.g. Photography, Beauty, Moving"
-              required
-              className="w-full text-gray-700 px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-[#5B4FE9] transition-all placeholder:text-gray-400"
-            />
-          </div>
-
-          {/* City & State */}
-          <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-bold text-gray-900 mb-2">
-                City <span className="text-red-500">*</span>
+              <label className="mb-2 block text-sm font-bold text-gray-900">
+                Description <span className="text-rose-500">*</span>
+              </label>
+              <div className={`${errors.description ? "rounded-xl ring-2 ring-rose-100" : ""}`}>
+                <RichTextEditor value={formData.description} onChange={handleDescriptionChange} />
+              </div>
+              {errors.description ? (
+                <p className="mt-1 text-xs text-rose-600">{errors.description}</p>
+              ) : (
+                <p className="mt-1 text-xs text-gray-500">Minimum 20 characters.</p>
+              )}
+            </div>
+
+            <div>
+              <label className="mb-2 block text-sm font-bold text-gray-900">
+                Category <span className="text-rose-500">*</span>
               </label>
               <input
                 type="text"
-                name="city"
-                value={formData.city}
+                name="category"
+                value={formData.category}
                 onChange={handleInputChange}
-                placeholder="Orlando"
-                required
-                className="w-full text-gray-700 px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-[#5B4FE9] transition-all placeholder:text-gray-400"
+                placeholder="e.g. Photography, Beauty, Moving"
+                className={`w-full rounded-xl border px-4 py-3 text-gray-700 transition-all placeholder:text-gray-400 focus:outline-none ${
+                  errors.category
+                    ? "border-rose-400 ring-2 ring-rose-100"
+                    : "border-gray-200 focus:border-[#5B4FE9] focus:ring-2 focus:ring-purple-500/20"
+                }`}
               />
+              {errors.category && <p className="mt-1 text-xs text-rose-600">{errors.category}</p>}
             </div>
+
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div>
+                <label className="mb-2 block text-sm font-bold text-gray-900">
+                  City <span className="text-rose-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  name="city"
+                  value={formData.city}
+                  onChange={handleInputChange}
+                  placeholder="Orlando"
+                  className={`w-full rounded-xl border px-4 py-3 text-gray-700 transition-all placeholder:text-gray-400 focus:outline-none ${
+                    errors.city
+                      ? "border-rose-400 ring-2 ring-rose-100"
+                      : "border-gray-200 focus:border-[#5B4FE9] focus:ring-2 focus:ring-purple-500/20"
+                  }`}
+                />
+                {errors.city && <p className="mt-1 text-xs text-rose-600">{errors.city}</p>}
+              </div>
+
+              <div>
+                <label className="mb-2 block text-sm font-bold text-gray-900">
+                  State <span className="text-rose-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  name="state"
+                  value={formData.state}
+                  onChange={handleInputChange}
+                  placeholder="FL"
+                  className={`w-full rounded-xl border px-4 py-3 text-gray-700 transition-all placeholder:text-gray-400 focus:outline-none ${
+                    errors.state
+                      ? "border-rose-400 ring-2 ring-rose-100"
+                      : "border-gray-200 focus:border-[#5B4FE9] focus:ring-2 focus:ring-purple-500/20"
+                  }`}
+                />
+                {errors.state && <p className="mt-1 text-xs text-rose-600">{errors.state}</p>}
+              </div>
+            </div>
+
             <div>
-              <label className="block text-sm font-bold text-gray-900 mb-2">
-                State <span className="text-red-500">*</span>
+              <label className="mb-2 block text-sm font-bold text-gray-900">
+                Date Needed <span className="text-rose-500">*</span>
               </label>
+              <div className="relative">
+                <input
+                  type="date"
+                  name="dateNeeded"
+                  value={formData.dateNeeded}
+                  onChange={handleInputChange}
+                  min={minDate}
+                  className={`w-full rounded-xl border px-4 py-3 pr-11 text-gray-700 transition-all focus:outline-none ${
+                    errors.dateNeeded
+                      ? "border-rose-400 ring-2 ring-rose-100"
+                      : "border-gray-200 focus:border-[#5B4FE9] focus:ring-2 focus:ring-purple-500/20"
+                  }`}
+                />                                                 
+              </div>                          
+              {errors.dateNeeded && (
+                <p className="mt-1 text-xs text-rose-600">{errors.dateNeeded}</p>
+              )}
+            </div>
+
+            <div>
+              <label className="mb-2 block text-sm font-bold text-gray-900">Budget (Optional)</label>
               <input
                 type="text"
-                name="state"
-                value={formData.state}
+                name="budget"
+                value={formData.budget}
                 onChange={handleInputChange}
-                placeholder="FL"
-                required
-                className="w-full text-gray-700 px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-[#5B4FE9] transition-all placeholder:text-gray-400"
+                placeholder="e.g. $500-800 or $50/day"
+                className={`w-full rounded-xl border px-4 py-3 text-gray-700 transition-all placeholder:text-gray-400 focus:outline-none ${
+                  errors.budget
+                    ? "border-rose-400 ring-2 ring-rose-100"
+                    : "border-gray-200 focus:border-[#5B4FE9] focus:ring-2 focus:ring-purple-500/20"
+                }`}
               />
+              {errors.budget && <p className="mt-1 text-xs text-rose-600">{errors.budget}</p>}
+            </div>
+
+            <div>
+              <label className="mb-2 block text-sm font-bold text-gray-900">Photos (Optional)</label>
+              <p className="mb-3 text-sm text-gray-500">
+                Add photos to show examples of what you are looking for
+              </p>
+              <div className="grid  grid-cols-3 gap-3 sm:gap-4">
+                {[0, 1, 2].map((index) => (
+                  <div key={index} className="relative ">
+                    <input
+                      type="file"
+                      ref={fileInputRefs[index]}
+                      onChange={(e) => handleFileChange(e, index)}
+                      accept="image/*"
+                      className="hidden"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => handlePhotoClick(index)}
+                      className={`flex aspect-square cursor-pointer w-full flex-col items-center justify-center gap-2 overflow-hidden rounded-xl border-2 border-dashed transition-all ${
+                        photoPreviews[index]
+                          ? "border-[#5B4FE9] bg-purple-50"
+                          : "border-gray-300 bg-gray-50 hover:border-gray-400"
+                      }`}
+                    >
+                      {photoPreviews[index] ? (
+                        <>
+                          <Image
+                            src={photoPreviews[index]}
+                            alt={`Preview ${index + 1}`}
+                            width={400}
+                            height={400}
+                            className="h-full w-full object-cover"
+                          />
+                          <span
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleRemovePhoto(index);
+                            }}
+                            role="button"
+                            tabIndex={0}
+                            className="absolute -right-2 -top-2 flex h-6 w-6 cursor-pointer items-center justify-center rounded-full bg-red-500 text-white shadow-md"
+                          >
+                            <X className="h-3.5 w-3.5" />
+                          </span>
+                        </>
+                      ) : (
+                        <>
+                          <Camera className="h-7 w-7 text-gray-400" />
+                          <span className="text-xs text-gray-500">Add Photo</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+                ))}
+              </div>
+              {errors.photos && <p className="mt-1 text-xs text-rose-600">{errors.photos}</p>}
             </div>
           </div>
 
-          {/* Date Needed */}
-          <div>
-            <label className="block text-sm font-bold text-gray-900 mb-2">
-              Date Needed <span className="text-red-500">*</span>
-            </label>
-            <div className="relative">
-              <input
-                type="date"
-                name="dateNeeded"
-                value={formData.dateNeeded}
-                onChange={handleInputChange}
-                required
-                placeholder="dd-mm-yyyy"
-                className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-[#5B4FE9] transition-all placeholder:text-gray-400 text-gray-700"
-              />
-              <Calendar className="absolute  right-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
-            </div>
-          </div>
-
-          {/* Budget */}
-          <div>
-            <label className="block text-sm font-bold text-gray-900 mb-2">
-              Budget (Optional)
-            </label>
-            <input
-              type="text"
-              name="budget"
-              value={formData.budget}
-              onChange={handleInputChange}
-              placeholder="e.g. $500-800 or $50/day"
-              className="w-full text-gray-700 px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-[#5B4FE9] transition-all placeholder:text-gray-400"
-            />
-          </div>
-
-          {/* Photos */}
-          <div>
-            <label className="block text-sm font-bold text-gray-900 mb-2">
-              Photos (Optional)
-            </label>
-            <p className="text-sm text-gray-500 mb-3">
-              Add photos to show examples of what you&apos;re looking for
-            </p>
-            <div className="grid grid-cols-3 gap-4">
-              {[0, 1, 2].map((index) => (
-                <div key={index} className="relative">
-                  <input
-                    type="file"
-                    ref={fileInputRefs[index]}
-                    onChange={(e) => handleFileChange(e, index)}
-                    accept="image/*"
-                    className="hidden"
-                  />
-                  <button
-                    type="button" // 👈 this is important to prevent form submission
-                    onClick={() => handlePhotoClick(index)}
-                    className={`w-full aspect-square rounded-xl border-2 border-dashed transition-all duration-200 flex flex-col items-center justify-center gap-2 overflow-hidden ${
-                      photoPreviews[index]
-                        ? "border-[#5B4FE9] bg-purple-50"
-                        : "border-gray-300 hover:border-gray-400 bg-gray-50"
-                    }`}
-                  >
-                    {photoPreviews[index] ? (
-                      <>
-                        <Image
-                          src={photoPreviews[index]}
-                          alt={`Preview ${index + 1}`}
-                          width={500}
-                          height={500}
-                          className="w-full h-full object-cover"
-                        />
-                        {/* Remove Button */}
-                        <div
-                          onClick={(e) => {
-                            e.stopPropagation(); // prevents file picker
-                            handleRemovePhoto(index);
-                          }}
-                          role="button"
-                          tabIndex={0}
-                          className="absolute -top-2 -right-2 w-5 h-5 bg-red-500 hover:bg-red-600 
-                                     text-white cursor-pointer rounded-full flex items-center 
-                                     justify-center shadow-md transition-colors z-10"
-                        >
-                          <X className="w-3 h-3" />
-                        </div>
-                      </>
-                    ) : (
-                      <>
-                        <Camera className="w-8 h-8 text-gray-400" />
-                        <span className="text-xs text-gray-500">Add Photo</span>
-                      </>
-                    )}
-                  </button>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Submit Button */}
-          <div className="pt-4">
+          <div className="sticky bottom-0 mt-6 border border-gray-100 bg-white/95 py-4 backdrop-blur">
             <button
               type="submit"
-              className="w-full py-4 cursor-pointer rounded-xl font-bold text-white bg-gradient-to-r from-[#5B4FE9] to-[#E95FC8] hover:shadow-lg hover:shadow-purple-500/25 transition-all duration-200 transform hover:-translate-y-0.5"
+              disabled={isSubmitting}
+              className="w-full cursor-pointer rounded-xl bg-gradient-to-r from-[#5B4FE9] to-[#E95FC8] py-3.5 font-bold text-white transition-all duration-200 hover:shadow-lg hover:shadow-purple-500/25 disabled:cursor-not-allowed disabled:opacity-70"
             >
-              Post to Community
+              {isSubmitting ? "Posting..." : "Post to Community"}
             </button>
           </div>
         </form>

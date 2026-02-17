@@ -3,6 +3,7 @@ import React from "react";
 import { useUser } from "@/context/UserContext";
 import { Star, Heart } from "lucide-react";
 import Image from "next/image";
+import { toast } from "sonner";
 
 export default function ServiceCard({ service, onClick }) {
   const { favorites, toggleFavorite } = useUser();
@@ -28,7 +29,7 @@ export default function ServiceCard({ service, onClick }) {
       });
     } else {
       navigator.clipboard.writeText(window.location.href);
-      alert("Link copied to clipboard!");
+      toast.success("Link copied to clipboard!");
     }
   };
 

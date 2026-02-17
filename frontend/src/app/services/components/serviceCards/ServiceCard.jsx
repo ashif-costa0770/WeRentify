@@ -4,6 +4,7 @@ import { useUser } from "@/context/UserContext";
 import { Star, Heart } from "lucide-react";
 import Image from "next/image";
 import { toast } from "sonner";
+import { shareOrCopyLink } from "@/utils/shareLink";
 
 export default function ServiceCard({ service, onClick }) {
   const { favorites, addFavorite, removeFavorite, isLogin, setShowSignIn } =
@@ -48,18 +49,18 @@ export default function ServiceCard({ service, onClick }) {
     }
   };
 
-  const handleShareClick = (e) => {
+  const handleShareClick = async (e) => {
     e.stopPropagation();
-    if (navigator.share) {
-      navigator.share({
-        title: service.name,
-        text: `Check out this ${service.name}!`,
-        url: window.location.href,
-      });
-    } else {
-      navigator.clipboard.writeText(window.location.href);
-      alert("Link copied to clipboard!");
-    }
+    const result = await shareOrCopyLink({
+      title: service.name,
+      text: `Check out this ${service.name}!`,
+      url: `/services?service=${service._id || ""}`,
+    });
+
+    if (result === "shared") toast.success("Service shared!");
+    else if (result === "copied") toast.success("Link copied to clipboard!");
+    else if (result !== "cancelled")
+      toast.error("Unable to share service right now");
   };
 
   return (

@@ -4,6 +4,7 @@ import { Heart, MessageCircle, Share, Bookmark } from "lucide-react";
 import { timeAgo } from "@/utils/timeAgo";
 import { likePost, savePost } from "@/services/post.service";
 import { formatDate } from "@/utils/formatDate";
+import { shareOrCopyLink } from "@/utils/shareLink";
 import { toast } from "sonner";
 
 export default function PostCard({
@@ -164,30 +165,17 @@ export default function PostCard({
           {/* Share */}
           <button
             onClick={async () => {
-              const shareUrl = `${window.location.origin}/community?post=${post._id}`;
+              const result = await shareOrCopyLink({
+                title: post.title,
+                text: post.description,
+                url: `/community?post=${post._id}`,
+              });
 
-              if (navigator.share) {
-                try {
-                  await navigator.share({
-                    title: post.title,
-                    text: post.description,
-                    url: shareUrl,
-                  });
-                  toast.success("Post shared!");
-                } catch (error) {
-                  if (error?.name !== "AbortError") {
-                    toast.error("Unable to share post right now");
-                  }
-                }
-                return;
-              }
-
-              try {
-                await navigator.clipboard.writeText(shareUrl);
+              if (result === "shared") toast.success("Post shared!");
+              else if (result === "copied")
                 toast.success("Link copied to clipboard!");
-              } catch (error) {
-                toast.error("Unable to copy link right now");
-              }
+              else if (result !== "cancelled")
+                toast.error("Unable to share post right now");
             }}
             className="hover:text-gray-900 transition cursor-pointer"
             aria-label="Share post"

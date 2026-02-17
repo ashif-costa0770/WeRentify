@@ -109,7 +109,7 @@ export default function EmailSignInModal({
           <button
             type="submit"
             disabled={!isValidEmail || !isValidPassword || isLoading}
-            className={`w-full py-3 rounded-xl font-semibold transition-colors ${
+            className={`w-full py-3 rounded-xl cursor-pointer font-semibold transition-colors ${
               isValidEmail && isValidPassword && !isLoading
                 ? "bg-indigo-600 text-white hover:bg-indigo-700"
                 : "bg-gray-300 text-gray-500 cursor-not-allowed"

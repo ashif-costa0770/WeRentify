@@ -108,16 +108,12 @@ export default function CommentModal({
     }
   };
 
-  // 🔹 Delete Comment
-  const handleDelete = async (commentId) => {
+  const deleteCommentById = async (commentId) => {
     if (!currentUser) {
       onClose();
       onRequireLogin();
       return;
     }
-
-    if (!window.confirm("Are you sure you want to delete this comment?"))
-      return;
 
     try {
       const res = await deleteComment(post._id, commentId);
@@ -131,6 +127,21 @@ export default function CommentModal({
       console.error("Failed to delete comment:", error);
       toast.error("Failed to delete comment: " + error.message);
     }
+  };
+
+  // 🔹 Delete Comment with toast confirmation (no native confirm dialog)
+  const handleDelete = (commentId) => {
+    toast("Delete this comment?", {
+      description: "This action cannot be undone.",
+      action: {
+        label: "Delete",
+        onClick: () => deleteCommentById(commentId),
+      },
+      cancel: {
+        label: "Cancel",
+        onClick: () => {},
+      },
+    });
   };
 
   if (!isOpen || !post) return null;

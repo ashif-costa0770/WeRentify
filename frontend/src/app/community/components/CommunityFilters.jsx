@@ -4,6 +4,7 @@
 import { useState } from "react";
 import CreatePostModal from "./modals/CreatePostModal";
 import { useUser } from "@/context/UserContext";
+import { toast } from "sonner";
 
 export default function CommunityFilters({
   activeFilter,
@@ -26,7 +27,7 @@ export default function CommunityFilters({
   };
 
   const handleCreatePost = (formData) => {
-    alert("Post created successfully!");
+    toast.success("Post created successfully!");
     console.log("New post:", formData);
   };
 

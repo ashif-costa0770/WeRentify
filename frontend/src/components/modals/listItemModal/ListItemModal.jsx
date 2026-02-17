@@ -128,7 +128,7 @@ export default function ListItemModal({ isOpen, onClose, onListingCreated }) {
       const videos = (formData.videos || []).filter(Boolean);
 
       if (photos.length < 3) {
-        alert("Please attach at least 3 photos.");
+        toast.error("Please attach at least 3 photos.");
         setIsSubmitting(false);
         return;
       }
@@ -183,7 +183,7 @@ export default function ListItemModal({ isOpen, onClose, onListingCreated }) {
         const first = err.response.data.errors[0];
         message = first?.message || message;
       }
-      alert(message);
+      toast.error(message);
     } finally {
       setIsSubmitting(false);
     }
@@ -269,20 +269,20 @@ export default function ListItemModal({ isOpen, onClose, onListingCreated }) {
   };
 
   return (
-    <div className="fixed inset-0 z-40 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
-      <div className="relative w-full max-w-2xl bg-white rounded-3xl shadow-2xl max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 z-40 flex items-end justify-center bg-black/40 p-2 backdrop-blur-sm sm:items-center sm:p-4">
+      <div className="relative flex h-[96dvh] w-full max-w-2xl flex-col overflow-hidden rounded-3xl bg-white shadow-2xl sm:h-auto sm:max-h-[92dvh]">
         {/* Header */}
-        <div className="sticky top-0 bg-white px-8 pt-4 pb-2 z-20">
+        <div className="shrink-0 border-b border-gray-100 bg-white px-4 pb-3 pt-4 sm:px-8 sm:pb-2">
           <div className="flex items-start justify-between mb-4">
             <div>
-              <h2 className="text-3xl font-extrabold text-gray-800">
+              <h2 className="text-2xl font-extrabold text-gray-800 sm:text-3xl">
                 {getStepTitle()}
               </h2>
               <p className="text-gray-500 mt-1 text-sm">{getStepSubtitle()}</p>
             </div>
             <button
               onClick={onClose}
-              className="p-2 hover:bg-gray-100 rounded-full transition-colors duration-200 group"
+              className="p-2 hover:bg-gray-100 cursor-pointer rounded-full transition-colors duration-200 group"
             >
               <X className="w-5 h-5 text-gray-400 group-hover:text-gray-600" />
             </button>
@@ -292,15 +292,18 @@ export default function ListItemModal({ isOpen, onClose, onListingCreated }) {
         </div>
 
         {/* Form Content */}
-        <div className="px-8 py-4 ">{renderStep()}</div>
+        <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4 sm:px-8">
+          {renderStep()}
+        </div>
 
         {/* Footer Navigation */}
-        <div className="sticky bottom-0 bg-white px-8 py-6 border-t border-gray-100 flex gap-4">
+        <div className="shrink-0 border-t border-gray-100 bg-white px-4 py-4 sm:px-8 sm:py-6">
+          <div className="flex gap-3 sm:gap-4">
           {currentStep > 1 && (
             <button
               type="button"
               onClick={handleBack}
-              className="flex-1 py-3.5 px-6 cursor-pointer rounded-xl font-semibold text-gray-700 bg-white border-2 border-gray-200 hover:bg-gray-50 hover:border-gray-300 transition-all duration-200"
+              className="flex-1 rounded-xl cursor-pointer border-2 border-gray-200 bg-white px-4 py-3 font-semibold text-gray-700 transition-all duration-200 hover:border-gray-300 hover:bg-gray-50 sm:px-6 sm:py-3.5"
             >
               Back
             </button>
@@ -309,7 +312,7 @@ export default function ListItemModal({ isOpen, onClose, onListingCreated }) {
             type="button"
             onClick={handleNext}
             disabled={!validateStep(currentStep) || isSubmitting}
-            className={`flex-1 py-3.5 px-6 cursor-pointer rounded-xl font-bold text-white transition-all duration-200 ${
+            className={`flex-1 rounded-xl cursor-pointer px-4 py-3 font-bold text-white transition-all duration-200 sm:px-6 sm:py-3.5 ${
               currentStep === totalSteps && formData.stripeConnected
                 ? "bg-linear-to-r from-green-500 to-emerald-500 hover:shadow-lg hover:shadow-green-500/25"
                 : "bg-linear-to-r from-[#5B4FE9] to-[#9F4AE8] hover:shadow-lg hover:shadow-purple-500/25"
@@ -321,6 +324,7 @@ export default function ListItemModal({ isOpen, onClose, onListingCreated }) {
                 ? "Publish Listing"
                 : "Continue"}
           </button>
+          </div>
         </div>
       </div>
     </div>
