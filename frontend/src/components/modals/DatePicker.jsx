@@ -35,14 +35,14 @@ export default function DatePickerModal({ open, onClose }) {
       <div className="bg-white w-full max-w-5xl rounded-3xl  shadow-2xl overflow-hidden">
 
         {/* Tabs */}
-        <div className="flex justify-center gap-8 py-4 border-b">
+        <div className="flex justify-center gap-8 py-4 border-b-2 border-gray-300">
           {['Dates', 'Months', 'Flexible'].map(tab => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
               className={`px-6 py-2 cursor-pointer rounded-full font-semibold transition ${
                 activeTab === tab
-                  ? 'border-2 border-black text-black'
+                  ? 'border-2 border-gray-500 text-black'
                   : 'text-gray-500'
               }`}
             >
@@ -65,11 +65,11 @@ export default function DatePickerModal({ open, onClose }) {
                 return (
                   <div key={`${y}-${m}`}>
                     {/* Month Header */}
-                    <div className="flex items-center justify-between mb-6">
+                    <div className="flex items-center  justify-between mb-6">
                       {index === 0 ? (
                         <button
                           onClick={() => setBaseDate(new Date(year, month - 1))}
-                          className="text-xl ms-6 cursor-pointer font-bold text-black"
+                          className="text-xl  ms-6 cursor-pointer font-bold text-black"
                         >
                           ◀
                         </button>
@@ -176,7 +176,7 @@ export default function DatePickerModal({ open, onClose }) {
         </div>
 
         {/* Footer */}
-        <div className="border-t px-8 py-5 flex justify-between items-center">
+        <div className="border-t-2 border-gray-300 px-8 py-5 flex justify-between items-center">
           <button
             onClick={() => setSelectedDate(null)}
             className="underline cursor-pointer font-semibold text-gray-600 hover:text-gray-800"
