@@ -4,8 +4,7 @@ import Logo from "@/components/navbar/Logo";
 import PackageIcon from "@/components/icons/PackageIcon";
 import HomeIcon from "@/components/icons/HomeIcon";
 import UsersIcon from "@/components/icons/UsersIcon";
-import { Suspense, useEffect, useRef, useState } from "react";
-import { useSearchParams } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
 import SignUpModal from "@/components/modals/SignUpModal";
 import SignInModal from "@/components/modals/SignInModal";
 import LanguageCurrencyModal from "@/components/modals/LanguageCurrencyModal";
@@ -15,27 +14,8 @@ import ProfileDropdown from "./ProfileDropdown";
 
 import { Globe } from "lucide-react";
 
-// Separated into its own component because useSearchParams() requires a Suspense boundary
-function NavbarSearchParamsHandler() {
-  const searchParams = useSearchParams();
-  const lastHandledAuthRef = useRef("");
-  const { isLogin, setShowSignIn } = useUser();
-
-  useEffect(() => {
-    const authType = searchParams.get("auth");
-    const redirect = searchParams.get("redirect") || "";
-    const key = `${authType || ""}|${redirect}`;
-
-    if (authType === "signin" && !isLogin && lastHandledAuthRef.current !== key) {
-      setShowSignIn(true);
-      lastHandledAuthRef.current = key;
-    }
-  }, [isLogin, searchParams, setShowSignIn]);
-
-  return null;
-}
-
 export default function Navbar() {
+  const lastHandledAuthRef = useRef("");
   const [showLang, setShowLang] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const {
@@ -50,6 +30,24 @@ export default function Navbar() {
     selectedConversation,
   } = useUser();
 
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const params = new URLSearchParams(window.location.search);
+    const authType = params.get("auth");
+    const redirect = params.get("redirect") || "";
+    const key = `${authType || ""}|${redirect}`;
+
+    if (
+      authType === "signin" &&
+      !isLogin &&
+      lastHandledAuthRef.current !== key
+    ) {
+      setShowSignIn(true);
+      lastHandledAuthRef.current = key;
+    }
+  }, [isLogin, setShowSignIn]);
+
   //mock data
   const user = {
     name: "Alex Johnson",
@@ -58,13 +56,7 @@ export default function Navbar() {
   };
 
   return (
-    <header>
-      {/* Handles ?auth=signin query param — must be in Suspense for Next.js static builds */}
-      <Suspense fallback={null}>
-        <NavbarSearchParamsHandler />
-      </Suspense>
-
-      <div className="max-w-7xl mx-auto px-4 pb-2">
+    <header>      <div className="max-w-7xl mx-auto px-4 pb-2">
         {/* Desktop & Tablet Layout */}
         <div className="flex items-center justify-between">
           {/* Logo */}
@@ -287,3 +279,4 @@ export default function Navbar() {
     </header>
   );
 }
+
