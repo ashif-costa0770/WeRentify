@@ -10,6 +10,14 @@ export default function SignUpModal({
   setIsLogin,
 }) {
   const [showEmailModal, setShowEmailModal] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  const handleGoogleSignup = () => {
+    if (loading) return;
+    setLoading(true);
+    onClose();
+    window.location.href = `${process.env.NEXT_PUBLIC_API_URL}/auth/google`;
+  };
 
   if (!open) return null;
 
@@ -67,10 +75,8 @@ export default function SignUpModal({
 
             {/* Google */}
             <button
-              // onClick={() => {
-              //   setIsLogin(true);
-              //   onClose();
-              // }}
+              onClick={handleGoogleSignup}
+              disabled={loading}
               className="w-full cursor-pointer flex items-center justify-center gap-3 px-4 py-3 border-2 border-gray-300 rounded-xl font-semibold text-gray-700 hover:bg-gray-50"
             >
               <svg width="20" height="20" viewBox="0 0 24 24">
@@ -102,7 +108,12 @@ export default function SignUpModal({
               // }}
               className="w-full cursor-pointer flex items-center justify-center gap-3 px-4 py-3 rounded-xl font-semibold text-white bg-blue-600 hover:bg-blue-700"
             >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+              >
                 <path d="M22.675 0h-21.35C.6 0 0 .6 0 1.326v21.348C0 23.4.6 24 1.326 24h11.495v-9.294H9.691V11.41h3.13V8.797c0-3.1 1.893-4.788 4.659-4.788 1.325 0 2.463.099 2.795.143v3.24h-1.918c-1.505 0-1.796.715-1.796 1.763v2.312h3.587l-.467 3.296h-3.12V24h6.116C23.4 24 24 23.4 24 22.674V1.326C24 .6 23.4 0 22.675 0z" />
               </svg>
               Sign up with Facebook
@@ -116,7 +127,12 @@ export default function SignUpModal({
               // }}
               className="w-full cursor-pointer flex items-center justify-center gap-3 px-4 py-3 rounded-xl font-semibold text-white bg-black"
             >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+              >
                 <path d="M16.365 1.43c0 1.14-.415 2.277-1.226 3.07-.812.812-2.055 1.29-3.3 1.205-.11-1.21.427-2.39 1.206-3.17.78-.78 2.13-1.35 3.32-1.1z" />
                 <path d="M20.09 17.435c-.496 1.125-.734 1.63-1.376 2.623-.894 1.365-2.155 3.07-3.74 3.09-1.41.02-1.776-.92-3.67-.91-1.89.01-2.3.93-3.71.91-1.586-.02-2.79-1.57-3.685-2.93-2.5-3.83-2.77-8.33-1.22-10.73.98-1.54 2.53-2.45 3.98-2.45 1.51 0 2.46.99 3.71.99 1.21 0 1.94-.99 3.69-.99 1.29 0 2.66.7 3.64 1.91-3.21 1.76-2.69 6.35.38 8.51z" />
               </svg>
@@ -138,8 +154,8 @@ export default function SignUpModal({
           </p>
 
           <p className="text-xs text-gray-500 mt-3 text-center">
-            This site is protected by reCAPTCHA and the Google Privacy Policy and
-            Terms of Service apply.
+            This site is protected by reCAPTCHA and the Google Privacy Policy
+            and Terms of Service apply.
           </p>
 
           {/* Footer */}

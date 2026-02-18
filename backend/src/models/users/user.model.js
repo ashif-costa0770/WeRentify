@@ -12,9 +12,17 @@ const userSchema = new mongoose.Schema(
     },
     password: {
       type: String,
-      required: true,
-      minlength: 4,
+      required: function () {
+        return !this.googleId; // ⭐ Only require if NOT Google user
+      },
     },
+
+    googleId: {
+      type: String,
+      unique: true,
+      sparse: true, // important if you allow email signup too
+    },
+
     isVerified: {
       type: Boolean,
       default: false,

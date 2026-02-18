@@ -50,21 +50,7 @@ export function UserProvider({ children }) {
     };
 
     fetchUserAndFavorites();
-  }, [isLogin]);
-
-  useEffect(() => {
-    const refreshFavoritesAfterLogin = async () => {
-      if (!isLogin) return;
-      try {
-        const favRes = await getFavorites();
-        setFavorites(favRes.data.data || []);
-      } catch (error) {
-        console.error("Failed to refresh favorites after login:", error);
-      }
-    };
-
-    refreshFavoritesAfterLogin();
-  }, [isLogin]);
+  }, []);
 
   // Load favorites from localStorage on mount
   useEffect(() => {

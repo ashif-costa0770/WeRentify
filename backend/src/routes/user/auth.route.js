@@ -1,6 +1,7 @@
 import express from "express";
+import passport from "passport";
+import { generateToken } from "../../utils/token.js";
 import {
-  // loginWithPhone,
   verifyEmail,
   verifyOtp,
   createUser,
@@ -23,5 +24,22 @@ router.post("/register",validate(registerSchema), createUser);
 router.post("/login", validate(loginSchema), login);
 router.post("/logout", logout);
 router.get("/me", protect, getMe);
+
+//google auth
+router.get("/google", passport.authenticate("google", {
+    scope: ["profile", "email"],
+  })
+);
+
+router.get("/google/callback",  passport.authenticate("google", {
+    failureRedirect: `${process.env.FRONTEND_URL || "http://localhost:3000"}?auth=signin`,
+    session: false,
+  }),
+  (req, res) => {
+    const token = generateToken(req.user._id);
+    res.cookie("token", token, { httpOnly: true });
+    res.redirect(process.env.FRONTEND_URL || "http://localhost:3000");
+  }
+);
 
 export default router;

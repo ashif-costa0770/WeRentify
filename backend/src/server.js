@@ -4,6 +4,8 @@ import cookieParser from "cookie-parser";
 import cors from "cors";
 import helmet from "helmet";
 import compression from "compression";
+import session from "express-session";
+import passport from "./config/passport.js";
 import { connectDB } from "./config/index.js";
 import listingRoutes from "./routes/listing/listing.route.js";
 import serviceRoutes from "./routes/service/service.route.js"
@@ -29,6 +31,21 @@ app.use(
 
 app.use(express.json()); // Parse JSON bodies
 app.use(express.urlencoded({ extended: true })); // Parse URL-encoded bodies
+
+// passport configuration for google auth
+app.use(
+  session({
+    secret: "google_auth_secret",
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+      httpOnly: true,
+    },
+  })
+);
+
+app.use(passport.initialize());
+app.use(passport.session());
 
 
 // Auth Routes

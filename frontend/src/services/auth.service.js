@@ -1,6 +1,5 @@
 import api from "@/lib/api";
 
-
 /* STEP 1 */
 export const verifyEmailAPI = (email) =>
   api.post("/auth/verify-email", { email });
@@ -10,8 +9,7 @@ export const verifyOtpAPI = (email, otp) =>
   api.post("/auth/verify-otp", { email, otp });
 
 /* RESEND OTP */
-export const resendOtpAPI = (email) =>
-  api.post("/auth/resend-otp", { email });
+export const resendOtpAPI = (email) => api.post("/auth/resend-otp", { email });
 
 /* STEP 3 */
 export const registerAPI = (email, password, confirmPassword) =>
@@ -28,11 +26,9 @@ export const loginAPI = (email, password) =>
 export const loginWithPhone = (email, password) =>
   api.post("/auth/login", { email, password });
 
-
 // GET CURRENT USER
 export const getMe = () =>
-  api.get("/auth/me");
+  api.get("/auth/me", { withCredentials: true});
 
 // LOGOUT
-export const logout = () =>
-  api.post("/auth/logout");
+export const logout = () => api.post("/auth/logout");
