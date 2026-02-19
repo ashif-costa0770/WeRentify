@@ -3,12 +3,19 @@ import mongoose from "mongoose";
 const userSchema = new mongoose.Schema(
   {
     // 1. Core Authentication (Mobile First)
+    name: {
+      type: String,
+      trim: true,
+      required: true,
+    },
+
     email: {
       type: String,
-      unique: true,
       required: true,
       lowercase: true,
       trim: true,
+      index: true,
+      unique: true,
     },
     password: {
       type: String,
@@ -29,11 +36,19 @@ const userSchema = new mongoose.Schema(
     },
 
     // 3. Profile (Optional - filled later)
-    name: {
+    firstname: {
       type: String,
       trim: true,
-      default: "User",
     },
+    lastname: {
+      type: String,
+      trim: true,
+    },
+    phone: {
+      type: String,
+      trim: true,
+    },
+
     avatar: {
       public_id: String,
       url: String,

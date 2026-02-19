@@ -11,6 +11,7 @@ import listingRoutes from "./routes/listing/listing.route.js";
 import serviceRoutes from "./routes/service/service.route.js"
 import postRoutes from "./routes/community/post.route.js";
 import commentRoutes from "./routes/community/comment.route.js";
+import userRoutes from "./routes/user/user.route.js"
 import authRoutes from "./routes/user/auth.route.js";
 import CategoryRoute from "./routes/category.route.js"
 import favoriteRoute from "./routes/favorite.route.js"
@@ -50,6 +51,8 @@ app.use(passport.session());
 
 // Auth Routes
 app.use("/api/auth", authRoutes);
+// Auth Routes
+app.use("/api/user", userRoutes);
 // Listing Routes
 app.use("/api/listings", listingRoutes);
 // Community Routes

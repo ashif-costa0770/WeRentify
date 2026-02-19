@@ -2,7 +2,7 @@
 
 import { MapPin } from "lucide-react";
 // import { categories } from "@/data/listingsData";
-import RichTextEditor from "@/components/tiptap-editor/RichTextEditor";
+import RichTextEditor from "@/app/components/tiptap-editor/RichTextEditor";
 import { useState, useEffect } from "react";
 import { getAllCategory } from "@/services/category.service";
 
@@ -24,25 +24,25 @@ export default function Step2Details({ formData, setFormData }) {
     // Keep raw lines while typing so Enter/new lines work normally.
     // Cleanup is handled later during submit.
     setFormData({ ...formData, [field]: value.split("\n") });
-  };  
-    // ✅ Fetch categories from backend
-    useEffect(() => {
-      const fetchCategories = async () => {
-        try {
-          setLoadingCategories(true);
-          const res = await getAllCategory("item");
-  
-          // Adjust depending on your backend response structure
-          setCategories(res.data?.data || res.data || []);
-        } catch (error) {
-          console.error("Error fetching categories:", error);
-          setCategoryError("Failed to load categories");
-        } finally {
-          setLoadingCategories(false);
-        }
-      };  
-      fetchCategories();
-    }, []);
+  };
+  // ✅ Fetch categories from backend
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        setLoadingCategories(true);
+        const res = await getAllCategory("item");
+
+        // Adjust depending on your backend response structure
+        setCategories(res.data?.data || res.data || []);
+      } catch (error) {
+        console.error("Error fetching categories:", error);
+        setCategoryError("Failed to load categories");
+      } finally {
+        setLoadingCategories(false);
+      }
+    };
+    fetchCategories();
+  }, []);
 
   return (
     <div className="space-y-5">
@@ -95,7 +95,7 @@ export default function Step2Details({ formData, setFormData }) {
           </div>
         </div>
       </div>
- 
+
       <div>
         <label className="block text-sm font-bold text-gray-900 mb-2">
           Description <span className="text-red-500">*</span>
@@ -106,12 +106,14 @@ export default function Step2Details({ formData, setFormData }) {
         />
       </div>
 
-       <div>
+      <div>
         <label className="block text-sm font-bold text-gray-900 mb-2">
-          Features & Details 
+          Features & Details
         </label>
         <textarea
-          value={Array.isArray(formData.features) ? formData.features.join("\n") : ""}
+          value={
+            Array.isArray(formData.features) ? formData.features.join("\n") : ""
+          }
           onChange={(e) => handleArrayFieldChange("features", e.target.value)}
           placeholder="Enter one feature per line"
           rows={4}
@@ -120,9 +122,9 @@ export default function Step2Details({ formData, setFormData }) {
         <p className="text-xs text-gray-500 mt-1">Example: Powerful motor</p>
       </div>
 
-       <div>
+      <div>
         <label className="block text-sm font-bold text-gray-900 mb-2">
-          Rental Rules 
+          Rental Rules
         </label>
         <textarea
           value={
@@ -144,7 +146,7 @@ export default function Step2Details({ formData, setFormData }) {
 
       <div>
         <label className="block text-sm font-bold text-gray-900 mb-2">
-           Cancellation Policy
+          Cancellation Policy
         </label>
         <RichTextEditor
           value={formData.cancellationPolicy}

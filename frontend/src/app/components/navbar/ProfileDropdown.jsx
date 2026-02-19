@@ -20,7 +20,7 @@ import { logout } from "@/services/auth.service";
 import { toast } from "sonner";
 
 export default function ProfileDropdown({
-  user = { name: "Alex Johnson", initial: "AJ", mode: "Renter" },
+  // user = { name: "Alex Johnson", initial: "AJ", mode: "Renter" },
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const [showPricing, setShowPricing] = useState(false);
@@ -34,7 +34,9 @@ export default function ProfileDropdown({
   const timeoutRef = useRef(null);
   const dropdownRef = useRef(null);
 
-  const { isLogin, setIsLogin, setShowMessages } = useUser();
+  const { user, isLogin, setIsLogin, setShowMessages } = useUser();
+
+  const fullName = `${user?.firstname || ""} ${user?.lastname || ""}`.trim();
 
   // handle logout
   const handleLogout = async () => {
@@ -99,7 +101,7 @@ export default function ProfileDropdown({
           className="w-10 h-10 rounded-full bg-gradient-to-br from-[#5B4FE9] to-[#E95FC8] text-white cursor-pointer font-bold text-xs flex items-center justify-center  hover:scale-105 transition-all border-2 border-white"
           onClick={() => setIsOpen(!isOpen)}
         >
-          {user.initial}
+          {user.firstname.charAt(0) || user.name.charAt(0)}
         </button>
       </div>
 
@@ -113,7 +115,7 @@ export default function ProfileDropdown({
         >
           {/* User Info Header - Reduced padding */}
           <div className="px-4 pb-4 border-b border-gray-100">
-            <h3 className="font-bold text-gray-900 text-md ">{user.name}</h3>
+            <h3 className="font-bold text-gray-900 text-md "> {fullName || user.name}</h3>
             <div className="flex items-center gap-1 text-xs text-gray-500 mt-1">
               <Home className="w-4 h-4 text-gray-400" />
               <span>{user.mode} Mode</span>

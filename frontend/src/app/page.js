@@ -1,13 +1,13 @@
 "use client";
 
 import { useMemo, useState, useEffect } from "react";
-import NavbarWrapper from "@/components/navbar/NavbarWrapper";
-import ItemCategoriesSection from "@/components/CategoryGrid/ItemCategoriesSection";
-import ItemGrid from "@/components/itemCards/ItemGrid";
-import FiltersSlicer from "@/components/modals/FiltersSlicer";
-import ProductModal from "@/components/modals/ProductModal";
-import MessageSlider from "@/components/modals/MessageSlider";
-import OwnerProfileModal from "@/components/modals/OwnerProfileModal";
+import NavbarWrapper from "@/app/components/navbar/NavbarWrapper";
+import ItemCategoriesSection from "@/app/components/CategoryGrid/ItemCategoriesSection";
+import ItemGrid from "@/app/components/itemCards/ItemGrid";
+import FiltersSlicer from "@/app/components/modals/FiltersSlicer";
+import ProductModal from "@/app/components/modals/ProductModal";
+import MessageSlider from "@/app/components/modals/MessageSlider";
+import OwnerProfileModal from "@/app/components/modals/OwnerProfileModal";
 import { getListings } from "@/services/item.service";
 
 export default function ListingPage() {
@@ -107,7 +107,14 @@ export default function ListingPage() {
     }
 
     return result;
-  }, [items, selectedCategory, priceRange, distanceFilter, verifiedOnly, sortBy]);
+  }, [
+    items,
+    selectedCategory,
+    priceRange,
+    distanceFilter,
+    verifiedOnly,
+    sortBy,
+  ]);
 
   /* ---------------- EFFECTS ---------------- */
   useEffect(() => {

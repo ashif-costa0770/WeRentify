@@ -108,3 +108,21 @@ export const uploadCategoryIcon = multer({
     files: 1,
   },
 }).single("icon");
+
+// Avatar upload (single image only)
+export const uploadAvatar = multer({
+  storage,
+  fileFilter: (req, file, cb) => {
+    if (!IMAGE_TYPES.includes(file.mimetype)) {
+      return cb(
+        new Error("Only image files are allowed for avatar."),
+        false
+      );
+    }
+    cb(null, true);
+  },
+  limits: {
+    fileSize: 2 * 1024 * 1024, // ⭐ 2MB is ideal for avatars
+    files: 1,
+  },
+}).single("avatar");   // field name must match frontend

@@ -12,8 +12,9 @@ export const verifyOtpAPI = (email, otp) =>
 export const resendOtpAPI = (email) => api.post("/auth/resend-otp", { email });
 
 /* STEP 3 */
-export const registerAPI = (email, password, confirmPassword) =>
+export const registerAPI = (name, email, password, confirmPassword) =>
   api.post("/auth/register", {
+    name,
     email,
     password,
     confirmPassword,
@@ -21,9 +22,6 @@ export const registerAPI = (email, password, confirmPassword) =>
 
 /* LOGIN */
 export const loginAPI = (email, password) =>
-  api.post("/auth/login", { email, password });
-
-export const loginWithPhone = (email, password) =>
   api.post("/auth/login", { email, password });
 
 // GET CURRENT USER

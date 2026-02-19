@@ -5,7 +5,7 @@ import { createPost } from "@/services/post.service";
 import { toast } from "sonner";
 import { useMemo, useRef, useState } from "react";
 import { X, Wrench, Package, Camera, Calendar } from "lucide-react";
-import RichTextEditor from "@/components/tiptap-editor/RichTextEditor";
+import RichTextEditor from "@/app/components/tiptap-editor/RichTextEditor";
 
 const MAX_PHOTO_SIZE_MB = 5;
 
@@ -24,7 +24,10 @@ const emptyForm = {
 const emptyPreviews = [null, null, null];
 
 function stripHtml(value = "") {
-  return value.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
+  return value
+    .replace(/<[^>]*>/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
 }
 
 function todayLocalISO() {
@@ -181,7 +184,10 @@ export default function CreatePostModal({ isOpen, onClose, onSubmit }) {
       payload.append("title", formData.title.trim());
       payload.append("description", formData.description);
       payload.append("category", formData.category.trim());
-      payload.append("location", `${formData.city.trim()}, ${formData.state.trim()}`);
+      payload.append(
+        "location",
+        `${formData.city.trim()}, ${formData.state.trim()}`,
+      );
       payload.append("dateNeeded", formData.dateNeeded);
       payload.append("budget", formData.budget.trim());
 
@@ -233,11 +239,15 @@ export default function CreatePostModal({ isOpen, onClose, onSubmit }) {
           </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="min-h-0 flex-1 overflow-y-auto px-5 py-5 sm:px-8 sm:py-6">
+        <form
+          onSubmit={handleSubmit}
+          className="min-h-0 flex-1 overflow-y-auto px-5 py-5 sm:px-8 sm:py-6"
+        >
           <div className="space-y-6">
             <div>
               <label className="mb-3 block text-sm font-bold text-gray-900">
-                What are you looking for? <span className="text-rose-500">*</span>
+                What are you looking for?{" "}
+                <span className="text-rose-500">*</span>
               </label>
               <div className="grid  grid-cols-1 gap-3 sm:grid-cols-2">
                 <button
@@ -253,7 +263,9 @@ export default function CreatePostModal({ isOpen, onClose, onSubmit }) {
                     <Wrench className="h-5 w-5 text-[#5B4FE9]" />
                   </div>
                   <p className="font-bold text-gray-900">Service Request</p>
-                  <p className="text-xs text-gray-500">Photographer, makeup artist, etc.</p>
+                  <p className="text-xs text-gray-500">
+                    Photographer, makeup artist, etc.
+                  </p>
                 </button>
 
                 <button
@@ -269,10 +281,14 @@ export default function CreatePostModal({ isOpen, onClose, onSubmit }) {
                     <Package className="h-5 w-5 text-[#5B4FE9]" />
                   </div>
                   <p className="font-bold text-gray-900">Item Request</p>
-                  <p className="text-xs text-gray-500">Power washer, camera, etc.</p>
+                  <p className="text-xs text-gray-500">
+                    Power washer, camera, etc.
+                  </p>
                 </button>
               </div>
-              {errors.type && <p className="mt-1 text-xs text-rose-600">{errors.type}</p>}
+              {errors.type && (
+                <p className="mt-1 text-xs text-rose-600">{errors.type}</p>
+              )}
             </div>
 
             <div>
@@ -295,20 +311,31 @@ export default function CreatePostModal({ isOpen, onClose, onSubmit }) {
                     : "border-gray-200 focus:border-[#5B4FE9] focus:ring-2 focus:ring-purple-500/20"
                 }`}
               />
-              {errors.title && <p className="mt-1 text-xs text-rose-600">{errors.title}</p>}
+              {errors.title && (
+                <p className="mt-1 text-xs text-rose-600">{errors.title}</p>
+              )}
             </div>
 
             <div>
               <label className="mb-2 block text-sm font-bold text-gray-900">
                 Description <span className="text-rose-500">*</span>
               </label>
-              <div className={`${errors.description ? "rounded-xl ring-2 ring-rose-100" : ""}`}>
-                <RichTextEditor value={formData.description} onChange={handleDescriptionChange} />
+              <div
+                className={`${errors.description ? "rounded-xl ring-2 ring-rose-100" : ""}`}
+              >
+                <RichTextEditor
+                  value={formData.description}
+                  onChange={handleDescriptionChange}
+                />
               </div>
               {errors.description ? (
-                <p className="mt-1 text-xs text-rose-600">{errors.description}</p>
+                <p className="mt-1 text-xs text-rose-600">
+                  {errors.description}
+                </p>
               ) : (
-                <p className="mt-1 text-xs text-gray-500">Minimum 20 characters.</p>
+                <p className="mt-1 text-xs text-gray-500">
+                  Minimum 20 characters.
+                </p>
               )}
             </div>
 
@@ -328,7 +355,9 @@ export default function CreatePostModal({ isOpen, onClose, onSubmit }) {
                     : "border-gray-200 focus:border-[#5B4FE9] focus:ring-2 focus:ring-purple-500/20"
                 }`}
               />
-              {errors.category && <p className="mt-1 text-xs text-rose-600">{errors.category}</p>}
+              {errors.category && (
+                <p className="mt-1 text-xs text-rose-600">{errors.category}</p>
+              )}
             </div>
 
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -348,7 +377,9 @@ export default function CreatePostModal({ isOpen, onClose, onSubmit }) {
                       : "border-gray-200 focus:border-[#5B4FE9] focus:ring-2 focus:ring-purple-500/20"
                   }`}
                 />
-                {errors.city && <p className="mt-1 text-xs text-rose-600">{errors.city}</p>}
+                {errors.city && (
+                  <p className="mt-1 text-xs text-rose-600">{errors.city}</p>
+                )}
               </div>
 
               <div>
@@ -367,7 +398,9 @@ export default function CreatePostModal({ isOpen, onClose, onSubmit }) {
                       : "border-gray-200 focus:border-[#5B4FE9] focus:ring-2 focus:ring-purple-500/20"
                   }`}
                 />
-                {errors.state && <p className="mt-1 text-xs text-rose-600">{errors.state}</p>}
+                {errors.state && (
+                  <p className="mt-1 text-xs text-rose-600">{errors.state}</p>
+                )}
               </div>
             </div>
 
@@ -387,15 +420,19 @@ export default function CreatePostModal({ isOpen, onClose, onSubmit }) {
                       ? "border-rose-400 ring-2 ring-rose-100"
                       : "border-gray-200 focus:border-[#5B4FE9] focus:ring-2 focus:ring-purple-500/20"
                   }`}
-                />                                                 
-              </div>                          
+                />
+              </div>
               {errors.dateNeeded && (
-                <p className="mt-1 text-xs text-rose-600">{errors.dateNeeded}</p>
+                <p className="mt-1 text-xs text-rose-600">
+                  {errors.dateNeeded}
+                </p>
               )}
             </div>
 
             <div>
-              <label className="mb-2 block text-sm font-bold text-gray-900">Budget (Optional)</label>
+              <label className="mb-2 block text-sm font-bold text-gray-900">
+                Budget (Optional)
+              </label>
               <input
                 type="text"
                 name="budget"
@@ -408,11 +445,15 @@ export default function CreatePostModal({ isOpen, onClose, onSubmit }) {
                     : "border-gray-200 focus:border-[#5B4FE9] focus:ring-2 focus:ring-purple-500/20"
                 }`}
               />
-              {errors.budget && <p className="mt-1 text-xs text-rose-600">{errors.budget}</p>}
+              {errors.budget && (
+                <p className="mt-1 text-xs text-rose-600">{errors.budget}</p>
+              )}
             </div>
 
             <div>
-              <label className="mb-2 block text-sm font-bold text-gray-900">Photos (Optional)</label>
+              <label className="mb-2 block text-sm font-bold text-gray-900">
+                Photos (Optional)
+              </label>
               <p className="mb-3 text-sm text-gray-500">
                 Add photos to show examples of what you are looking for
               </p>
@@ -459,14 +500,18 @@ export default function CreatePostModal({ isOpen, onClose, onSubmit }) {
                       ) : (
                         <>
                           <Camera className="h-7 w-7 text-gray-400" />
-                          <span className="text-xs text-gray-500">Add Photo</span>
+                          <span className="text-xs text-gray-500">
+                            Add Photo
+                          </span>
                         </>
                       )}
                     </button>
                   </div>
                 ))}
               </div>
-              {errors.photos && <p className="mt-1 text-xs text-rose-600">{errors.photos}</p>}
+              {errors.photos && (
+                <p className="mt-1 text-xs text-rose-600">{errors.photos}</p>
+              )}
             </div>
           </div>
 

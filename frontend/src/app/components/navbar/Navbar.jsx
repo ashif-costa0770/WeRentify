@@ -1,14 +1,14 @@
 "use client";
 import Link from "next/link";
-import Logo from "@/components/navbar/Logo";
-import PackageIcon from "@/components/icons/PackageIcon";
-import HomeIcon from "@/components/icons/HomeIcon";
-import UsersIcon from "@/components/icons/UsersIcon";
+import Logo from "@/app/components/navbar/Logo";
+import PackageIcon from "@/app/components/icons/PackageIcon";
+import HomeIcon from "@/app/components/icons/HomeIcon";
+import UsersIcon from "@/app/components/icons/UsersIcon";
 import { useEffect, useRef, useState } from "react";
-import SignUpModal from "@/components/modals/SignUpModal";
-import SignInModal from "@/components/modals/SignInModal";
-import LanguageCurrencyModal from "@/components/modals/LanguageCurrencyModal";
-import MessageSlider from "@/components/modals/MessageSlider";
+import SignUpModal from "@/app/components/modals/SignUpModal";
+import SignInModal from "@/app/components/modals/SignInModal";
+import LanguageCurrencyModal from "@/app/components/modals/LanguageCurrencyModal";
+import MessageSlider from "@/app/components/modals/MessageSlider";
 import { useUser } from "@/context/UserContext";
 import ProfileDropdown from "./ProfileDropdown";
 
@@ -56,7 +56,9 @@ export default function Navbar() {
   };
 
   return (
-    <header>      <div className="max-w-7xl mx-auto px-4 pb-2">
+    <header>
+      {" "}
+      <div className="max-w-7xl mx-auto px-4 pb-2">
         {/* Desktop & Tablet Layout */}
         <div className="flex items-center justify-between">
           {/* Logo */}
@@ -244,7 +246,6 @@ export default function Navbar() {
           </div>
         )}
       </div>
-
       {/* Modals */}
       <SignUpModal
         open={showSignUp}
@@ -255,7 +256,6 @@ export default function Navbar() {
         }}
         setIsLogin={setIsLogin}
       />
-
       <SignInModal
         open={showSignIn}
         onClose={() => setShowSignIn(false)}
@@ -265,12 +265,10 @@ export default function Navbar() {
         }}
         setIsLogin={setIsLogin}
       />
-
       <LanguageCurrencyModal
         open={showLang}
         onClose={() => setShowLang(false)}
       />
-
       <MessageSlider
         showMessages={showMessages}
         setShowMessages={setShowMessages}
@@ -279,4 +277,3 @@ export default function Navbar() {
     </header>
   );
 }
-

@@ -1,5 +1,5 @@
 import { Suspense } from "react";
-import Navbar from "@/components/navbar/Navbar";
+import Navbar from "@/app/components/navbar/Navbar";
 
 export default function CommunityLayout({ children }) {
   return (

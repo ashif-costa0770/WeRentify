@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useListBusiness } from "@/context/ListBusinessContext";
-import RichTextEditor from "@/components/tiptap-editor/RichTextEditor";
+import RichTextEditor from "@/app/components/tiptap-editor/RichTextEditor";
 import { getAllCategory } from "@/services/category.service";
 
 export default function BusinessInfoStep() {
@@ -41,7 +41,9 @@ export default function BusinessInfoStep() {
       <div className="space-y-5">
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div className="sm:col-span-2">
-            <label className="block text-sm font-semibold text-gray-700">Business name *</label>
+            <label className="block text-sm font-semibold text-gray-700">
+              Business name *
+            </label>
             <input
               type="text"
               value={formData.businessName}
@@ -54,12 +56,16 @@ export default function BusinessInfoStep() {
               }`}
             />
             {errors?.businessName && (
-              <p className="mt-1 text-xs text-rose-600">{errors.businessName}</p>
+              <p className="mt-1 text-xs text-rose-600">
+                {errors.businessName}
+              </p>
             )}
           </div>
 
           <div>
-            <label className="block text-sm font-semibold text-gray-700">Type of service *</label>
+            <label className="block text-sm font-semibold text-gray-700">
+              Type of service *
+            </label>
             <input
               type="text"
               value={formData.serviceType}
@@ -77,7 +83,9 @@ export default function BusinessInfoStep() {
           </div>
 
           <div>
-            <label className="block text-sm font-semibold text-gray-700">Category *</label>
+            <label className="block text-sm font-semibold text-gray-700">
+              Category *
+            </label>
             <select
               value={formData.category}
               onChange={(e) => setField("category", e.target.value)}
@@ -89,7 +97,9 @@ export default function BusinessInfoStep() {
               }`}
             >
               <option value="">
-                {loadingCategories ? "Loading categories..." : "Select category"}
+                {loadingCategories
+                  ? "Loading categories..."
+                  : "Select category"}
               </option>
               {categories.map((cat) => (
                 <option key={cat._id} value={cat._id}>
@@ -97,12 +107,18 @@ export default function BusinessInfoStep() {
                 </option>
               ))}
             </select>
-            {errors?.category && <p className="mt-1 text-xs text-rose-600">{errors.category}</p>}
-            {categoryError && <p className="mt-1 text-xs text-rose-600">{categoryError}</p>}
+            {errors?.category && (
+              <p className="mt-1 text-xs text-rose-600">{errors.category}</p>
+            )}
+            {categoryError && (
+              <p className="mt-1 text-xs text-rose-600">{categoryError}</p>
+            )}
           </div>
 
           <div className="sm:col-span-2">
-            <label className="block text-sm font-semibold text-gray-700">Years in business *</label>
+            <label className="block text-sm font-semibold text-gray-700">
+              Years in business *
+            </label>
             <input
               type="number"
               min={0}
@@ -116,13 +132,19 @@ export default function BusinessInfoStep() {
               }`}
             />
             {errors?.yearsInBusiness && (
-              <p className="mt-1 text-xs text-rose-600">{errors.yearsInBusiness}</p>
+              <p className="mt-1 text-xs text-rose-600">
+                {errors.yearsInBusiness}
+              </p>
             )}
           </div>
 
           <div className="sm:col-span-2">
-            <label className="block text-sm font-semibold text-gray-700">Description *</label>
-            <div className={`mt-2 rounded-xl ${errors?.description ? "ring-2 ring-rose-100" : ""}`}>
+            <label className="block text-sm font-semibold text-gray-700">
+              Description *
+            </label>
+            <div
+              className={`mt-2 rounded-xl ${errors?.description ? "ring-2 ring-rose-100" : ""}`}
+            >
               <RichTextEditor
                 value={formData.description}
                 onChange={(content) => setField("description", content)}
@@ -131,7 +153,9 @@ export default function BusinessInfoStep() {
             {errors?.description ? (
               <p className="mt-1 text-xs text-rose-600">{errors.description}</p>
             ) : (
-              <p className="mt-1 text-xs text-gray-500">Minimum 20 characters recommended.</p>
+              <p className="mt-1 text-xs text-gray-500">
+                Minimum 20 characters recommended.
+              </p>
             )}
           </div>
         </div>

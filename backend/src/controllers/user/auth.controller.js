@@ -5,7 +5,6 @@ import { generateOtp } from "../../utils/opt.js";
 import { successResponse, errorResponse } from "../../utils/response.js";
 import { sendOtpEmail } from "../../utils/mailer.js";
 import argon2 from "argon2";
-import jwt from "jsonwebtoken";
 
 const RESEND_COOLDOWN_SECONDS = 60;
 
@@ -22,7 +21,7 @@ export const verifyEmail = async (req, res) => {
     await OTP.create({ email, otp, expiresAt });
 
     await sendOtpEmail(email, otp);
-    return successResponse(res, 200, "OTP sent successfully", otp);
+    return successResponse(res, 200, "OTP sent successfully");
   } catch (error) {
     console.error("email verification faild Error:", error.message);
     return errorResponse(res, 400, "Invalid data");
@@ -43,7 +42,6 @@ export const verifyOtp = async (req, res) => {
 
     record.isVerified = true;
     await record.save();
-    //  await OTP.deleteMany({ email });
 
     return successResponse(res, 200, "OTP verified successfully");
   } catch (err) {
@@ -101,10 +99,7 @@ export const resendOtp = async (req, res) => {
 //! Step 3
 export const createUser = async (req, res) => {
   try {
-    const { email, password, confirmPassword } = req.body;
-
-    if (password !== confirmPassword)
-      return errorResponse(res, 400, "Passwords do not match");
+    const {name, email, password, confirmPassword } = req.body;
 
     const existingUser = await User.findOne({ email });
 
@@ -118,6 +113,7 @@ export const createUser = async (req, res) => {
     const hashedPassword = await argon2.hash(password);
 
     const user = await User.create({
+      name,
       email,
       password: hashedPassword,
       isVerified: true,
@@ -130,6 +126,7 @@ export const createUser = async (req, res) => {
     await OTP.deleteMany({ email });
     return successResponse(res, 200, "Account created successfully", {
       _id: user._id,
+      name:user.name,
       email: user.email,
       token,
     });
@@ -146,7 +143,7 @@ export const createUser = async (req, res) => {
 /!* LOGIN ENDPOINT */;
 export const login = async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const {name, email, password } = req.body;
 
     const user = await User.findOne({ email });
 
@@ -165,6 +162,7 @@ export const login = async (req, res) => {
 
     return successResponse(res, 200, "Login successful", {
       _id: user._id,
+      name:user.name,
       email: user.email,
       token,
     });
@@ -190,6 +188,5 @@ export const getMe = async (req, res) => {
 
 export const logout = async (req, res) => {
   res.clearCookie("token");
-  // console.log(req.user);
   return successResponse(res, 200, "Logged out successfully");
 };

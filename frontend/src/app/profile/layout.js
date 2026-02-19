@@ -1,7 +1,7 @@
 import { Suspense } from "react";
 import Navbar from "@/app/components/navbar/Navbar";
 
-export default function MyListingsLayout({ children }) {
+export default function ProfileLayout({ children }) {
   return (
     <>
       <div className="sticky top-0 z-50 bg-gray-100 pb-4 shadow-lg">

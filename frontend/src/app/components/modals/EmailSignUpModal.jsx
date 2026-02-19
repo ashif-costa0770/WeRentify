@@ -20,6 +20,7 @@ export default function EmailSignUpModal({
   // 3-step registration flow:
   // 1) generate OTP by email, 2) verify OTP, 3) set password and create account.
   const [step, setStep] = useState(1);
+  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [otp, setOtp] = useState("");
   const [password, setPassword] = useState("");
@@ -27,6 +28,7 @@ export default function EmailSignUpModal({
   const [isLoading, setIsLoading] = useState(false);
   const [resendSeconds, setResendSeconds] = useState(0);
 
+  const isNameValid = name.length >= 2;
   const isValidEmail = /\S+@\S+\.\S+/.test(email.trim());
   const isOtpValid = otp.trim().length >= 6;
   const isPasswordValid = password.length >= 4;
@@ -35,6 +37,7 @@ export default function EmailSignUpModal({
 
   const resetForm = () => {
     setStep(1);
+    setName("");
     setEmail("");
     setOtp("");
     setPassword("");
@@ -60,6 +63,11 @@ export default function EmailSignUpModal({
 
   const handleGenerateOtp = async (e) => {
     e.preventDefault();
+    if (!isNameValid) {
+      toast.error("Please enter a valid name");
+      return;
+    }
+
     if (!isValidEmail) {
       toast.error("Please enter a valid email");
       return;
@@ -129,6 +137,7 @@ export default function EmailSignUpModal({
       setIsLoading(true);
       // Step 3 backend call: create user account with verified email + password.
       await registerAPI(
+        name.trim(),
         email.trim().toLowerCase(),
         password,
         confirmPassword,
@@ -202,6 +211,19 @@ export default function EmailSignUpModal({
             <form onSubmit={handleGenerateOtp} className="space-y-4">
               <div>
                 <label className="block text-sm font-semibold text-gray-900 mb-2">
+                  Name
+                </label>
+                <input
+                  type="text"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="Enter your name"
+                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl font-medium text-gray-900 placeholder-gray-400 focus:outline-none focus:border-indigo-500 transition-colors"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-gray-900 mb-2">
                   Email
                 </label>
                 <input
@@ -215,9 +237,9 @@ export default function EmailSignUpModal({
 
               <button
                 type="submit"
-                disabled={!isValidEmail || isLoading}
+                disabled={!isNameValid || !isValidEmail || isLoading}
                 className={`w-full cursor-pointer py-3 px-4 rounded-xl font-bold text-white transition-all ${
-                  !isValidEmail || isLoading
+                 !isNameValid || !isValidEmail || isLoading
                     ? "bg-gray-300 cursor-not-allowed"
                     : "bg-linear-to-r from-indigo-600 to-pink-500 hover:opacity-90"
                 }`}
@@ -274,7 +296,9 @@ export default function EmailSignUpModal({
                   disabled={isLoading || resendSeconds > 0}
                   className="text-sm cursor-pointer text-indigo-600 font-semibold hover:underline disabled:opacity-50"
                 >
-                  {resendSeconds > 0 ? `Resend OTP in ${resendSeconds}s` : "Resend OTP"}
+                  {resendSeconds > 0
+                    ? `Resend OTP in ${resendSeconds}s`
+                    : "Resend OTP"}
                 </button>
               </div>
             </form>
