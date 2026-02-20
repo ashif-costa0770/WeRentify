@@ -41,7 +41,7 @@ export const createPost = async (req, res) => {
 //! Get all post
 export const getAllPost = async (req, res) => {
   try {
-    const posts = await Post.find().populate("author", "name email").sort({ createdAt: -1 });
+    const posts = await Post.find().populate("author").sort({ createdAt: -1 });
     if (!posts) {
       return errorResponse(res, 404, "No post found");
     }

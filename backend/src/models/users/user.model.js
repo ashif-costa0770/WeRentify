@@ -3,12 +3,11 @@ import mongoose from "mongoose";
 const userSchema = new mongoose.Schema(
   {
     // 1. Core Authentication (Mobile First)
-    name: {
+    firstname: {
       type: String,
-      trim: true,
       required: true,
+      trim: true,
     },
-
     email: {
       type: String,
       required: true,
@@ -20,7 +19,7 @@ const userSchema = new mongoose.Schema(
     password: {
       type: String,
       required: function () {
-        return !this.googleId; // ⭐ Only require if NOT Google user
+        return !this.googleId && !this.facebookId; 
       },
     },
 
@@ -30,16 +29,20 @@ const userSchema = new mongoose.Schema(
       sparse: true, // important if you allow email signup too
     },
 
+     facebookId: {
+      type: String,
+      unique: true,
+      sparse: true, // important if you allow email signup too
+    },
+
+
     isVerified: {
       type: Boolean,
       default: false,
     },
 
     // 3. Profile (Optional - filled later)
-    firstname: {
-      type: String,
-      trim: true,
-    },
+
     lastname: {
       type: String,
       trim: true,

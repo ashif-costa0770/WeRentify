@@ -34,7 +34,9 @@ export default function ProductModal({
 
   const ownerName =
     typeof selectedItem.owner === "object"
-      ? selectedItem.owner?.name || "Unknown Owner"
+      ? `${selectedItem.owner?.firstname || ""} ${selectedItem.owner?.lastname || ""}`.trim() ||
+        selectedItem.owner?.firstname ||
+        "Unknown Owner"
       : selectedItem.owner || "Unknown Owner";
   const ownerId =
     (typeof selectedItem.owner === "object" ? selectedItem.owner?._id : null) ||
@@ -561,14 +563,14 @@ export default function ProductModal({
                           setShowBooking(true);
                         }
                       }}
-                      disabled={!selectedItem.availability}
+                      disabled={!selectedItem.isAvailable}
                       className={`w-full cursor-pointer py-4 rounded-xl font-bold text-lg ${
-                        selectedItem.availability
+                        selectedItem.isAvailable
                           ? "bg-linear-to-r from-indigo-600 to-purple-600 text-white hover:shadow-xl"
                           : "bg-gray-300 text-gray-600 cursor-not-allowed"
                       }`}
                     >
-                      {selectedItem.availability ? "Book Now" : "Not Available"}
+                      {selectedItem.isAvailable ? "Book Now" : "Not Available"}
                     </button>
 
                     <div className="grid grid-cols-2 gap-3">

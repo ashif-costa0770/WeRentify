@@ -12,9 +12,9 @@ export const verifyOtpAPI = (email, otp) =>
 export const resendOtpAPI = (email) => api.post("/auth/resend-otp", { email });
 
 /* STEP 3 */
-export const registerAPI = (name, email, password, confirmPassword) =>
+export const registerAPI = (firstname, email, password, confirmPassword) =>
   api.post("/auth/register", {
-    name,
+    firstname,
     email,
     password,
     confirmPassword,

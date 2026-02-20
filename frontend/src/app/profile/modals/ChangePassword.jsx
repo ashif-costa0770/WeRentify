@@ -10,6 +10,7 @@ import {
 } from "@/services/user.service";
 
 export default function ChangePasswordModal({ isOpen, onClose, email, onClosed }) {
+  const RESEND_COOLDOWN_SECONDS = 60;
   const [passwordStep, setPasswordStep] = useState(1);
   const [otp, setOtp] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -19,6 +20,7 @@ export default function ChangePasswordModal({ isOpen, onClose, email, onClosed }
   const [isSendingOtp, setIsSendingOtp] = useState(false);
   const [isVerifyingOtp, setIsVerifyingOtp] = useState(false);
   const [isChangingPassword, setIsChangingPassword] = useState(false);
+  const [resendSeconds, setResendSeconds] = useState(RESEND_COOLDOWN_SECONDS);
 
   const resetState = () => {
     setPasswordStep(1);
@@ -30,13 +32,24 @@ export default function ChangePasswordModal({ isOpen, onClose, email, onClosed }
     setIsSendingOtp(false);
     setIsVerifyingOtp(false);
     setIsChangingPassword(false);
+    setResendSeconds(RESEND_COOLDOWN_SECONDS);
   };
 
   useEffect(() => {
-    if (!isOpen) {
-      resetState();
+    if (isOpen) {
+      setResendSeconds(RESEND_COOLDOWN_SECONDS);
+      return;
     }
+    resetState();
   }, [isOpen]);
+
+  useEffect(() => {
+    if (!isOpen || resendSeconds <= 0) return;
+    const timer = setInterval(() => {
+      setResendSeconds((prev) => (prev > 0 ? prev - 1 : 0));
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [isOpen, resendSeconds]);
 
   const handleClose = () => {
     onClose();
@@ -44,10 +57,12 @@ export default function ChangePasswordModal({ isOpen, onClose, email, onClosed }
   };
 
   const handleResendOtp = async () => {
+    if (resendSeconds > 0) return;
     try {
       setIsSendingOtp(true);
       await resendPasswordOtp();
       toast.success("OTP resent successfully.");
+      setResendSeconds(RESEND_COOLDOWN_SECONDS);
     } catch (error) {
       const message =
         error?.response?.data?.message ||
@@ -123,7 +138,7 @@ export default function ChangePasswordModal({ isOpen, onClose, email, onClosed }
           <button
             type="button"
             onClick={handleClose}
-            className="rounded-full p-1 text-gray-500"
+            className="rounded-full p-1 text-gray-500 cursor-pointer"
           >
             <X size={18} />
           </button>
@@ -152,16 +167,20 @@ export default function ChangePasswordModal({ isOpen, onClose, email, onClosed }
               <button
                 type="button"
                 onClick={handleResendOtp}
-                disabled={isSendingOtp}
-                className="text-sm font-medium text-indigo-600 disabled:opacity-70 disabled:cursor-not-allowed"
+                disabled={isSendingOtp || resendSeconds > 0}
+                className="text-sm font-medium cursor-pointer text-indigo-600 disabled:opacity-70 disabled:cursor-not-allowed"
               >
-                {isSendingOtp ? "Sending..." : "Resend OTP"}
+                {isSendingOtp
+                  ? "Sending..."
+                  : resendSeconds > 0
+                    ? `Resend OTP in ${resendSeconds}s`
+                    : "Resend OTP"}
               </button>
               <button
                 type="button"
                 onClick={handleVerifyOtp}
                 disabled={isVerifyingOtp}
-                className="rounded-xl bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white disabled:opacity-70 disabled:cursor-not-allowed"
+                className="rounded-xl bg-indigo-600 cursor-pointer px-5 py-2.5 text-sm font-semibold text-white disabled:opacity-70 disabled:cursor-not-allowed"
               >
                 {isVerifyingOtp ? "Verifying..." : "Verify OTP"}
               </button>
@@ -206,7 +225,7 @@ export default function ChangePasswordModal({ isOpen, onClose, email, onClosed }
                   setPasswordStep(1);
                   setPasswordError("");
                 }}
-                className="rounded-xl border border-gray-200 px-4 py-2.5 text-sm font-medium text-gray-700"
+                className="rounded-xl cursor-pointer border border-gray-200 px-4 py-2.5 text-sm font-medium text-gray-700"
               >
                 Back
               </button>
@@ -214,7 +233,7 @@ export default function ChangePasswordModal({ isOpen, onClose, email, onClosed }
                 type="button"
                 onClick={handleSubmitNewPassword}
                 disabled={isChangingPassword}
-                className="rounded-xl bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white disabled:opacity-70 disabled:cursor-not-allowed"
+                className="rounded-xl bg-indigo-600 px-5 cursor-pointer py-2.5 text-sm font-semibold text-white disabled:opacity-70 disabled:cursor-not-allowed"
               >
                 {isChangingPassword ? "Updating..." : "Update Password"}
               </button>

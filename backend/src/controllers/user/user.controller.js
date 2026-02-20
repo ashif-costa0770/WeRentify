@@ -1,4 +1,10 @@
 import User from "../../models/users/user.model.js";
+import Favorite from "../../models/favorite.model.js";
+import Listing from "../../models/listing/listing.model.js";
+import Service from "../../models/service/service.model.js";
+import Post from "../../models/community/post.model.js";
+import Comment from "../../models/community/comment.model.js";
+import mongoose from "mongoose";
 import { successResponse, errorResponse } from "../../utils/response.js";
 import { uploadBufferToCloudinary } from "../../config/cloudinary.js";
 import { cloudinary } from "../../config/cloudinary.js";
@@ -6,6 +12,8 @@ import OTP from "../../models/users/otp.model.js";
 import { sendOtpEmail } from "../../utils/mailer.js";
 import { generateOtp } from "../../utils/opt.js";
 import argon2 from "argon2";
+
+const RESEND_COOLDOWN_SECONDS = 60;
 
 export const updateProfile = async (req, res) => {
   try {
@@ -67,6 +75,48 @@ export const sendPasswordChangeOtp = async (req, res) => {
   }
 };
 
+//! Otp resend with cooldown
+export const resendPasswordChangeOtp = async (req, res) => {
+  try {
+    const email = req.user?.email;
+    console.log(email);
+
+    const existingRecord = await OTP.findOne({ email });
+
+    if (!existingRecord)
+      return res.status(400).json({ message: "Request OTP first" });
+
+    const now = Date.now();
+    const lastSent = new Date(existingRecord.lastSentAt).getTime();
+    const diffSeconds = Math.floor((now - lastSent) / 1000);
+
+    if (diffSeconds < RESEND_COOLDOWN_SECONDS) {
+      return errorResponse(res, 429, "Please wait before resending OTP", {
+        retryAfter: RESEND_COOLDOWN_SECONDS - diffSeconds,
+      });
+    }
+
+    const newOtp = generateOtp();
+    const newExpiry = new Date(Date.now() + 2 * 60 * 1000);
+
+    existingRecord.otp = newOtp;
+    existingRecord.expiresAt = newExpiry;
+    existingRecord.lastSentAt = new Date();
+    existingRecord.isVerified = false;
+
+    await existingRecord.save();
+
+    await sendOtpEmail(email, newOtp);
+    return successResponse(res, 200, "OTP resent successfully");
+  } catch (err) {
+    return errorResponse(
+      res,
+      400,
+      "Invalid data, resend otp faild",
+      err.message,
+    );
+  }
+};
 export const verifyPasswordChangeOtp = async (req, res) => {
   try {
     const email = req.user?.email;
@@ -94,7 +144,6 @@ export const changePassword = async (req, res) => {
     const { password, confirmPassword } = req.body;
     const email = req.user?.email;
 
-
     if (password.length < 6) {
       return errorResponse(res, 400, "Password must be at least 6 characters");
     }
@@ -106,7 +155,8 @@ export const changePassword = async (req, res) => {
 
     const otpRecord = await OTP.findOne({ email });
     if (!otpRecord) return errorResponse(res, 400, "OTP not found");
-    if (!otpRecord.isVerified) return errorResponse(res, 400, "OTP not verified");
+    if (!otpRecord.isVerified)
+      return errorResponse(res, 400, "OTP not verified");
 
     const hashedPassword = await argon2.hash(password);
 
@@ -121,5 +171,85 @@ export const changePassword = async (req, res) => {
     });
   } catch (err) {
     return errorResponse(res, 400, "Password change failed", err.message);
+  }
+};
+
+//! Delete user with all details (listings, services, account, post, comment, favorites)
+
+export const deleteUserAccount = async (req, res) => {
+  const session = await mongoose.startSession();
+
+  try {
+    session.startTransaction();
+
+    const email = req.user?.email;
+
+    const user = await User.findOne({ email }).session(session);
+
+    if (!user) {
+      await session.abortTransaction();
+      return errorResponse(res, 404, "User not found");
+    }
+
+    const userId = user._id;
+
+    /* -----------------------------------------------------------
+       STEP 1: Fetch comments BEFORE deletion
+       We need them to fix commentsCount on posts
+       ----------------------------------------------------------- */
+
+    const comments = await Comment.find({ user: userId })
+      .select("post")
+      .session(session);
+
+    /* -----------------------------------------------------------
+       STEP 2: Build per-post decrement map
+       Example:
+         PostA → 3 comments
+         PostB → 1 comment
+       ----------------------------------------------------------- */
+
+    const postMap = {};
+
+    comments.forEach((comment) => {
+      const postId = comment.post.toString();
+      postMap[postId] = (postMap[postId] || 0) + 1;
+    });
+
+    //  STEP 3: Decrement counters accurately
+
+    for (const postId in postMap) {
+      await Post.findByIdAndUpdate(postId, {
+        $inc: { commentsCount: -postMap[postId] },
+      }).session(session);
+    }
+
+    //  STEP 4: Delete dependent documents
+
+    await Listing.deleteMany({ owner: userId }).session(session);
+    await Service.deleteMany({ owner: userId }).session(session);
+
+    // ⚠ Ensure field name EXACTLY matches schema
+    await Post.deleteMany({ author: userId }).session(session);
+
+    await Comment.deleteMany({ user: userId }).session(session);
+    await Favorite.deleteMany({ user: userId }).session(session);
+
+    //  STEP 5: Delete user
+
+    await User.findByIdAndDelete(userId).session(session);
+
+    await session.commitTransaction();
+
+    return successResponse(res, 200, "User account deleted successfully", {
+      _id: userId,
+      email: user.email,
+    });
+  } catch (error) {
+    await session.abortTransaction();
+
+    return errorResponse(res, 400, "Failed to delete user", error.message);
+  } finally {
+    session.endSession();
   }
 };

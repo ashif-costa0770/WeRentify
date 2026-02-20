@@ -22,6 +22,10 @@ export default function MessageModal({ isOpen, onClose, post }) {
   if (!isOpen || !post) return null;
 
   const isService = post.type === "service";
+  const authorName =
+    `${post.author?.firstname || ""} ${post.author?.lastname || ""}`.trim() ||
+    post.author?.firstname ||
+    "User";
 
   const quickResponses = [
     `Hi! Are you still in need of this ${isService ? "service" : "item"}?`,
@@ -64,11 +68,11 @@ export default function MessageModal({ isOpen, onClose, post }) {
           <div className="flex items-start justify-between">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-pink-500 flex items-center justify-center text-white font-semibold text-lg shadow-lg">
-                {post.author?.name?.charAt(0) || "U"}
+                {authorName.charAt(0) || "U"}
               </div>
               <div>
                 <h2 className="text-lg font-bold text-gray-900">
-                  Message {post.author?.name || "User"}
+                  Message {authorName}
                 </h2>
                 <p className="text-sm text-gray-500 truncate max-w-[250px]">
                   About: {post.title}

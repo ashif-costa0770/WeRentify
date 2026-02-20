@@ -5,6 +5,8 @@ import { generateOtp } from "../../utils/opt.js";
 import { successResponse, errorResponse } from "../../utils/response.js";
 import { sendOtpEmail } from "../../utils/mailer.js";
 import argon2 from "argon2";
+import axios from "axios";
+
 
 const RESEND_COOLDOWN_SECONDS = 60;
 
@@ -99,7 +101,7 @@ export const resendOtp = async (req, res) => {
 //! Step 3
 export const createUser = async (req, res) => {
   try {
-    const {name, email, password, confirmPassword } = req.body;
+    const {firstname, email, password, confirmPassword } = req.body;
 
     const existingUser = await User.findOne({ email });
 
@@ -113,7 +115,7 @@ export const createUser = async (req, res) => {
     const hashedPassword = await argon2.hash(password);
 
     const user = await User.create({
-      name,
+      firstname,
       email,
       password: hashedPassword,
       isVerified: true,
@@ -126,7 +128,7 @@ export const createUser = async (req, res) => {
     await OTP.deleteMany({ email });
     return successResponse(res, 200, "Account created successfully", {
       _id: user._id,
-      name:user.name,
+      firstname:user.firstname,
       email: user.email,
       token,
     });
@@ -143,7 +145,7 @@ export const createUser = async (req, res) => {
 /!* LOGIN ENDPOINT */;
 export const login = async (req, res) => {
   try {
-    const {name, email, password } = req.body;
+    const {firstname, email, password } = req.body;
 
     const user = await User.findOne({ email });
 
@@ -162,7 +164,7 @@ export const login = async (req, res) => {
 
     return successResponse(res, 200, "Login successful", {
       _id: user._id,
-      name:user.name,
+      firstname:user.firstname,
       email: user.email,
       token,
     });
@@ -189,4 +191,55 @@ export const getMe = async (req, res) => {
 export const logout = async (req, res) => {
   res.clearCookie("token");
   return successResponse(res, 200, "Logged out successfully");
+};
+
+// ! Facebook auth
+export const facebookAuth = async (req, res) => {
+  try {
+    const { accessToken } = req.body;
+
+    if (!accessToken) {
+      return errorResponse(res, 400, "Access token missing");
+    }
+
+    const fbRes = await axios.get("https://graph.facebook.com/me", {
+      params: {
+        fields: "id,name,email,picture",
+        access_token: accessToken,
+      },
+    });
+
+    const { id, name, email, picture } = fbRes.data;
+
+    if (!email) {
+      return errorResponse(res, 400, "Facebook account has no email");
+    }
+
+    let user = await User.findOne({ email });
+
+    if (!user) {
+      user = await User.create({
+        firstname: name,
+        email,
+        facebookId: id,
+        isVerified: true,
+      });
+    }
+
+    // ✅ Use SAME token logic as login
+    const token = generateToken(user._id);
+
+    // ✅ Store token in cookie (same as login)
+    res.cookie("token", token, { httpOnly: true });
+
+    return successResponse(res, 200, "Facebook login successful", {
+      _id: user._id,
+      firstname: user.firstname,
+      email: user.email,
+      token,
+    });
+  } catch (err) {
+    console.error("Facebook Auth Error:", err.response?.data || err.message);
+    return errorResponse(res, 500, "Facebook authentication failed");
+  }
 };

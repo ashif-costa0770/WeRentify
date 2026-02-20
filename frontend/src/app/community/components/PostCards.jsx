@@ -17,6 +17,9 @@ export default function PostCard({
   onUpdatePost = () => {},
 }) {
   const isService = post.type === "service";
+  const authorName =
+    `${post.author?.firstname || ""} ${post.author?.lastname || ""}`.trim() ||
+    "Unknown";
 
   const isLiked = currentUser ? post.likes?.includes(currentUser._id) : false;
 
@@ -70,13 +73,11 @@ export default function PostCard({
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-3">
           <div className="w-9 h-9 rounded-full bg-linear-to-r from-indigo-500 to-pink-500 text-white flex items-center justify-center font-bold">
-            {post.author?.name?.charAt(0) || "U"}
+            {authorName.charAt(0) || "U"}
           </div>
 
           <div>
-            <p className="font-semibold text-sm text-gray-900">
-              {post.author?.name || "Unknown"}
-            </p>
+            <p className="font-semibold text-sm text-gray-900">{authorName}</p>
             <p className="text-xs text-gray-500">{timeAgo(post.createdAt)}</p>
           </div>
         </div>

@@ -13,3 +13,8 @@ export const resendPasswordOtp = () => api.post(`/user/resend-otp`, {});
 export const verifyPasswordOtp = (data) => api.post(`/user/verify-otp`, data);
 
 export const changePassword = (data) => api.post(`/user/change-password`, data);
+
+//Delete user account
+export const deleteAccount = ()=> {
+  return api.delete(`/user/delete-account`);
+}

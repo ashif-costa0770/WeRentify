@@ -3,10 +3,12 @@
 import React, { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useUser } from "@/context/UserContext";
 import PricingModal from "@/app/components/modals/PricingModal";
 import ChangePasswordModal from "@/app/profile/modals/ChangePassword";
 import { logout } from "@/services/auth.service";
+import AccountInfo from "@/app/profile/components/AccountInfo"
 import {
   updateProfile,
   sendPasswordOtp,
@@ -30,6 +32,7 @@ import {
 } from "lucide-react";
 
 export default function AccountProfile() {
+  const router = useRouter();
   const [profileImage, setProfileImage] = useState(null);
   const [avatarFile, setAvatarFile] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
@@ -51,10 +54,10 @@ export default function AccountProfile() {
     return localStorage.getItem("userPlan") || "basic";
   });
 
-  const { user, setUser, setIsLogin, setShowMessages } = useUser();
+  const { user, setUser, setIsLogin, setShowMessages, isLogin, isAuthLoading } = useUser();
   const fullName = `${user?.firstname || ""} ${user?.lastname || ""}`.trim();
 
-  const displayName = fullName || user?.name || "Alex Johnson";
+  const displayName = fullName || "Unknown";
   const displayMode = user?.mode
     ? user.mode.charAt(0).toUpperCase() + user.mode.slice(1)
     : "Renter";
@@ -66,13 +69,9 @@ export default function AccountProfile() {
   }, [profileImage, user?.avatar?.url]);
 
   useEffect(() => {
-    const fallbackNames = (user?.name || "").trim().split(/\s+/);
-    const fallbackFirst = fallbackNames[0] || "";
-    const fallbackLast = fallbackNames.slice(1).join(" ");
-
     setFormValues({
-      firstname: user?.firstname || fallbackFirst,
-      lastname: user?.lastname || fallbackLast,
+      firstname: user?.firstname || "",
+      lastname: user?.lastname || "",
       phone: user?.phone || "",
     });
   }, [user]);
@@ -95,6 +94,12 @@ export default function AccountProfile() {
     };
   }, [profileImage]);
 
+  useEffect(() => {
+    if (!isAuthLoading && !isLogin) {
+      router.replace("/");
+    }
+  }, [isAuthLoading, isLogin, router]);
+
   //TODO-> Update user plan in backend
   const handlePlanSelect = (planId) => {
     setCurrentPlan(planId);
@@ -104,8 +109,10 @@ export default function AccountProfile() {
   const handleLogout = async () => {
     try {
       await logout();
+      setUser(null);
       setIsLogin(false);
       toast.success("Logout successfull");
+      router.push("/");
     } catch (error) {
       console.log(error);
     }
@@ -257,140 +264,144 @@ export default function AccountProfile() {
             />
           </aside>
 
-          <main className="bg-white rounded-2xl border border-gray-200 shadow-sm p-4 sm:p-8">
-            <h1 className="text-2xl font-semibold text-gray-900 mb-6">Profile Details</h1>
+          <div className="space-y-6">
+            <main className="bg-white rounded-2xl border border-gray-200 shadow-sm p-4 sm:p-8">
+              <h1 className="text-2xl font-semibold text-gray-900 mb-6">Profile Details</h1>
 
-            <form className="space-y-6" onSubmit={handleSubmit}>
-              <div className="flex flex-col sm:flex-row sm:items-center gap-5">
-                <div className="relative">
-                  <div className="w-20 h-20 rounded-full bg-gray-100 border border-gray-300 flex items-center justify-center overflow-hidden">
-                    {avatarUrl ? (
-                      <Image
-                        src={avatarUrl}
-                        height={80}
-                        width={80}
-                        alt="Profile Preview"
-                        className="w-full h-full object-cover"
+              <form className="space-y-6" onSubmit={handleSubmit}>
+                <div className="flex flex-col sm:flex-row sm:items-center gap-5">
+                  <div className="relative">
+                    <div className="w-20 h-20 rounded-full bg-gray-100 border border-gray-300 flex items-center justify-center overflow-hidden">
+                      {avatarUrl ? (
+                        <Image
+                          src={avatarUrl}
+                          height={80}
+                          width={80}
+                          alt="Profile Preview"
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <User className="w-10 h-10 text-gray-400" />
+                      )}
+                    </div>
+
+                    <label className="absolute bottom-0 right-0 bg-indigo-600 p-2 rounded-full text-white cursor-pointer shadow">
+                      <Camera size={12} />
+                      <input
+                        type="file"
+                        className="hidden"
+                        accept="image/*"
+                        onChange={handleImageChange}
                       />
-                    ) : (
-                      <User className="w-10 h-10 text-gray-400" />
-                    )}
+                    </label>
                   </div>
 
-                  <label className="absolute bottom-0 right-0 bg-indigo-600 p-2 rounded-full text-white cursor-pointer shadow">
-                    <Camera size={12} />
+                  <div>
+                    <p className="text-base font-medium text-gray-800">Profile Photo</p>
+                    <p className="text-sm text-gray-400 mt-1">
+                      Click the camera icon to upload. PNG,
+                      <br className="hidden sm:block" />
+                      JPG or GIF.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                  <div>
+                    <label className="text-sm font-medium text-gray-700">First Name</label>
                     <input
-                      type="file"
-                      className="hidden"
-                      accept="image/*"
-                      onChange={handleImageChange}
+                      type="text"
+                      placeholder="Jane"
+                      value={formValues.firstname}
+                      onChange={(e) => handleInputChange("firstname", e.target.value)}
+                      className={`mt-1 w-full rounded-xl border px-4 py-3 outline-none focus:ring-2 focus:ring-indigo-200 ${
+                        errors.firstname ? "border-red-400 focus:border-red-400" : "border-gray-200 focus:border-indigo-500"
+                      }`}
                     />
-                  </label>
+                    {errors.firstname && (
+                      <p className="mt-1 text-xs text-red-500">{errors.firstname}</p>
+                    )}
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-gray-700">Last Name</label>
+                    <input
+                      type="text"
+                      placeholder="Doe"
+                      value={formValues.lastname}
+                      onChange={(e) => handleInputChange("lastname", e.target.value)}
+                      className={`mt-1 w-full rounded-xl border px-4 py-3 outline-none focus:ring-2 focus:ring-indigo-200 ${
+                        errors.lastname ? "border-red-400 focus:border-red-400" : "border-gray-200 focus:border-indigo-500"
+                      }`}
+                    />
+                    {errors.lastname && (
+                      <p className="mt-1 text-xs text-red-500">{errors.lastname}</p>
+                    )}
+                  </div>
                 </div>
 
                 <div>
-                  <p className="text-base font-medium text-gray-800">Profile Photo</p>
-                  <p className="text-sm text-gray-400 mt-1">
-                    Click the camera icon to upload. PNG,
-                    <br className="hidden sm:block" />
-                    JPG or GIF.
-                  </p>
+                  <label className="text-sm font-medium text-gray-700">Email Address</label>
+                  <div className="relative mt-1">
+                    <Mail
+                      className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"
+                      size={18}
+                    />
+                    <input
+                      type="email"
+                      value={email}
+                      readOnly
+                      className="w-full rounded-xl border border-gray-200 bg-gray-50 pl-12 pr-4 py-3 text-gray-500 italic"
+                    />
+                  </div>
                 </div>
-              </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                 <div>
-                  <label className="text-sm font-medium text-gray-700">First Name</label>
-                  <input
-                    type="text"
-                    placeholder="Jane"
-                    value={formValues.firstname}
-                    onChange={(e) => handleInputChange("firstname", e.target.value)}
-                    className={`mt-1 w-full rounded-xl border px-4 py-3 outline-none focus:ring-2 focus:ring-indigo-200 ${
-                      errors.firstname ? "border-red-400 focus:border-red-400" : "border-gray-200 focus:border-indigo-500"
-                    }`}
-                  />
-                  {errors.firstname && (
-                    <p className="mt-1 text-xs text-red-500">{errors.firstname}</p>
-                  )}
+                  <label className="text-sm font-medium text-gray-700">Phone Number</label>
+                  <div className="relative mt-1">
+                    <Phone
+                      className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"
+                      size={18}
+                    />
+                    <input
+                      type="tel"
+                      placeholder="+91 98765 43210"
+                      value={formValues.phone}
+                      onChange={(e) =>
+                        handleInputChange("phone", e.target.value.replace(/[^\d+]/g, ""))
+                      }
+                      className={`w-full rounded-xl border pl-12 pr-4 py-3 outline-none focus:ring-2 focus:ring-indigo-200 ${
+                        errors.phone ? "border-red-400 focus:border-red-400" : "border-gray-200 focus:border-indigo-500"
+                      }`}
+                    />
+                    {errors.phone && <p className="mt-1 text-xs text-red-500">{errors.phone}</p>}
+                  </div>
                 </div>
-                <div>
-                  <label className="text-sm font-medium text-gray-700">Last Name</label>
-                  <input
-                    type="text"
-                    placeholder="Doe"
-                    value={formValues.lastname}
-                    onChange={(e) => handleInputChange("lastname", e.target.value)}
-                    className={`mt-1 w-full rounded-xl border px-4 py-3 outline-none focus:ring-2 focus:ring-indigo-200 ${
-                      errors.lastname ? "border-red-400 focus:border-red-400" : "border-gray-200 focus:border-indigo-500"
-                    }`}
-                  />
-                  {errors.lastname && (
-                    <p className="mt-1 text-xs text-red-500">{errors.lastname}</p>
-                  )}
-                </div>
-              </div>
 
-              <div>
-                <label className="text-sm font-medium text-gray-700">Email Address</label>
-                <div className="relative mt-1">
-                  <Mail
-                    className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"
-                    size={18}
-                  />
-                  <input
-                    type="email"
-                    value={email}
-                    readOnly
-                    className="w-full rounded-xl border border-gray-200 bg-gray-50 pl-12 pr-4 py-3 text-gray-500 italic"
-                  />
+                <div className="pt-2 flex justify-between border-t border-gray-100">
+                  <button
+                    type="submit"
+                    disabled={isSaving}
+                    className="inline-flex cursor-pointer items-center gap-2 rounded-xl bg-indigo-600 px-6 py-3 text-white font-semibold shadow disabled:opacity-70 disabled:cursor-not-allowed"
+                  >
+                    <Save size={18} />
+                    <span>{isSaving ? "Saving..." : "Save Changes"}</span>
+                  </button>
+                   <button
+                     type="button"  
+                     onClick={handleChangePassword}          
+                     disabled={isSendingOtp}
+                     className="inline-flex cursor-pointer items-center gap-2 text-indigo-600 font-semibold disabled:opacity-70 disabled:cursor-not-allowed"
+                   >
+                     <Lock  size={18} />
+                     {isSendingOtp ? "Sending OTP..." : "Change Password"}
+                   </button>
+                  
                 </div>
-              </div>
-
-              <div>
-                <label className="text-sm font-medium text-gray-700">Phone Number</label>
-                <div className="relative mt-1">
-                  <Phone
-                    className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"
-                    size={18}
-                  />
-                  <input
-                    type="tel"
-                    placeholder="+91 98765 43210"
-                    value={formValues.phone}
-                    onChange={(e) =>
-                      handleInputChange("phone", e.target.value.replace(/[^\d+]/g, ""))
-                    }
-                    className={`w-full rounded-xl border pl-12 pr-4 py-3 outline-none focus:ring-2 focus:ring-indigo-200 ${
-                      errors.phone ? "border-red-400 focus:border-red-400" : "border-gray-200 focus:border-indigo-500"
-                    }`}
-                  />
-                  {errors.phone && <p className="mt-1 text-xs text-red-500">{errors.phone}</p>}
-                </div>
-              </div>
-
-              <div className="pt-2 flex justify-between border-t border-gray-100">
-                <button
-                  type="submit"
-                  disabled={isSaving}
-                  className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-6 py-3 text-white font-semibold shadow disabled:opacity-70 disabled:cursor-not-allowed"
-                >
-                  <Save size={18} />
-                  <span>{isSaving ? "Saving..." : "Save Changes"}</span>
-                </button>
-                 <button
-                   type="button"  
-                   onClick={handleChangePassword}          
-                   disabled={isSendingOtp}
-                   className="inline-flex cursor-pointer items-center gap-2 text-indigo-600 font-semibold disabled:opacity-70 disabled:cursor-not-allowed"
-                 >
-                   <Lock  size={18} />
-                   {isSendingOtp ? "Sending OTP..." : "Change Password"}
-                 </button>
-                
-              </div>
-            </form>
-          </main>
+              </form>            
+            </main>
+            <AccountInfo />
+          </div>
+          
         </div>
       </div>
       <PricingModal

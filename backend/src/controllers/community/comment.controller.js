@@ -32,7 +32,7 @@ export const getAllComments = async (req, res) => {
     .sort({ createdAt: -1 })
     .skip(skip)
     .limit(limit)
-    .populate("user", "name email");
+    .populate("user", "-password");
 
   const total = await Comment.countDocuments({ post: postId });
 
@@ -121,10 +121,7 @@ export const toggleLike = async (req, res) => {
   }
 
   await post.save();
-  const updatedPost = await Post.findById(postId).populate(
-    "author",
-    "name email",
-  );
+  const updatedPost = await Post.findById(postId).populate("author", "-password");
   return successResponse(
     res,
     200,
@@ -157,10 +154,7 @@ export const toggleSave = async (req, res) => {
   }
 
   await post.save();
-  const updatedPost = await Post.findById(postId).populate(
-    "author",
-    "name email",
-  );
+  const updatedPost = await Post.findById(postId).populate("author", "-password");
 
   return successResponse(
     res,

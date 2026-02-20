@@ -13,6 +13,10 @@ function mapBackendService(service) {
   const categoryId = service.category?._id || service.category?.toString?.() || null;
   const iconUrl = service.category?.icon.url || service.category?.toString?.() || "other";
   const hourlyRateNum = parseFloat(service.hourlyRate) || 0;
+  const providerName =
+    `${service.owner?.firstname || ""} ${service.owner?.lastname || ""}`.trim() ||
+    service.owner?.firstname ||
+    "Provider";
   return {
     ...service,
     id: service._id,
@@ -24,7 +28,7 @@ function mapBackendService(service) {
     description: service.description ?? "Professional service with guaranteed quality",
     reviews: service.reviewCount ?? 0,
     verified: service.verified,
-    provider: service.owner?.name || "Provider",
+    provider: providerName,
     categoryName:categoryName,
     category: categoryId,
     distance: service.serviceRadius ?? 0,

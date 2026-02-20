@@ -21,7 +21,7 @@ export function UserProvider({ children }) {
   const [isLoaded, setIsLoaded] = useState(false);
   const [isAuthLoading, setIsAuthLoading] = useState(true);
 
-  // Fetch user profile on mount and whenever login state flips to true.
+  // Fetch user profile on mount and when login state changes.
   useEffect(() => {
     const fetchUserAndFavorites = async () => {
       try {
@@ -50,7 +50,7 @@ export function UserProvider({ children }) {
     };
 
     fetchUserAndFavorites();
-  }, []);
+  }, [isLogin]);
 
   // Load favorites from localStorage on mount
   useEffect(() => {

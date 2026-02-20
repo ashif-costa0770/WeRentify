@@ -9,6 +9,7 @@ import {
   getMe,
   logout,
   login,
+  facebookAuth,
 } from "../../controllers/user/auth.controller.js";
 import { protect } from "../../middlewares/auth.middleware.js";
 import validate from "../../middlewares/validate.js";
@@ -41,5 +42,8 @@ router.get("/google/callback",  passport.authenticate("google", {
     res.redirect(process.env.FRONTEND_URL || "http://localhost:3000");
   }
 );
+
+//! Facebook auth
+router.post("/facebook", facebookAuth);
 
 export default router;

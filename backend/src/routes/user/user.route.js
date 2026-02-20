@@ -13,11 +13,14 @@ import {
   updateProfile,
   sendPasswordChangeOtp,
   verifyPasswordChangeOtp,
+  resendPasswordChangeOtp,
+  deleteUserAccount,
 } from "../../controllers/user/user.controller.js";
 import {
   handleMulterError,
   uploadAvatar,
 } from "../../middlewares/upload.middleware.js";
+
 
 const router = express.Router();
 
@@ -26,8 +29,13 @@ router.put("/profile", protect, uploadAvatar, handleMulterError,  validate(updat
 
 //! Change Passwrod
 router.post("/send-otp", protect, validate(sendOtpForPasswordSchema), sendPasswordChangeOtp);
-router.post("/resend-otp", protect, validate(sendOtpForPasswordSchema), sendPasswordChangeOtp);
+router.post("/resend-otp", protect, validate(sendOtpForPasswordSchema), resendPasswordChangeOtp);
 router.post("/verify-otp", protect, validate(verifyPasswordOtpSchema), verifyPasswordChangeOtp);
 router.post("/change-password", protect, validate(changePasswordSchema), changePassword);
+
+//!delete user account
+router.delete("/delete-account", protect, deleteUserAccount);
+
+
 
 export default router;

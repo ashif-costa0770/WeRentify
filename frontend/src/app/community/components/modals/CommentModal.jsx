@@ -10,6 +10,7 @@ import {
   updateComment,
   deleteComment,
 } from "@/services/comment.service";
+import { useUser } from "@/context/UserContext";
 import { toast } from "sonner";
 
 export default function CommentModal({
@@ -20,6 +21,9 @@ export default function CommentModal({
   onRequireLogin = () => {},
   onUpdatePost = () => {},
 }) {
+  const { user: contextUser } = useUser();
+  const activeUser = currentUser || contextUser;
+
   const [comments, setComments] = useState([]);
   const [loading, setLoading] = useState(false);
   const [commentText, setCommentText] = useState("");
@@ -56,7 +60,7 @@ export default function CommentModal({
 
   // 🔹 Create Comment
   const handleCreate = async () => {
-    if (!currentUser) {
+    if (!activeUser) {
       onClose();
       onRequireLogin();
       return;
@@ -83,7 +87,7 @@ export default function CommentModal({
 
   // 🔹 Update Comment
   const handleUpdate = async (commentId) => {
-    if (!currentUser) {
+    if (!activeUser) {
       onClose();
       onRequireLogin();
       return;
@@ -109,7 +113,7 @@ export default function CommentModal({
   };
 
   const deleteCommentById = async (commentId) => {
-    if (!currentUser) {
+    if (!activeUser) {
       onClose();
       onRequireLogin();
       return;
@@ -147,6 +151,16 @@ export default function CommentModal({
   if (!isOpen || !post) return null;
 
   const isService = post.type === "service";
+  const postAuthorName =
+    `${post.author?.firstname || ""} ${post.author?.lastname || ""}`.trim() ||
+    "Unknown";
+  const currentUserName =
+    `${activeUser?.firstname || ""} ${activeUser?.lastname || ""}`.trim() ||
+    activeUser?.firstname ||
+    activeUser?.name ||
+    activeUser?.email?.split("@")?.[0] ||
+    "User";
+    
 
   return (
     <>
@@ -163,11 +177,11 @@ export default function CommentModal({
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3">
               <div className="w-12 h-12 rounded-full bg-linear-to-r from-indigo-500 to-pink-500 text-white flex items-center justify-center font-bold text-lg">
-                {post.author?.name?.charAt(0) || "C"}
+                {postAuthorName.charAt(0) || "C"}
               </div>
               <div>
                 <p className="font-bold text-gray-900">
-                  {post.author?.name || "Unknown"}
+                  {postAuthorName}
                 </p>
                 <p className="text-sm text-gray-500">
                   {timeAgo(post.createdAt)}
@@ -240,87 +254,94 @@ export default function CommentModal({
             </div>
           ) : (
             <div className="space-y-4">
-              {comments.map((comment) => (
-                <div key={comment._id} className="flex gap-3 group">
-                  <div className="w-10 h-10 cursor-pointer rounded-full bg-linear-to-r from-indigo-400 to-pink-400 text-white flex items-center justify-center font-bold text-sm flex-shrink-0">
-                    {comment.user?.name?.charAt(0) || "U"}
-                  </div>
-                  <div className="flex-1">
-                    <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 hover:border-indigo-100 transition-colors">
-                      <div className="flex justify-between items-start">
-                        <p className="font-bold text-sm text-gray-900">
-                          {comment.user?.name || "User"}
-                        </p>
-                        {currentUser?._id === comment.user?._id && (
-                          <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all">
-                            <button
-                              onClick={() => {
-                                setEditingId(comment._id);
-                                setEditText(comment.text);
-                              }}
-                              className="p-1.5 cursor-pointer text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition"
-                              title="Edit"
-                            >
-                              <Edit3 size={15} />
-                            </button>
-                            <button
-                              onClick={() => handleDelete(comment._id)}
-                              className="p-1.5 cursor-pointer text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition"
-                              title="Delete"
-                            >
-                              <Trash2 size={15} />
-                            </button>
+              {comments.map((comment) => {
+                const commentUserName =
+                  `${comment.user?.firstname || ""} ${comment.user?.lastname || ""}`.trim() ||
+                  comment.user?.firstname ||
+                  "User";
+
+                return (
+                  <div key={comment._id} className="flex gap-3 group">
+                    <div className="w-10 h-10 cursor-pointer rounded-full bg-linear-to-r from-indigo-400 to-pink-400 text-white flex items-center justify-center font-bold text-sm flex-shrink-0">
+                      {commentUserName.charAt(0) || "U"}
+                    </div>
+                    <div className="flex-1">
+                      <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 hover:border-indigo-100 transition-colors">
+                        <div className="flex justify-between items-start">
+                          <p className="font-bold text-sm text-gray-900">
+                            {commentUserName}
+                          </p>
+                          {activeUser?._id === comment.user?._id && (
+                            <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all">
+                              <button
+                                onClick={() => {
+                                  setEditingId(comment._id);
+                                  setEditText(comment.text);
+                                }}
+                                className="p-1.5 cursor-pointer text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition"
+                                title="Edit"
+                              >
+                                <Edit3 size={15} />
+                              </button>
+                              <button
+                                onClick={() => handleDelete(comment._id)}
+                                className="p-1.5 cursor-pointer text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition"
+                                title="Delete"
+                              >
+                                <Trash2 size={15} />
+                              </button>
+                            </div>
+                          )}
+                        </div>
+
+                        {editingId === comment._id ? (
+                          <div className="mt-2">
+                            <textarea
+                              value={editText}
+                              onChange={(e) => setEditText(e.target.value)}
+                              className="w-full border border-gray-300 rounded-xl px-3 py-2 text-sm focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all"
+                              rows="2"
+                              autoFocus
+                            />
+                            <div className="flex justify-end gap-2 mt-2">
+                              <button
+                                onClick={() => setEditingId(null)}
+                                className="p-1 px-2 text-xs font-semibold text-gray-500 hover:bg-gray-100 rounded-lg transition flex items-center gap-1"
+                              >
+                                <XCircle size={14} /> Cancel
+                              </button>
+                              <button
+                                onClick={() => handleUpdate(comment._id)}
+                                disabled={!editText.trim() || isSubmitting}
+                                className="p-1 px-3 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg transition flex items-center gap-1 shadow-sm"
+                              >
+                                <Check size={14} /> Save
+                              </button>
+                            </div>
                           </div>
+                        ) : (
+                          <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">
+                            {comment.text}
+                          </p>
                         )}
                       </div>
-
-                      {editingId === comment._id ? (
-                        <div className="mt-2">
-                          <textarea
-                            value={editText}
-                            onChange={(e) => setEditText(e.target.value)}
-                            className="w-full border border-gray-300 rounded-xl px-3 py-2 text-sm focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all"
-                            rows="2"
-                            autoFocus
-                          />
-                          <div className="flex justify-end gap-2 mt-2">
-                            <button
-                              onClick={() => setEditingId(null)}
-                              className="p-1 px-2 text-xs font-semibold text-gray-500 hover:bg-gray-100 rounded-lg transition flex items-center gap-1"
-                            >
-                              <XCircle size={14} /> Cancel
-                            </button>
-                            <button
-                              onClick={() => handleUpdate(comment._id)}
-                              disabled={!editText.trim() || isSubmitting}
-                              className="p-1 px-3 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg transition flex items-center gap-1 shadow-sm"
-                            >
-                              <Check size={14} /> Save
-                            </button>
-                          </div>
-                        </div>
-                      ) : (
-                        <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">
-                          {comment.text}
-                        </p>
-                      )}
+                      <p className="text-[11px] text-gray-400 mt-1 ml-2 font-medium">
+                        {timeAgo(comment.createdAt)}
+                      </p>
                     </div>
-                    <p className="text-[11px] text-gray-400 mt-1 ml-2 font-medium">
-                      {timeAgo(comment.createdAt)}
-                    </p>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>
 
         {/* Comment Input Area */}
         <div className="p-6 border-t border-gray-100 bg-white flex-shrink-0">
-          {currentUser ? (
+          {activeUser ? (
             <div className="flex gap-4 items-start">
               <div className="w-10 h-10 rounded-full bg-linear-to-r from-indigo-500 to-pink-500 text-white flex items-center justify-center font-bold flex-shrink-0 shadow-sm">
-                {currentUser.name?.charAt(0) || "U"}
+                {currentUserName.charAt(0) || "U"}
               </div>
               <div className="flex-1">
                 <textarea

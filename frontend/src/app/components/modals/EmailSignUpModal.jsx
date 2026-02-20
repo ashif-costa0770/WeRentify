@@ -20,7 +20,7 @@ export default function EmailSignUpModal({
   // 3-step registration flow:
   // 1) generate OTP by email, 2) verify OTP, 3) set password and create account.
   const [step, setStep] = useState(1);
-  const [name, setName] = useState("");
+  const [firstname, setFirstName] = useState("");
   const [email, setEmail] = useState("");
   const [otp, setOtp] = useState("");
   const [password, setPassword] = useState("");
@@ -28,7 +28,7 @@ export default function EmailSignUpModal({
   const [isLoading, setIsLoading] = useState(false);
   const [resendSeconds, setResendSeconds] = useState(0);
 
-  const isNameValid = name.length >= 2;
+  const isNameValid = firstname.length >= 2;
   const isValidEmail = /\S+@\S+\.\S+/.test(email.trim());
   const isOtpValid = otp.trim().length >= 6;
   const isPasswordValid = password.length >= 4;
@@ -37,7 +37,7 @@ export default function EmailSignUpModal({
 
   const resetForm = () => {
     setStep(1);
-    setName("");
+    setFirstName("");
     setEmail("");
     setOtp("");
     setPassword("");
@@ -137,7 +137,7 @@ export default function EmailSignUpModal({
       setIsLoading(true);
       // Step 3 backend call: create user account with verified email + password.
       await registerAPI(
-        name.trim(),
+        firstname.trim(),
         email.trim().toLowerCase(),
         password,
         confirmPassword,
@@ -215,8 +215,8 @@ export default function EmailSignUpModal({
                 </label>
                 <input
                   type="text"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
+                  value={firstname}
+                  onChange={(e) => setFirstName(e.target.value)}
                   placeholder="Enter your name"
                   className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl font-medium text-gray-900 placeholder-gray-400 focus:outline-none focus:border-indigo-500 transition-colors"
                 />
