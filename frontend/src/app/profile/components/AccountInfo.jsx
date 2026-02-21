@@ -77,7 +77,7 @@ export default function SocialLoginSettings() {
       return;
     }
 
-    const apiUrl = (process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api").replace(/\/+$/, "");
+    const apiUrl = (process.env.NEXT_PUBLIC_API_URL || "/backend-api").replace(/\/+$/, "");
     window.location.href = `${apiUrl}/auth/google`;
   };
 

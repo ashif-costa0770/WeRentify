@@ -2,6 +2,9 @@
 
 import { useState } from "react";
 import EmailSignUpModal from "./EmailSignUpModal";
+import { loginWithFacebook } from "@/utils/facebookLogin";
+import { facebookAuth } from "@/services/auth.service";
+import { toast } from "sonner";
 
 export default function SignUpModal({
   open,
@@ -18,6 +21,33 @@ export default function SignUpModal({
     onClose();
     window.location.href = `${process.env.NEXT_PUBLIC_API_URL}/auth/google`;
   };
+
+   //! Handle facebook login
+    const handleFacebookSignIn = async () => {
+      if (loading) return;
+      setLoading(true);
+  
+      try {
+        const accessToken = await loginWithFacebook();
+        await facebookAuth(accessToken);
+        toast.success("Facebook sign up successfull");
+        setIsLogin(true);
+        onClose();
+      } catch (error) {
+        if (error?.message === "FACEBOOK_LOGIN_CANCELLED") {
+          toast.info("Facebook sign up cancelled");
+          return;
+        }
+        console.error("FB LOGIN ERROR:", error);
+        const message =
+          error?.response?.data?.message ||
+          error?.message ||
+          "Facebook sign up failed";
+        toast.error(message);
+      } finally {
+        setLoading(false);
+      }
+    };
 
   if (!open) return null;
 
@@ -102,10 +132,8 @@ export default function SignUpModal({
 
             {/* Facebook */}
             <button
-              // onClick={() => {
-              //   setIsLogin(true);
-              //   onClose();
-              // }}
+             onClick={handleFacebookSignIn}
+              disabled={loading}
               className="w-full cursor-pointer flex items-center justify-center gap-3 px-4 py-3 rounded-xl font-semibold text-white bg-blue-600 hover:bg-blue-700"
             >
               <svg

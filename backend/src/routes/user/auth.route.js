@@ -16,6 +16,7 @@ import validate from "../../middlewares/validate.js";
 import { loginSchema, registerSchema } from "../../validations/auth.validation.js";
 
 const router = express.Router();
+const frontendUrl = process.env.FRONTEND_URL || "https://localhost:3000";
 
 
 router.post("/verify-email",verifyEmail);
@@ -33,13 +34,13 @@ router.get("/google", passport.authenticate("google", {
 );
 
 router.get("/google/callback",  passport.authenticate("google", {
-    failureRedirect: `${process.env.FRONTEND_URL || "http://localhost:3000"}?auth=signin`,
+    failureRedirect: `${frontendUrl}?auth=signin`,
     session: false,
   }),
   (req, res) => {
     const token = generateToken(req.user._id);
     res.cookie("token", token, { httpOnly: true });
-    res.redirect(process.env.FRONTEND_URL || "http://localhost:3000");
+    res.redirect(frontendUrl);
   }
 );
 

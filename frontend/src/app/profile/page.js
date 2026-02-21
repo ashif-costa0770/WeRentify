@@ -9,6 +9,7 @@ import PricingModal from "@/app/components/modals/PricingModal";
 import ChangePasswordModal from "@/app/profile/modals/ChangePassword";
 import { logout } from "@/services/auth.service";
 import AccountInfo from "@/app/profile/components/AccountInfo"
+import AccountDeleteBtn from "@/app/profile/components/AccountDeleteBtn"
 import {
   updateProfile,
   sendPasswordOtp,
@@ -400,6 +401,7 @@ export default function AccountProfile() {
               </form>            
             </main>
             <AccountInfo />
+            <AccountDeleteBtn />
           </div>
           
         </div>

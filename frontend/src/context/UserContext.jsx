@@ -34,8 +34,13 @@ export function UserProvider({ children }) {
           setIsLogin(true);
 
           // 🔥 Fetch favorites after login
-          const favRes = await getFavorites();
-          setFavorites(favRes.data.data || []);
+          try {
+            const favRes = await getFavorites();
+            setFavorites(favRes.data.data || []);
+          } catch (favError) {
+            console.error("Failed to fetch favorites:", favError);
+            setFavorites([]);
+          }
         }
       } catch (error) {
         if (error.response?.status !== 401) {

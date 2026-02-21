@@ -30,3 +30,9 @@ export const getMe = () =>
 
 // LOGOUT
 export const logout = () => api.post("/auth/logout");
+
+
+// Facebook Login
+export const facebookAuth = (accessToken ) =>{
+  return api.post("/auth/facebook", {accessToken })
+}

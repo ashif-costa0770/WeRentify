@@ -2,6 +2,11 @@
 
 import { useState } from "react";
 import EmailSignInModal from "./EmailSignInModal"; // Adjust path as needed
+import { loginWithFacebook } from "@/utils/facebookLogin";
+import { facebookAuth } from "@/services/auth.service";
+
+import { toast } from "sonner";
+
 
 export default function SignInModal({
   open,
@@ -19,6 +24,34 @@ export default function SignInModal({
     setLoading(true);
     onClose();
     window.location.href = `${process.env.NEXT_PUBLIC_API_URL}/auth/google`;
+  };
+
+  //! Handle facebook login
+  const handleFacebookSignIn = async () => {
+    if (loading) return;
+    setLoading(true);
+
+    try {
+      const accessToken = await loginWithFacebook();
+      await facebookAuth(accessToken);
+      console.log("Facebook Login success");
+      toast.success("Facebook login successful");
+      setIsLogin(true);
+      onClose();
+    } catch (error) {
+      if (error?.message === "FACEBOOK_LOGIN_CANCELLED") {
+        toast.info("Facebook login cancelled");
+        return;
+      }
+      console.error("FB LOGIN ERROR:", error);
+      const message =
+        error?.response?.data?.message ||
+        error?.message ||
+        "Facebook login failed";
+      toast.error(message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleEmailClick = () => {
@@ -112,7 +145,8 @@ export default function SignInModal({
 
             {/* Facebook */}
             <button
-              // onClick={() => {setIsLogin(true); onClose()}}
+              onClick={handleFacebookSignIn}
+              disabled={loading}
               className="w-full flex items-center cursor-pointer justify-center gap-3 px-4 py-3 rounded-xl font-semibold text-white bg-blue-600 hover:bg-blue-700"
             >
               <svg
