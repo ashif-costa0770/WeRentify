@@ -85,3 +85,8 @@ export const createListingSchema = z.object({
 
 // More concise - creates optional version of all fields
 export const updateListingSchema = createListingSchema.partial();
+
+
+export const ListingByIdSchema = z.object({
+  id: z.string().regex(/^[0-9a-fA-F]{24}$/, "Invalid post ID"),
+});

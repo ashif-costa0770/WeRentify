@@ -1,14 +1,25 @@
-"use client";
+﻿"use client";
 
 import { useMemo, useState, useEffect } from "react";
-import NavbarWrapper from "@/app/components/navbar/NavbarWrapper";
-import ItemCategoriesSection from "@/app/components/CategoryGrid/ItemCategoriesSection";
-import ItemGrid from "@/app/components/itemCards/ItemGrid";
-import FiltersSlicer from "@/app/components/modals/FiltersSlicer";
-import ProductModal from "@/app/components/modals/ProductModal";
-import MessageSlider from "@/app/components/modals/MessageSlider";
-import OwnerProfileModal from "@/app/components/modals/OwnerProfileModal";
+import dynamic from "next/dynamic";
+import NavbarWrapper from "@/components/navbar/NavbarWrapper";
+import ItemCategoriesSection from "@/components/CategoryGrid/ItemCategoriesSection";
+import ItemGrid from "@/components/itemCards/ItemGrid";
 import { getListings } from "@/services/item.service";
+
+const FiltersSlicer = dynamic(() => import("@/components/modals/FiltersSlicer"), {
+  ssr: false,
+});
+const ProductModal = dynamic(() => import("@/components/modals/ProductModal"), {
+  ssr: false,
+});
+const MessageSlider = dynamic(() => import("@/components/modals/MessageSlider"), {
+  ssr: false,
+});
+const OwnerProfileModal = dynamic(
+  () => import("@/components/modals/OwnerProfileModal"),
+  { ssr: false },
+);
 
 export default function ListingPage() {
   /* ---------------- STATE: LISTINGS & FETCHING ---------------- */

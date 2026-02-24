@@ -1,8 +1,8 @@
-"use client";
+﻿"use client";
 
 import { MapPin } from "lucide-react";
 // import { categories } from "@/data/listingsData";
-import RichTextEditor from "@/app/components/tiptap-editor/RichTextEditor";
+import RichTextEditor from "@/components/tiptap-editor/RichTextEditor";
 import { useState, useEffect } from "react";
 import { getAllCategory } from "@/services/category.service";
 
@@ -25,7 +25,7 @@ export default function Step2Details({ formData, setFormData }) {
     // Cleanup is handled later during submit.
     setFormData({ ...formData, [field]: value.split("\n") });
   };
-  // ✅ Fetch categories from backend
+  // âœ… Fetch categories from backend
   useEffect(() => {
     const fetchCategories = async () => {
       try {

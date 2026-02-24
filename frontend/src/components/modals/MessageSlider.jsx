@@ -41,6 +41,15 @@ const formatTime = (value) => {
   return date.toLocaleDateString([], { month: "short", day: "numeric" });
 };
 
+const shortenTitle = (value, maxWords = 4) => {
+  const text = String(value || "").trim();
+  if (!text) return "Conversation";
+
+  const words = text.split(/\s+/);
+  if (words.length <= maxWords) return text;
+  return `${words.slice(0, maxWords).join(" ")} ...`;
+};
+
 const Avatar = ({ src, name, size = 40, className = "" }) => {
   const initial = (name || "U").charAt(0).toUpperCase();
 
@@ -123,14 +132,16 @@ export default function MessageSlider({
       const other = resolveOtherParticipant(conversation);
       const otherName =
         `${other?.firstname || ""} ${other?.lastname || ""}`.trim() || other?.firstname || "";
-      const lastText = conversation?.lastMessage?.text || "";
+      const titleKey = `${conversation?.refModel}:${conversation?.refId}`;
+      const title =
+        conversationTitles[titleKey] ||
+        (conversation?.refModel === "Post" ? "Post" : conversation?.refModel === "Listing" ? "Listing" : "Conversation");
       return (
         otherName.toLowerCase().includes(term) ||
-        lastText.toLowerCase().includes(term) ||
-        (conversation?.refModel || "").toLowerCase().includes(term)
+        title.toLowerCase().includes(term)
       );
     });
-  }, [conversations, search, resolveOtherParticipant]);
+  }, [conversations, search, resolveOtherParticipant, conversationTitles]);
 
   const getConversationTitle = useCallback(async (conversation) => {
     try {
@@ -178,7 +189,14 @@ export default function MessageSlider({
         const res = await getMessages(conversationId);
         const list = Array.isArray(res?.data?.data) ? res.data.data : [];
         setMessages(list);
+      } catch (error) {
+        toast.error(error?.response?.data?.message || "Failed to load messages");
+        setMessages([]);
+      } finally {
+        setIsMessagesLoading(false);
+      }
 
+      try {
         await markMessagesSeen(conversationId);
         setConversations((prev) =>
           prev.map((item) =>
@@ -194,10 +212,7 @@ export default function MessageSlider({
           ),
         );
       } catch (error) {
-        toast.error(error?.response?.data?.message || "Failed to load messages");
-        setMessages([]);
-      } finally {
-        setIsMessagesLoading(false);
+        toast.error(error?.response?.data?.message || "Seen update failed");
       }
     },
     [user?._id],
@@ -438,6 +453,15 @@ export default function MessageSlider({
                       "User";
                     const unread = Number(conversation?.unreadCounts?.[user?._id] || 0);
                     const isActive = conversation._id === activeConversationId;
+                    const titleKey = `${conversation?.refModel}:${conversation?.refId}`;
+                    const title =
+                      conversationTitles[titleKey] ||
+                      (conversation?.refModel === "Post"
+                        ? "Post"
+                        : conversation?.refModel === "Listing"
+                          ? "Listing"
+                          : "Conversation");
+                    const shortTitle = shortenTitle(title);
 
                     return (
                       <button
@@ -461,6 +485,9 @@ export default function MessageSlider({
                                 {formatTime(conversation?.lastMessage?.createdAt || conversation?.updatedAt)}
                               </span>
                             </div>
+                            <p className="mt-0.5 truncate text-xs font-medium text-indigo-600">
+                              {shortTitle}
+                            </p>
                             <div className="mt-0.5 flex items-center justify-between gap-2">
                               <p className="truncate text-xs text-gray-600">
                                 {conversation?.lastMessage?.text || "No messages yet"}

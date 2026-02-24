@@ -1,12 +1,12 @@
-"use client";
+﻿"use client";
 
-import { useMemo, useState, useEffect, useCallback } from "react"; // ✅ useCallback added
-import ServicesNavbarWrapper from "./components/navbar/SearchNavbarWrapper";
-import ServicesGridWrapper from "./components/serviceGrid/ServiceGridWrapper";
-import ServicesCardsWrapper from "./components/serviceCards/ServicesCardsWrapper";
+import { useMemo, useState, useEffect, useCallback } from "react"; // âœ… useCallback added
+import ServicesNavbarWrapper from "./_components/navbar/SearchNavbarWrapper";
+import ServicesGridWrapper from "./_components/serviceGrid/ServiceGridWrapper";
+import ServicesCardsWrapper from "./_components/serviceCards/ServicesCardsWrapper";
 import { getServices } from "@/services/services.service";
-import ListBusinessModal from "./components/modals/ListBusinessModal";
-import { useListBusiness } from "@/context/ListBusinessContext"; // ✅ added
+import ListBusinessModal from "./_components/modals/ListBusinessModal";
+import { useListBusiness } from "@/context/ListBusinessContext"; // âœ… added
 
 function mapBackendService(service) {
   const categoryName = service.category?.name || "other";
@@ -37,7 +37,7 @@ function mapBackendService(service) {
 }
 
 export default function ServicesPage() {
-  const { registerSuccessCallback } = useListBusiness(); // ✅
+  const { registerSuccessCallback } = useListBusiness(); // âœ…
 
   const [services, setServices] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -45,7 +45,7 @@ export default function ServicesPage() {
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [sortBy, setSortBy] = useState("recommended");
 
-  // ✅ Extracted as useCallback so it's stable and can be passed as a callback
+  // âœ… Extracted as useCallback so it's stable and can be passed as a callback
   const fetchServices = useCallback(async () => {
     try {
       setLoading(true);
@@ -61,12 +61,12 @@ export default function ServicesPage() {
     }
   }, []);
 
-  // ✅ Initial fetch on mount
+  // âœ… Initial fetch on mount
   useEffect(() => {
     fetchServices();
   }, [fetchServices]);
 
-  // ✅ Register fetchServices so context can call it after a successful submit
+  // âœ… Register fetchServices so context can call it after a successful submit
   useEffect(() => {
     registerSuccessCallback(fetchServices);
   }, [fetchServices, registerSuccessCallback]);

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState } from "react";
 import {
@@ -11,7 +11,7 @@ import {
   Wrench,
   Lightbulb,
 } from "lucide-react";
-import RichTextEditor from "@/app/components/tiptap-editor/RichTextEditor";
+import RichTextEditor from "@/components/tiptap-editor/RichTextEditor";
 import { formatDate } from "@/utils/formatDate";
 import { toast } from "sonner";
 import {

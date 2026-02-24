@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Image from "next/image";
-import { Loader2, MessageCircle } from "lucide-react";
+import { Loader2, MessageCircle, Search } from "lucide-react";
 import { useUser } from "@/context/UserContext";
 import { getConversations } from "@/services/message.service";
 import { getListingById } from "@/services/item.service";
@@ -34,6 +34,7 @@ export default function Messages() {
   const [conversations, setConversations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [titles, setTitles] = useState({});
+  const [searchTerm, setSearchTerm] = useState("");
 
   const getConversationTitle = useCallback(async (conversation) => {
     try {
@@ -137,11 +138,37 @@ export default function Messages() {
     });
   }, [conversations, titles, user?._id]);
 
+  const filteredRows = useMemo(() => {
+    const term = searchTerm.trim().toLowerCase();
+    if (!term) return rows;
+
+    return rows.filter((row) => {
+      const userName = (row.otherName || "").toLowerCase();
+      const title = (row.title || "").toLowerCase();
+      return userName.includes(term) || title.includes(term);
+    });
+  }, [rows, searchTerm]);
+
   return (
     <section className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
       <div className="px-6 py-5 border-b border-gray-100">
-        <h2 className="text-xl font-semibold text-gray-900">Messages</h2>
-        <p className="text-sm text-gray-500 mt-1">Your inbox conversations</p>
+        <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+          <div>
+            <h2 className="text-xl font-semibold text-gray-900">Messages</h2>
+            <p className="text-sm text-gray-500 mt-1">Your inbox conversations</p>
+          </div>
+
+          <div className="relative w-full md:w-[280px]">
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-500" />
+            <input
+              type="text"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder="Search by user or title"
+              className="h-10 w-full rounded-xl border border-gray-300 bg-white pl-9 pr-3 text-sm text-gray-700 outline-none transition focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100"
+            />
+          </div>
+        </div>
       </div>
 
       {loading ? (
@@ -157,9 +184,17 @@ export default function Messages() {
             Start chatting from any listing or community post.
           </p>
         </div>
+      ) : filteredRows.length === 0 ? (
+        <div className="py-16 text-center px-6">
+          <MessageCircle className="w-10 h-10 text-gray-300 mx-auto mb-3" />
+          <p className="text-gray-700 font-medium">No conversations found</p>
+          <p className="text-sm text-gray-500 mt-1">
+            Try searching by user name or conversation title.
+          </p>
+        </div>
       ) : (
         <div className="divide-y divide-gray-100">
-          {rows.map((row) => (
+          {filteredRows.map((row) => (
             <button
               key={row.conversation._id}
               type="button"
@@ -192,7 +227,7 @@ export default function Messages() {
                       <p className="text-sm font-semibold text-gray-900 truncate">
                         {row.otherName}
                       </p>
-                      <p className="text-xs text-indigo-600 truncate mt-0.5">
+                      <p className="mt-0.5 truncate text-xs font-medium text-indigo-600">
                         {row.title}
                       </p>
                     </div>

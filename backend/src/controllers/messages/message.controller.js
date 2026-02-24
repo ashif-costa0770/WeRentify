@@ -1,26 +1,36 @@
+import mongoose from "mongoose";
 import Message from "../../models/messages/message.model.js";
 import Conversation from "../../models/messages/conversation.model.js";
 import { successResponse, errorResponse } from "../../utils/response.js";
-import { io } from "../../server.js"; // ✅ IMPORTANT
+import { io } from "../../server.js";
+
+const isValidObjectId = (value) => mongoose.Types.ObjectId.isValid(value);
+const hasParticipant = (participants = [], userId) =>
+  participants.some((id) => String(id) === String(userId));
 
 export const sendMessage = async (req, res) => {
   try {
     const senderId = req.user._id;
     const { conversationId, text } = req.body;
 
-    const conversation = await Conversation.findById(conversationId);
+    if (!isValidObjectId(conversationId)) {
+      return errorResponse(res, 400, "Invalid conversationId");
+    }
+
+    const conversation = await Conversation.findById(conversationId).select("participants");
 
     if (!conversation) return errorResponse(res, 404, "Conversation not found");
 
-    const isParticipant = conversation.participants.some((id) =>
-      id.equals(senderId),
-    );
-
+    const isParticipant = hasParticipant(conversation.participants, senderId);
     if (!isParticipant) return errorResponse(res, 403, "Unauthorized");
 
     const receiverId = conversation.participants.find(
-      (id) => !id.equals(senderId),
+      (id) => String(id) !== String(senderId),
     );
+
+    if (!receiverId) {
+      return errorResponse(res, 400, "Invalid conversation participants");
+    }
 
     const message = await Message.create({
       conversation: conversationId,
@@ -29,21 +39,22 @@ export const sendMessage = async (req, res) => {
       text,
     });
 
-    /* Update conversation metadata */
-    conversation.lastMessage = {
-      text,
-      sender: senderId,
-      createdAt: new Date(),
-    };
-
-    conversation.unreadCounts.set(
-      receiverId.toString(),
-      (conversation.unreadCounts.get(receiverId.toString()) || 0) + 1,
+    await Conversation.updateOne(
+      { _id: conversationId },
+      {
+        $set: {
+          lastMessage: {
+            text,
+            sender: senderId,
+            createdAt: new Date(),
+          },
+        },
+        $inc: {
+          [`unreadCounts.${receiverId.toString()}`]: 1,
+        },
+      },
     );
 
-    await conversation.save();
-
-    /* ✅ REAL-TIME EMIT */
     io.to(receiverId.toString()).emit("new_message", message);
 
     return successResponse(res, 200, "Message sent", message);
@@ -52,26 +63,25 @@ export const sendMessage = async (req, res) => {
   }
 };
 
-//!Get conversation messages
 export const getConversationMessages = async (req, res) => {
   try {
     const userId = req.user._id;
     const { conversationId } = req.params;
 
-    const conversation = await Conversation.findById(conversationId);
+    if (!isValidObjectId(conversationId)) {
+      return errorResponse(res, 400, "Invalid conversationId");
+    }
+
+    const conversation = await Conversation.findById(conversationId).select("participants");
 
     if (!conversation) return errorResponse(res, 404, "Conversation not found");
 
-    /* ✅ Authorization Check (VERY IMPORTANT) */
-    const isParticipant = conversation.participants.some((id) =>
-      id.equals(userId),
-    );
-
+    const isParticipant = hasParticipant(conversation.participants, userId);
     if (!isParticipant) return errorResponse(res, 403, "Unauthorized access");
 
     const messages = await Message.find({
       conversation: conversationId,
-    }).sort({ createdAt: 1 }); // ✅ oldest → newest
+    }).sort({ createdAt: 1 });
 
     return successResponse(res, 200, "Messages fetched successfully", messages);
   } catch (error) {
@@ -79,11 +89,21 @@ export const getConversationMessages = async (req, res) => {
   }
 };
 
-//!mark Messages Seen
 export const markMessagesSeen = async (req, res) => {
   try {
     const userId = req.user._id;
     const { conversationId } = req.body;
+
+    if (!isValidObjectId(conversationId)) {
+      return errorResponse(res, 400, "Invalid conversationId");
+    }
+
+    const conversation = await Conversation.findById(conversationId).select("participants");
+
+    if (!conversation) return errorResponse(res, 404, "Conversation not found");
+
+    const isParticipant = hasParticipant(conversation.participants, userId);
+    if (!isParticipant) return errorResponse(res, 403, "Unauthorized access");
 
     await Message.updateMany(
       {
@@ -94,12 +114,10 @@ export const markMessagesSeen = async (req, res) => {
       { seen: true },
     );
 
-    const conversation = await Conversation.findById(conversationId);
-
-    if (!conversation) return errorResponse(res, 404, "Conversation not found");
-
-    conversation.unreadCounts.set(userId.toString(), 0);
-    await conversation.save();
+    await Conversation.updateOne(
+      { _id: conversationId },
+      { $set: { [`unreadCounts.${userId.toString()}`]: 0 } },
+    );
 
     return successResponse(res, 200, "Messages marked as seen");
   } catch (error) {

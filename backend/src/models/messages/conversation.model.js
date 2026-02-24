@@ -1,5 +1,11 @@
 import mongoose from "mongoose";
 
+const buildParticipantsKey = (participants = []) =>
+  participants
+    .map((participant) => participant.toString())
+    .sort()
+    .join(":");
+
 const conversationSchema = new mongoose.Schema(
   {
     participants: [
@@ -9,6 +15,11 @@ const conversationSchema = new mongoose.Schema(
         required: true,
       },
     ],
+
+    participantsKey: {
+      type: String,
+      required: true,
+    },
 
     refModel: {
       type: String,
@@ -40,10 +51,21 @@ const conversationSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+conversationSchema.pre("validate", function setParticipantsKey(next) {
+  if (!Array.isArray(this.participants) || this.participants.length !== 2) {
+    return next(new Error("Conversation must have exactly 2 participants"));
+  }
+
+  this.participantsKey = buildParticipantsKey(this.participants);
+  next();
+});
+
 /* Prevent duplicate conversations */
 conversationSchema.index(
-  { participants: 1, refId: 1 },
+  { participantsKey: 1, refModel: 1, refId: 1 },
   { unique: true }
 );
+
+conversationSchema.statics.buildParticipantsKey = buildParticipantsKey;
 
 export default mongoose.model("Conversation", conversationSchema);

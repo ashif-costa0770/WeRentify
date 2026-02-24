@@ -1,16 +1,12 @@
-"use client";
+﻿"use client";
 
 import React, { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { useUser } from "@/context/UserContext";
-import PricingModal from "@/app/components/modals/PricingModal";
-import ChangePasswordModal from "@/app/profile/modals/ChangePassword";
 import { logout } from "@/services/auth.service";
-import AccountInfo from "@/app/profile/components/AccountInfo"
-import AccountDeleteBtn from "@/app/profile/components/AccountDeleteBtn"
-import Messages from "@/app/profile/components/Messages";
 import {
   updateProfile,
   sendPasswordOtp,
@@ -32,6 +28,30 @@ import {
   LogOut,
   Lock,
 } from "lucide-react";
+
+const PricingModal = dynamic(() => import("@/components/modals/PricingModal"), {
+  ssr: false,
+});
+const ChangePasswordModal = dynamic(
+  () => import("@/app/profile/_modals/ChangePassword"),
+  { ssr: false },
+);
+const AccountInfo = dynamic(() => import("@/app/profile/_components/AccountInfo"), {
+  ssr: false,
+});
+const AccountDeleteBtn = dynamic(
+  () => import("@/app/profile/_components/AccountDeleteBtn"),
+  {
+    ssr: false,
+  },
+);
+const Messages = dynamic(() => import("@/app/profile/_components/Messages"), {
+  ssr: false,
+});
+
+const Favorites = dynamic(() => import("@/app/profile/_components/Favorites"), {
+  ssr: false,
+});
 
 export default function AccountProfile() {
   const router = useRouter();
@@ -65,6 +85,7 @@ export default function AccountProfile() {
     ? user.mode.charAt(0).toUpperCase() + user.mode.slice(1)
     : "Renter";
   const email = user?.email || "user@email.com";
+  const displayInitial = displayName.charAt(0).toUpperCase();
 
   const avatarUrl = useMemo(() => {
     if (profileImage) return profileImage;
@@ -162,7 +183,10 @@ export default function AccountProfile() {
       isValid = false;
     }
 
-    if (phone && !/^\+?[0-9]{10,15}$/.test(phone)) {
+    if (!phone) {
+      nextErrors.phone = "Phone number is required";
+      isValid = false;
+    } else if (!/^\+?[0-9]{10,15}$/.test(phone)) {
       nextErrors.phone = "Use 10-15 digits, optional leading +";
       isValid = false;
     }
@@ -217,11 +241,29 @@ export default function AccountProfile() {
       <div className="max-w-7xl mx-auto px-4 py-10 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-6 items-start">
           <aside className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden flex flex-col">
-            <div className="px-6 py-6 border-b border-gray-100">
-              <h2 className="text-xl font-semibold text-gray-900">{displayName}</h2>
-              <div className="mt-1 flex items-center gap-2 text-sm text-gray-500">
-                <House size={14} />
-                <span>{displayMode} Mode</span>
+            <div className="px-4 py-6 border-b border-gray-100">
+              <div className="flex items-center gap-3">
+                <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-full border border-gray-200 bg-gray-100">
+                  {avatarUrl ? (
+                    <Image
+                      src={avatarUrl}
+                      alt={`${displayName} avatar`}
+                      fill
+                      className="object-cover"
+                    />
+                  ) : (
+                    <span className="flex h-full w-full items-center justify-center text-sm font-semibold text-gray-600">
+                      {displayInitial}
+                    </span>
+                  )}
+                </div>
+                <div className="min-w-0">
+                  <h2 className="truncate text-xl font-bold text-gray-900">{displayName}</h2>
+                  <div className=" ms-[-1] flex items-center gap-1 text-sm text-gray-500">
+                    <House size={14} />
+                    <span>{displayMode} Mode</span>
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -238,7 +280,12 @@ export default function AccountProfile() {
                 onClick={() => setActiveSection("messages")}
                 active={activeSection === "messages"}
               />
-              <SidebarItem icon={<Heart size={16} />} label="Favorites" href="/favorites" />
+              <SidebarItem
+                icon={<Heart size={16} />}
+                label="Favorites"
+                onClick={() => setActiveSection("favorites")}
+                active={activeSection === "favorites"}
+              />
               <SidebarItem icon={<Crown size={16} />} label="My Listings" href="/my-listings" />
             </nav>
 
@@ -413,8 +460,10 @@ export default function AccountProfile() {
                 <AccountInfo />
                 <AccountDeleteBtn />
               </>
-            ) : (
+            ) : activeSection === "messages" ? (
               <Messages />
+            ) : (
+              <Favorites />
             )}
           </div>
           
@@ -450,7 +499,7 @@ function SidebarItem({
       <span className={active ? "text-indigo-600" : "text-gray-500"}>{icon}</span>
       <div>
         <p
-          className={`text-sm font-medium ${
+          className={`text-sm cursor-pointer font-medium ${
             active ? "text-indigo-600" : "text-gray-800"
           } ${textClassName}`}
         >

@@ -1,5 +1,5 @@
-import { Suspense } from "react";
-import Navbar from "@/app/components/navbar/Navbar";
+﻿import { Suspense } from "react";
+import Navbar from "@/components/navbar/Navbar";
 
 export default function MyListingsLayout({ children }) {
   return (

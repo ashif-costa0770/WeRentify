@@ -33,23 +33,37 @@ export const createOrGetConversation = async (req, res) => {
     if (senderId.equals(receiverId))
       return errorResponse(res, 400, "Cannot message yourself");
 
-    const participants = [senderId, receiverId].sort();
+    const participants = [senderId, receiverId];
+    const participantsKey = Conversation.buildParticipantsKey(participants);
 
     let conversation = await Conversation.findOne({
-      participants,
+      participantsKey,
       refId,
+      refModel,
     });
 
     if (!conversation) {
-      conversation = await Conversation.create({
-        participants,
-        refId,
-        refModel,
-        unreadCounts: {
-          [senderId]: 0,
-          [receiverId]: 0,
-        },
-      });
+      try {
+        conversation = await Conversation.create({
+          participants,
+          participantsKey,
+          refId,
+          refModel,
+          unreadCounts: {
+            [senderId]: 0,
+            [receiverId]: 0,
+          },
+        });
+      } catch (createError) {
+        // Handle concurrent requests creating the same conversation.
+        if (createError?.code !== 11000) throw createError;
+
+        conversation = await Conversation.findOne({
+          participantsKey,
+          refId,
+          refModel,
+        });
+      }
     }
 
     return successResponse(

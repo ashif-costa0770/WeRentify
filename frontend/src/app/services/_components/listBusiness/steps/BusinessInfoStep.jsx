@@ -1,8 +1,8 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState } from "react";
 import { useListBusiness } from "@/context/ListBusinessContext";
-import RichTextEditor from "@/app/components/tiptap-editor/RichTextEditor";
+import RichTextEditor from "@/components/tiptap-editor/RichTextEditor";
 import { getAllCategory } from "@/services/category.service";
 
 export default function BusinessInfoStep() {

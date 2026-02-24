@@ -10,12 +10,13 @@ import {
   errorResponse,
   paginatedResponse,
 } from "../../utils/response.js";
+import User from "../../models/users/user.model.js";
 
 //! Create listing
 export const createListing = async (req, res) => {
   try {
     const { pickupLocation } = req.body;
-   
+
     if (!req.files?.photos || req.files.photos.length < 3) {
       return errorResponse(res, 400, "At least 3 photos are required");
     }
@@ -119,6 +120,38 @@ export const getListingById = async (req, res) => {
     );
   } catch (error) {
     return errorResponse(res, 500, "Failed to retrieve listing", error.message);
+  }
+};
+
+//! Get all listings by user
+export const getListingByUser = async (req, res) => {
+  try {
+    const userId = req.user._id;
+
+    const user = await User.findById(userId);
+    
+    const listings = await Listing.find({
+      owner: userId,
+      status: "active",
+    });
+
+    if (listings.length === 0) {
+      return errorResponse(res, 404, "User has no listings");
+    }
+
+    return successResponse(
+      res,
+      200,
+      "User listings fetched successfully",
+      listings,
+    );
+  } catch (error) {
+    return errorResponse(
+      res,
+      500,
+      "Failed to retrieve user listings",
+      error.message,
+    );
   }
 };
 
@@ -229,7 +262,7 @@ export const deleteListing = async (req, res) => {
         "video",
       );
     }
-    await Listing.findByIdAndDelete(req.params.id) ;
+    await Listing.findByIdAndDelete(req.params.id);
     return successResponse(res, 200, "Listing deleted successfully");
   } catch (error) {
     return errorResponse(res, 500, "Failed to delete listing", error.message);

@@ -1,14 +1,14 @@
-"use client";
+﻿"use client";
 import Link from "next/link";
-import Logo from "@/app/components/navbar/Logo";
-import PackageIcon from "@/app/components/icons/PackageIcon";
-import HomeIcon from "@/app/components/icons/HomeIcon";
-import UsersIcon from "@/app/components/icons/UsersIcon";
+import Logo from "@/components/navbar/Logo";
+import PackageIcon from "@/components/icons/PackageIcon";
+import HomeIcon from "@/components/icons/HomeIcon";
+import UsersIcon from "@/components/icons/UsersIcon";
 import { useEffect, useRef, useState } from "react";
-import SignUpModal from "@/app/components/modals/SignUpModal";
-import SignInModal from "@/app/components/modals/SignInModal";
-import LanguageCurrencyModal from "@/app/components/modals/LanguageCurrencyModal";
-import MessageSlider from "@/app/components/modals/MessageSlider";
+import SignUpModal from "@/components/modals/SignUpModal";
+import SignInModal from "@/components/modals/SignInModal";
+import LanguageCurrencyModal from "@/components/modals/LanguageCurrencyModal";
+import MessageSlider from "@/components/modals/MessageSlider";
 import { useUser } from "@/context/UserContext";
 import ProfileDropdown from "./ProfileDropdown";
 
@@ -239,7 +239,7 @@ export default function Navbar() {
                 }}
                 className="w-full px-6 py-3 cursor-pointer rounded-full font-semibold text-gray-800 bg-white border border-gray-200 flex items-center justify-center gap-2 shadow-sm"
               >
-                <span>🌐</span>
+                <span>ðŸŒ</span>
                 <span>Language & Currency</span>
               </button>
             </div>

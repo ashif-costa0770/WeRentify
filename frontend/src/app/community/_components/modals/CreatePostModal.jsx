@@ -1,11 +1,11 @@
-"use client";
+﻿"use client";
 
 import Image from "next/image";
 import { createPost } from "@/services/post.service";
 import { toast } from "sonner";
 import { useMemo, useRef, useState } from "react";
 import { X, Wrench, Package, Camera, Calendar } from "lucide-react";
-import RichTextEditor from "@/app/components/tiptap-editor/RichTextEditor";
+import RichTextEditor from "@/components/tiptap-editor/RichTextEditor";
 
 const MAX_PHOTO_SIZE_MB = 5;
 

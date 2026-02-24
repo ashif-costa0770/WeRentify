@@ -23,6 +23,7 @@ import CategoryRoute from "./routes/category.route.js";
 import favoriteRoute from "./routes/favorite.route.js";
 import messageRoutes from "./routes/messages/message.route.js";
 import conversationRoutes from "./routes/messages/conversation.route.js";
+import Conversation from "./models/messages/conversation.model.js";
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -127,6 +128,50 @@ app.use((err, req, res, next) => {
 
 /* DATABASE */
 await connectDB();
+
+/* One-time-safe index migration for conversations */
+try {
+  await Conversation.collection.dropIndex("participants_1_refId_1");
+} catch (error) {
+  if (error?.codeName !== "IndexNotFound") {
+    throw error;
+  }
+}
+
+/* Backfill participantsKey for older conversation documents */
+const missingParticipantsKey = await Conversation.find({
+  $or: [
+    { participantsKey: { $exists: false } },
+    { participantsKey: "" },
+  ],
+})
+  .select("_id participants")
+  .lean();
+
+if (missingParticipantsKey.length > 0) {
+  const ops = missingParticipantsKey
+    .filter(
+      (item) =>
+        Array.isArray(item.participants) &&
+        item.participants.length === 2,
+    )
+    .map((item) => ({
+      updateOne: {
+        filter: { _id: item._id },
+        update: {
+          $set: {
+            participantsKey: Conversation.buildParticipantsKey(item.participants),
+          },
+        },
+      },
+    }));
+
+  if (ops.length > 0) {
+    await Conversation.bulkWrite(ops);
+  }
+}
+
+await Conversation.syncIndexes();
 
 
 /* ✅ HTTP SERVER (REQUIRED FOR SOCKET.IO) */

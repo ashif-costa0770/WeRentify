@@ -1,9 +1,9 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useMemo, useState, useCallback } from "react";
-import CommunityFilters from "./components/CommunityFilters";
-import PostsGrid from "./components/PostsGrid";
-import { getPosts } from "@/services/post.service"; // 👈 backend API
+import CommunityFilters from "./_components/CommunityFilters";
+import PostsGrid from "./_components/PostsGrid";
+import { getPosts } from "@/services/post.service"; // ðŸ‘ˆ backend API
 import { useUser } from "@/context/UserContext";
 
 export default function CommunityPage() {
@@ -13,7 +13,7 @@ export default function CommunityPage() {
   const [activeFilter, setActiveFilter] = useState("all");
   const [sortBy, setSortBy] = useState("recent");
 
-  // 🔹 Fetch posts from backend
+  // ðŸ”¹ Fetch posts from backend
   const fetchPosts = useCallback(async () => {
     try {
       setLoading(true);
@@ -30,23 +30,23 @@ export default function CommunityPage() {
     fetchPosts();
   }, [fetchPosts]);
 
-  // 🔹 Update a single post in state (for likes/saves)
+  // ðŸ”¹ Update a single post in state (for likes/saves)
   const handleUpdatePost = useCallback((updatedPost) => {
     setPosts((prevPosts) =>
       prevPosts.map((p) => (p._id === updatedPost._id ? updatedPost : p)),
     );
   }, []);
 
-  // 🔹 Filter + sort (frontend only for now)
+  // ðŸ”¹ Filter + sort (frontend only for now)
   const filteredAndSortedPosts = useMemo(() => {
     let result = [...posts];
 
-    // 1️⃣ Filter
+    // 1ï¸âƒ£ Filter
     if (activeFilter !== "all") {
       result = result.filter((post) => post.type === activeFilter);
     }
 
-    // 2️⃣ Sort
+    // 2ï¸âƒ£ Sort
     switch (sortBy) {
       case "recent":
         result.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
@@ -71,7 +71,7 @@ export default function CommunityPage() {
     return result;
   }, [posts, activeFilter, sortBy]);
 
-  // 🔹 Counts for filter tabs
+  // ðŸ”¹ Counts for filter tabs
   const counts = useMemo(
     () => ({
       all: posts.length,
