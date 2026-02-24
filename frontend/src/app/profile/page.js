@@ -10,6 +10,7 @@ import ChangePasswordModal from "@/app/profile/modals/ChangePassword";
 import { logout } from "@/services/auth.service";
 import AccountInfo from "@/app/profile/components/AccountInfo"
 import AccountDeleteBtn from "@/app/profile/components/AccountDeleteBtn"
+import Messages from "@/app/profile/components/Messages";
 import {
   updateProfile,
   sendPasswordOtp,
@@ -50,12 +51,13 @@ export default function AccountProfile() {
   const [showPricing, setShowPricing] = useState(false);
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [isSendingOtp, setIsSendingOtp] = useState(false);
+  const [activeSection, setActiveSection] = useState("profile");
   const [currentPlan, setCurrentPlan] = useState(() => {
     if (typeof window === "undefined") return "basic";
     return localStorage.getItem("userPlan") || "basic";
   });
 
-  const { user, setUser, setIsLogin, setShowMessages, isLogin, isAuthLoading } = useUser();
+  const { user, setUser, setIsLogin, isLogin, isAuthLoading } = useUser();
   const fullName = `${user?.firstname || ""} ${user?.lastname || ""}`.trim();
 
   const displayName = fullName || "Unknown";
@@ -224,11 +226,17 @@ export default function AccountProfile() {
             </div>
 
             <nav className="py-2 gap-2">
-              <SidebarItem icon={<User size={16} />} label="Profile" href="/profile" active />
+              <SidebarItem
+                icon={<User size={16} />}
+                label="Profile"
+                onClick={() => setActiveSection("profile")}
+                active={activeSection === "profile"}
+              />
               <SidebarItem
                 icon={<MessageCircle size={16} />}
                 label="Messages"
-                onClick={() => setShowMessages(true)}
+                onClick={() => setActiveSection("messages")}
+                active={activeSection === "messages"}
               />
               <SidebarItem icon={<Heart size={16} />} label="Favorites" href="/favorites" />
               <SidebarItem icon={<Crown size={16} />} label="My Listings" href="/my-listings" />
@@ -266,7 +274,9 @@ export default function AccountProfile() {
           </aside>
 
           <div className="space-y-6">
-            <main className="bg-white rounded-2xl border border-gray-200 shadow-sm p-4 sm:p-8">
+            {activeSection === "profile" ? (
+              <>
+                <main className="bg-white rounded-2xl border border-gray-200 shadow-sm p-4 sm:p-8">
               <h1 className="text-2xl font-semibold text-gray-900 mb-6">Profile Details</h1>
 
               <form className="space-y-6" onSubmit={handleSubmit}>
@@ -399,9 +409,13 @@ export default function AccountProfile() {
                   
                 </div>
               </form>            
-            </main>
-            <AccountInfo />
-            <AccountDeleteBtn />
+                </main>
+                <AccountInfo />
+                <AccountDeleteBtn />
+              </>
+            ) : (
+              <Messages />
+            )}
           </div>
           
         </div>

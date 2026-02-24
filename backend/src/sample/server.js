@@ -1,40 +1,27 @@
 import "dotenv/config";
 import express from "express";
-import http from "http";                  
-import { Server } from "socket.io";      
-
 import cookieParser from "cookie-parser";
 import cors from "cors";
 import helmet from "helmet";
 import compression from "compression";
 import session from "express-session";
-
 import passport from "./config/passport.js";
 import { connectDB } from "./config/index.js";
-import { initSocket } from "./config/socket.js";   
-
 import listingRoutes from "./routes/listing/listing.route.js";
-import serviceRoutes from "./routes/service/service.route.js";
+import serviceRoutes from "./routes/service/service.route.js"
 import postRoutes from "./routes/community/post.route.js";
 import commentRoutes from "./routes/community/comment.route.js";
-import userRoutes from "./routes/user/user.route.js";
+import userRoutes from "./routes/user/user.route.js"
 import authRoutes from "./routes/user/auth.route.js";
-import CategoryRoute from "./routes/category.route.js";
-import favoriteRoute from "./routes/favorite.route.js";
-import messageRoutes from "./routes/messages/message.route.js";
-import conversationRoutes from "./routes/messages/conversation.route.js";
-
+import CategoryRoute from "./routes/category.route.js"
+import favoriteRoute from "./routes/favorite.route.js"
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-
-/* MIDDLEWARES */
-/* -------------------------------------------------- */
-
-app.use(helmet());
-app.use(compression());
+// Middlewares
+app.use(helmet()); // Security headers
+app.use(compression()); // Compress responses
 app.use(cookieParser());
-
 app.use(
   cors({
     origin: (origin, callback) => {
@@ -44,6 +31,7 @@ app.use(
         "https://localhost:3000",
       ].filter(Boolean);
 
+      // Allow requests without origin (e.g. Postman, server-to-server)
       if (!origin || allowedOrigins.includes(origin)) {
         return callback(null, true);
       }
@@ -51,42 +39,45 @@ app.use(
       return callback(new Error(`CORS blocked for origin: ${origin}`));
     },
     credentials: true,
-  })
+  }),
 );
 
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json()); // Parse JSON bodies
+app.use(express.urlencoded({ extended: true })); // Parse URL-encoded bodies
 
-/* Passport Session (Google Auth) */
-
+// passport configuration for google auth
 app.use(
   session({
     secret: "google_auth_secret",
     resave: false,
     saveUninitialized: false,
-    cookie: { httpOnly: true },
+    cookie: {
+      httpOnly: true,
+    },
   })
 );
 
 app.use(passport.initialize());
 app.use(passport.session());
 
-/* ROUTES */
-/* -------------------------------------------------- */
+
+// Auth Routes
 app.use("/api/auth", authRoutes);
+// Auth Routes
 app.use("/api/user", userRoutes);
+// Listing Routes
 app.use("/api/listings", listingRoutes);
+// Community Routes
 app.use("/api/posts", postRoutes);
 app.use("/api/posts", commentRoutes);
-app.use("/api/services", serviceRoutes);
-app.use("/api/category", CategoryRoute);
-app.use("/api/favorites", favoriteRoute);
-app.use("/api/conversations", conversationRoutes);
-app.use("/api/messages", messageRoutes);
+// Services Routes
+app.use("/api/services", serviceRoutes)
+// Category Routes
+app.use("/api/category", CategoryRoute)
+// Add to favorite
+app.use("/api/favorites", favoriteRoute)
 
-
-/* HEALTH */
-/* -------------------------------------------------- */
+// Health check route
 app.get("/api/health", (req, res) => {
   res.status(200).json({
     success: true,
@@ -96,16 +87,14 @@ app.get("/api/health", (req, res) => {
   });
 });
 
+// Root route
 app.get("/", (req, res) => {
-  res.status(200).json({
-    success: true,
-    message: "Welcome to Rental Marketplace API",
-  });
+  res
+    .status(200)
+    .json({ success: true, message: "Welcome to Rental Marketplace API" });
 });
 
-
-/* ERROR HANDLERS */
-/* -------------------------------------------------- */
+// 404 handler - Must be after all routes
 app.use((req, res) => {
   res.status(404).json({
     success: false,
@@ -114,6 +103,7 @@ app.use((req, res) => {
   });
 });
 
+// Global error handler - Must be last
 app.use((err, req, res, next) => {
   console.error("Global error handler:", err);
 
@@ -124,35 +114,10 @@ app.use((err, req, res, next) => {
   });
 });
 
-
-/* DATABASE */
+// Connect to MongoDB
 await connectDB();
 
-
-/* ✅ HTTP SERVER (REQUIRED FOR SOCKET.IO) */
-/* -------------------------------------------------- */
-const server = http.createServer(app);
-
-
-/* ✅ SOCKET.IO INITIALIZATION */
-/* -------------------------------------------------- */
-const io = new Server(server, {
-  cors: {
-    origin: [
-      process.env.FRONTEND_URL,
-      "http://localhost:3000",
-      "https://localhost:3000",
-    ].filter(Boolean),
-    credentials: true,
-  },
-});
-
-/* Delegate all socket logic */
-initSocket(io);
-
-/* SERVER START */
-/* -------------------------------------------------- */
-server.listen(PORT, () => {
+app.listen(PORT, () => {
   console.log(`
 ╔════════════════════════════════════════════╗
 ║   🚀 Server running on port ${PORT}         ║
@@ -162,13 +127,9 @@ server.listen(PORT, () => {
   `);
 });
 
-
-/* PROCESS SAFETY */
-/* -------------------------------------------------- */
+// Handle unhandled promise rejections
 process.on("unhandledRejection", (err) => {
   console.error("❌ Unhandled Promise Rejection:", err);
+  // Close server & exit process
   process.exit(1);
 });
-
-/* ✅ Export io for message system */
-export { io };

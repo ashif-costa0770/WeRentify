@@ -1,7 +1,8 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { useUser } from "@/context/UserContext";
-import { deleteAccount } from "@/services/user.service";
+import { facebookAuth, getMe, logout } from "@/services/auth.service";
+import { loginWithFacebook } from "@/utils/facebookLogin";
 
 const AuthMethodRow = ({ title, description, isConnected, onToggle, isLoading = false }) => {
   return (
@@ -38,47 +39,95 @@ const maskEmail = (email) => {
 export default function SocialLoginSettings() {
   const { user, setUser, setIsLogin } = useUser();
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
-  const [showDisconnectConfirm, setShowDisconnectConfirm] = useState(false);
+  const [isFacebookLoading, setIsFacebookLoading] = useState(false);
   const [connections, setConnections] = useState({
     google: !!user?.googleId,
-    facebook: false,
+    facebook: !!user?.facebookId,
     apple: false,
   });
 
   useEffect(() => {
-    setConnections((prev) => ({ ...prev, google: !!user?.googleId }));
-  }, [user?.googleId]);
+    setConnections((prev) => ({
+      ...prev,
+      google: !!user?.googleId,
+      facebook: !!user?.facebookId,
+    }));
+  }, [user?.googleId, user?.facebookId]);
 
   const maskedGoogleEmail = useMemo(() => maskEmail(user?.email), [user?.email]);
+  const maskedFacebookEmail = useMemo(() => maskEmail(user?.email), [user?.email]);
 
-  const confirmDisconnect = async () => {
+  const disconnectCurrentUser = async (provider) => {
     try {
-      setIsGoogleLoading(true);
-      await deleteAccount();
-      toast.success("Google account deleted");
+      if (provider === "facebook") {
+        setIsFacebookLoading(true);
+      } else {
+        setIsGoogleLoading(true);
+      }
+      await logout();
+      toast.success("Logged out successfully");
       setUser(null);
       setIsLogin(false);
-      setConnections((prev) => ({ ...prev, google: false }));
-      setShowDisconnectConfirm(false);
+      setConnections((prev) => ({ ...prev, google: false, facebook: false }));
     } catch (error) {
       const message =
         error?.response?.data?.message ||
         error?.response?.data?.error ||
-        "Failed to disconnect account";
+        "Failed to log out";
       toast.error(message);
     } finally {
-      setIsGoogleLoading(false);
+      if (provider === "facebook") {
+        setIsFacebookLoading(false);
+      } else {
+        setIsGoogleLoading(false);
+      }
     }
   };
 
   const handleGoogleToggle = async () => {
     if (connections.google) {
-      setShowDisconnectConfirm(true);
+      await disconnectCurrentUser("google");
       return;
     }
 
     const apiUrl = (process.env.NEXT_PUBLIC_API_URL || "/backend-api").replace(/\/+$/, "");
     window.location.href = `${apiUrl}/auth/google`;
+  };
+
+  const handleFacebookToggle = async () => {
+    if (connections.facebook) {
+      await disconnectCurrentUser("facebook");
+      return;
+    }
+
+    try {
+      setIsFacebookLoading(true);
+      const accessToken = await loginWithFacebook();
+      await facebookAuth(accessToken);
+
+      const profileRes = await getMe();
+      if (profileRes?.data?.success && profileRes?.data?.data) {
+        setUser(profileRes.data.data);
+      }
+
+      setIsLogin(true);
+      setConnections((prev) => ({ ...prev, facebook: true }));
+      toast.success("Facebook login successful");
+    } catch (error) {
+      if (error?.message === "FACEBOOK_LOGIN_CANCELLED") {
+        toast.info("Facebook login cancelled");
+        return;
+      }
+
+      const message =
+        error?.response?.data?.message ||
+        error?.response?.data?.error ||
+        error?.message ||
+        "Facebook login failed";
+      toast.error(message);
+    } finally {
+      setIsFacebookLoading(false);
+    }
   };
 
   return (
@@ -100,11 +149,12 @@ export default function SocialLoginSettings() {
           title="Log in with Facebook"
           description={
             connections.facebook
-              ? "You've set up login with your Facebook account."
+              ? `You've set up login with your Facebook account (${maskedFacebookEmail}).`
               : "Not connected. You can choose to log in with Facebook."
           }
           isConnected={connections.facebook}
-          onToggle={() => setConnections((prev) => ({ ...prev, facebook: !prev.facebook }))}
+          onToggle={handleFacebookToggle}
+          isLoading={isFacebookLoading}
         />
 
         <AuthMethodRow
@@ -118,35 +168,6 @@ export default function SocialLoginSettings() {
           onToggle={() => setConnections((prev) => ({ ...prev, apple: !prev.apple }))}
         />
       </div>
-
-      {showDisconnectConfirm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
-          <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
-            <h3 className="text-lg font-semibold text-gray-900">Confirm Disconnect</h3>
-            <p className="mt-2 text-sm text-gray-600">
-              Are you sure? This will permanently delete your account and all your data including Items, Services, Posts etc.
-            </p>
-            <div className="mt-6 flex justify-end gap-3">
-              <button
-                type="button"
-                onClick={() => setShowDisconnectConfirm(false)}
-                disabled={isGoogleLoading}
-                className="rounded-lg border cursor-pointer border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-70 disabled:cursor-not-allowed"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={confirmDisconnect}
-                disabled={isGoogleLoading}
-                className="rounded-lg bg-red-600 px-4 cursor-pointer py-2 text-sm font-medium text-white hover:bg-red-700 disabled:opacity-70 disabled:cursor-not-allowed"
-              >
-                {isGoogleLoading ? "Disconnecting..." : "Disconnect"}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

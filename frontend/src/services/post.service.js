@@ -7,6 +7,10 @@ export const createPost = (data) => api.post("/posts", data);
 export const getPosts = () =>
   api.get("/posts");
 
+// GET SINGLE POST
+export const getPostById = (id) =>
+  api.get(`/posts/${id}`);
+
 // LIKE
 export const likePost = (postId) =>
   api.post(`/posts/${postId}/like`, {});

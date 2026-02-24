@@ -52,7 +52,12 @@ const getFacebookLoginStatus = () =>
     window.FB.getLoginStatus((response) => resolve(response));
   });
 
-export const loginWithFacebook = async () => {
+const facebookLogout = () =>
+  new Promise((resolve) => {
+    window.FB.logout(() => resolve());
+  });
+
+export const loginWithFacebook = async ({ forceDialog = false } = {}) => {
   if (typeof window === "undefined") {
     throw new Error("Facebook login is only available in the browser");
   }
@@ -64,7 +69,22 @@ export const loginWithFacebook = async () => {
   }
 
   await waitForFacebookReady();
-  const beforeStatus = await getFacebookLoginStatus();
+  const currentStatus = await getFacebookLoginStatus();
+
+  if (!forceDialog) {
+
+    if (
+      currentStatus?.status === "connected" &&
+      currentStatus?.authResponse?.accessToken
+    ) {
+      return currentStatus.authResponse.accessToken;
+    }
+  }
+
+  if (forceDialog && currentStatus?.status === "connected") {
+    // Clear active FB SDK session before reopening modal to avoid token override warnings.
+    await facebookLogout();
+  }
 
   return new Promise((resolve, reject) => {
     window.FB.login(
@@ -73,17 +93,6 @@ export const loginWithFacebook = async () => {
           response?.status === "connected" &&
           response?.authResponse?.accessToken
         ) {
-          const unchangedSession =
-            beforeStatus?.status === "connected" &&
-            beforeStatus?.authResponse?.userID === response.authResponse.userID &&
-            beforeStatus?.authResponse?.accessToken ===
-              response.authResponse.accessToken;
-
-          if (unchangedSession) {
-            reject(new Error("FACEBOOK_LOGIN_CANCELLED"));
-            return;
-          }
-
           resolve(response.authResponse.accessToken);
           return;
         }

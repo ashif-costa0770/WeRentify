@@ -3,6 +3,7 @@ import Footer from "@/app/components/footer/Footer";
 import { UserProvider } from "@/context/UserContext";
 import { Toaster } from "sonner";
 import Script from "next/script";
+import SocketProvider from "@/lib/socketProvider";
 
 export const metadata = {
   title: "WeRentify",
@@ -10,25 +11,32 @@ export const metadata = {
 };
 
 export default function RootLayout({ children }) {
+  const facebookAppId =
+    process.env.NEXT_PUBLIC_FACEBOOK_APP_ID || "2694434750924820";
+  const facebookApiVersion =
+    process.env.NEXT_PUBLIC_FACEBOOK_API_VERSION || "v22.0";
+
   return (
     <html lang="en">
-      <body>
+      <body suppressHydrationWarning>
         <UserProvider>
-          <main>
-            {children}
-            <Toaster position="top-right" richColors />
-          </main>
-          <Footer />
+          <SocketProvider>
+            <main>
+              {children}
+              <Toaster position="top-right" richColors />
+            </main>
+            <Footer />
+          </SocketProvider>
         </UserProvider>
 
         <Script id="facebook-init" strategy="beforeInteractive">
           {`
     window.fbAsyncInit = function() {
       window.FB.init({
-        appId: '2694434750924820',
+        appId: '${facebookAppId}',
         cookie: true,
         xfbml: false,
-        version: 'v22.0'
+        version: '${facebookApiVersion}'
       });
       window.fbSdkReady = true;
     };

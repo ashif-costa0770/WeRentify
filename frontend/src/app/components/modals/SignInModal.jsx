@@ -32,7 +32,7 @@ export default function SignInModal({
     setLoading(true);
 
     try {
-      const accessToken = await loginWithFacebook();
+      const accessToken = await loginWithFacebook({ forceDialog: true });
       await facebookAuth(accessToken);
       console.log("Facebook Login success");
       toast.success("Facebook login successful");

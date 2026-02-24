@@ -14,6 +14,10 @@ import {
 import RichTextEditor from "@/app/components/tiptap-editor/RichTextEditor";
 import { formatDate } from "@/utils/formatDate";
 import { toast } from "sonner";
+import {
+  createOrGetConversation,
+  sendMessage,
+} from "@/services/message.service";
 
 export default function MessageModal({ isOpen, onClose, post }) {
   const [message, setMessage] = useState("");
@@ -41,20 +45,41 @@ export default function MessageModal({ isOpen, onClose, post }) {
     setMessage(content);
   };
 
+  const extractText = (html) => {
+    if (!html) return "";
+    if (typeof window !== "undefined") {
+      const doc = new DOMParser().parseFromString(html, "text/html");
+      return (doc.body.textContent || "").trim();
+    }
+    return html.replace(/<[^>]*>/g, "").trim();
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!message.trim()) return;
+    const plainText = extractText(message);
+    if (!plainText) return;
 
     setIsSending(true);
-    // Simulate API call - replace with your actual message sending logic
     try {
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      console.log("Sending message to:", post.author, "Message:", message);
+      const conversationRes = await createOrGetConversation({
+        refId: post._id,
+        refModel: "Post",
+      });
+      const conversationId = conversationRes?.data?.data?._id;
+      if (!conversationId) {
+        throw new Error("Conversation not found");
+      }
+
+      await sendMessage({
+        conversationId,
+        text: plainText,
+      });
+
       onClose();
       setMessage("");
       toast.success("Message sent!");
     } catch (error) {
-      console.error("Error sending message:", error);
+      toast.error(error?.response?.data?.message || "Failed to send message");
     } finally {
       setIsSending(false);
     }

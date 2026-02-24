@@ -28,7 +28,7 @@ export default function SignUpModal({
       setLoading(true);
   
       try {
-        const accessToken = await loginWithFacebook();
+        const accessToken = await loginWithFacebook({ forceDialog: true });
         await facebookAuth(accessToken);
         toast.success("Facebook sign up successfull");
         setIsLogin(true);
