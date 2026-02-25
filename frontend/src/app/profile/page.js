@@ -52,6 +52,9 @@ const Messages = dynamic(() => import("@/app/profile/_components/Messages"), {
 const Favorites = dynamic(() => import("@/app/profile/_components/Favorites"), {
   ssr: false,
 });
+const MyListings = dynamic(() => import("@/app/profile/_components/MyListings"), {
+  ssr: false,
+});
 
 export default function AccountProfile() {
   const router = useRouter();
@@ -286,7 +289,12 @@ export default function AccountProfile() {
                 onClick={() => setActiveSection("favorites")}
                 active={activeSection === "favorites"}
               />
-              <SidebarItem icon={<Crown size={16} />} label="My Listings" href="/my-listings" />
+              <SidebarItem
+                icon={<Crown size={16} />}
+                label="My Listings"
+                onClick={() => setActiveSection("my-listings")}
+                active={activeSection === "my-listings"}
+              />
             </nav>
 
             <div className="border-t border-gray-100" />
@@ -462,9 +470,11 @@ export default function AccountProfile() {
               </>
             ) : activeSection === "messages" ? (
               <Messages />
-            ) : (
+            ) : activeSection === "favorites" ? (
               <Favorites />
-            )}
+            ) : activeSection === "my-listings" ? (
+              <MyListings />
+            ) : null}
           </div>
           
         </div>

@@ -71,6 +71,25 @@ export const getSinglePost = async (req, res) => {
   }
 };
 
+//! Get posts by user
+export const getPostsByUser = async (req, res) => {
+  try {
+    const posts = await Post.find({ author: req.user._id }).populate("author" , "email firstname lastname avatar _id");
+    if (posts.length === 0) {
+      return errorResponse(res, 404, "User has no posts");
+    }
+    return successResponse(res, 200, " User posts fetched successfully", posts);
+  } catch (error) {
+    console.log("Error in fetching user posts", error);
+    return errorResponse(
+      res,
+      500,
+      "Failed to fetch user posts",
+      error.message,
+    );
+  }
+};
+
 //! Update Post
 export const updatePost = async (req, res) => {
   try {

@@ -6,6 +6,7 @@ import {
   deleteMultipleFromCloudinary,
 } from "../../config/cloudinary.js";
 
+//! Create Service
 export const createService = async (req, res) => {
   try {
     //  📸 Validate Photos (Minimum 3 Required)
@@ -56,7 +57,7 @@ export const createService = async (req, res) => {
   }
 };
 
-//! Get all listings
+//! Get all services
 export const getAllServices = async (req, res) => {
   try {
     const services = await Service.find()
@@ -75,7 +76,8 @@ export const getAllServices = async (req, res) => {
   }
 };
 
-//! Get single listings
+
+//! Get single service
 export const getSingleService = async (req, res) => {
   try {
     const service = await Service.findById(req.params.id)
@@ -89,6 +91,31 @@ export const getSingleService = async (req, res) => {
     });
   } catch (error) {
     console.log("Error in fetching single servie", error.message);
+  }
+};
+
+//! Get all listings by user
+export const getServicesByUser = async (req, res) => {
+  try {
+    const userId = req.user._id;
+    
+    const services = await Service.find({
+      owner: userId,
+      status: "active",
+    }).populate("owner" , "email firstname lastname avatar _id");
+
+    if (services.length === 0) {
+      return errorResponse(res, 404, "User has no services");
+    }
+
+    return successResponse(
+      res,
+      200,
+      "User services fetched successfully",
+      services,
+    );
+  } catch (error) {
+    return errorResponse(res, 500, "Failed to retrieve user services", error.message);
   }
 };
 

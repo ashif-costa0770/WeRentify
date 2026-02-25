@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { X, Check, Package, Star, Crown, Loader2 } from "lucide-react";
+ import api from "@/lib/api";
 
 const plans = [
   {
@@ -66,25 +67,27 @@ export default function PricingModal({ isOpen, onClose, currentPlan = "basic", o
 
   if (!isOpen) return null;
 
-  const handleSelectPlan = async (planId) => {
-    if (planId === selectedPlan) return;
-    
+ 
+
+const handleSelectPlan = async (planId) => {
+  if (planId === selectedPlan) return;
+
+  try {
     setProcessingPlan(planId);
     setIsProcessing(true);
 
-    // Simulate API call / Stripe payment
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    const res = await api.post("/payments/create-checkout-session", {
+      planId,
+    });
 
-    // Save to localStorage (or your backend)
-    localStorage.setItem("userPlan", planId);
-    
-    setSelectedPlan(planId);
+    window.location.href = res.data.url;
+
+  } catch (err) {
+    console.error("Stripe Redirect Error:", err);
     setIsProcessing(false);
     setProcessingPlan(null);
-    
-    onPlanSelect?.(planId);
-    onClose();
-  };
+  }
+};
 
   const getButtonState = (planId) => {
     if (selectedPlan === planId) {

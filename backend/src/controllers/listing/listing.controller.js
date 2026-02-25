@@ -133,7 +133,7 @@ export const getListingByUser = async (req, res) => {
     const listings = await Listing.find({
       owner: userId,
       status: "active",
-    });
+    }).populate("owner", "email firstname lastname avatar _id");
 
     if (listings.length === 0) {
       return errorResponse(res, 404, "User has no listings");

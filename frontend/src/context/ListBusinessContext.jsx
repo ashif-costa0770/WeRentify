@@ -1,10 +1,50 @@
 "use client";
 
-import { createService } from "@/services/services.service";
-import { createContext, useContext, useState, useRef } from "react"; // ✅ useRef added
+import { createContext, useContext, useRef, useState } from "react";
 import { toast } from "sonner";
+import { createService, updateService } from "@/services/services.service";
 
 const ListBusinessContext = createContext(null);
+
+const EMPTY_FORM_DATA = {
+  businessName: "",
+  serviceType: "",
+  category: "",
+  yearsInBusiness: "",
+  description: "",
+  location: "",
+  serviceRadius: "",
+  phone: "",
+  email: "",
+  website: "",
+  certifications: "",
+  hourlyRate: "",
+  photos: [],
+  videos: [],
+  plan: "",
+};
+
+const mapServiceToFormData = (service = {}) => ({
+  ...EMPTY_FORM_DATA,
+  businessName: service?.businessName || "",
+  serviceType: service?.serviceType || "",
+  category:
+    typeof service?.category === "object"
+      ? service?.category?._id || ""
+      : service?.category || "",
+  yearsInBusiness: service?.yearsInBusiness ?? "",
+  description: service?.description || "",
+  location: service?.location || "",
+  serviceRadius: service?.serviceRadius ?? "",
+  phone: service?.phone || "",
+  email: service?.email || "",
+  website: service?.website || "",
+  certifications: service?.certifications || "",
+  hourlyRate: service?.hourlyRate ?? "",
+  photos: [],
+  videos: [],
+  plan: service?.plan || "basic",
+});
 
 export const useListBusiness = () => {
   const context = useContext(ListBusinessContext);
@@ -16,47 +56,64 @@ export const useListBusiness = () => {
 
 export function ListBusinessProvider({ children }) {
   const [isOpen, setIsOpen] = useState(false);
+  const [modalMode, setModalMode] = useState("create");
+  const [editingServiceId, setEditingServiceId] = useState(null);
+  const [existingMediaCounts, setExistingMediaCounts] = useState({
+    photos: 0,
+    videos: 0,
+  });
+
   const [currentStep, setCurrentStep] = useState(1);
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [formData, setFormData] = useState(EMPTY_FORM_DATA);
 
-  // ✅ Holds the refetch function registered by the services page
   const successCallbackRef = useRef(null);
 
   const registerSuccessCallback = (fn) => {
     successCallbackRef.current = fn;
   };
 
-  const [formData, setFormData] = useState({
-    businessName: "",
-    serviceType: "",
-    category: "",
-    yearsInBusiness: "",
-    description: "",
-    location: "",
-    serviceRadius: "",
-    phone: "",
-    email: "",
-    website: "",
-    certifications: "",
-    hourlyRate: "",
-    photos: [],
-    videos: [],
-    plan: "",
-  });
-
-  const openModal = () => setIsOpen(true);
   const clearErrors = () => setErrors({});
+  const resetStep = () => setCurrentStep(1);
+
+  const openModal = (options = {}) => {
+    const mode = options?.mode === "edit" ? "edit" : "create";
+    const service = options?.service || null;
+
+    setModalMode(mode);
+    setCurrentStep(1);
+    clearErrors();
+
+    if (mode === "edit" && service?._id) {
+      setEditingServiceId(service._id);
+      setExistingMediaCounts({
+        photos: Array.isArray(service?.photos) ? service.photos.length : 0,
+        videos: Array.isArray(service?.videos) ? service.videos.length : 0,
+      });
+      setFormData(mapServiceToFormData(service));
+    } else {
+      setEditingServiceId(null);
+      setExistingMediaCounts({ photos: 0, videos: 0 });
+      setFormData(EMPTY_FORM_DATA);
+    }
+
+    setIsOpen(true);
+  };
 
   const closeModal = () => {
     setIsOpen(false);
+    setModalMode("create");
+    setEditingServiceId(null);
+    setExistingMediaCounts({ photos: 0, videos: 0 });
+    setFormData(EMPTY_FORM_DATA);
+    resetStep();
     clearErrors();
   };
 
   const nextStep = () => setCurrentStep((prev) => Math.min(prev + 1, 4));
   const prevStep = () => setCurrentStep((prev) => Math.max(prev - 1, 1));
   const goToStep = (step) => setCurrentStep(step);
-  const resetStep = () => setCurrentStep(1);
 
   const updateFormData = (data) => {
     setFormData((prev) => ({ ...prev, ...data }));
@@ -90,37 +147,30 @@ export function ListBusinessProvider({ children }) {
         }
       });
 
-      await createService(payload);
-
-      toast.success("Service added successfully!");
+      if (modalMode === "edit") {
+        if (!editingServiceId) {
+          throw new Error("Missing service id for edit operation");
+        }
+        await updateService(editingServiceId, payload);
+        toast.success("Service updated successfully!");
+      } else {
+        await createService(payload);
+        toast.success("Service added successfully!");
+      }
 
       closeModal();
-      setFormData({
-        businessName: "",
-        serviceType: "",
-        category: "",
-        yearsInBusiness: "",
-        description: "",
-        location: "",
-        serviceRadius: "",
-        phone: "",
-        email: "",
-        website: "",
-        certifications: "",
-        hourlyRate: "",
-        photos: [],
-        videos: [],
-        plan: "",
-      });
-      resetStep();
 
-      // ✅ Trigger the page's fetchServices instead of router.push
       if (successCallbackRef.current) {
         successCallbackRef.current();
       }
     } catch (error) {
-      console.log("FULL ERROR:", error.response?.data);
-      toast.error("Error in creating service!");
+      console.log("FULL ERROR:", error?.response?.data || error?.message);
+      const message =
+        error?.response?.data?.message ||
+        (modalMode === "edit"
+          ? "Error in updating service!"
+          : "Error in creating service!");
+      toast.error(message);
     } finally {
       setIsSubmitting(false);
     }
@@ -130,6 +180,9 @@ export function ListBusinessProvider({ children }) {
     <ListBusinessContext.Provider
       value={{
         isOpen,
+        modalMode,
+        editingServiceId,
+        existingMediaCounts,
         openModal,
         closeModal,
         currentStep,
@@ -147,7 +200,7 @@ export function ListBusinessProvider({ children }) {
         removeFile,
         isSubmitting,
         submitBusiness,
-        registerSuccessCallback, // ✅ exposed
+        registerSuccessCallback,
       }}
     >
       {children}

@@ -5,6 +5,7 @@ import {
   getSinglePost,
   updatePost,
   deletePost,
+  getPostsByUser,
 } from "../../controllers/community/post.controller.js";
 import {
   uploadListingMedia,
@@ -28,6 +29,7 @@ router.post(
   createPost,
 );
 router.get("/", getAllPost);
+router.get("/user", protect,  getPostsByUser);
 router.get("/:id", getSinglePost);
 router.put(
   "/:id",

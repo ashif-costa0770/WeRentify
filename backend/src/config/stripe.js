@@ -1,22 +1,7 @@
-// Stripe configuration - Will be implemented later
-// import Stripe from 'stripe';
-// const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+import Stripe from "stripe";
 
-/**
- * This file is prepared for future Stripe integration
- * Currently skipped as per requirements
- */
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
+  apiVersion: "2023-10-16", // stable version
+});
 
-const stripeConfig = {
-  // Placeholder for future implementation
-  secretKey: process.env.STRIPE_SECRET_KEY,
-  publishableKey: process.env.STRIPE_PUBLISHABLE_KEY,
-};
-
-// Future functions to implement:
-// - createConnectedAccount()
-// - createPaymentIntent()
-// - handleWebhooks()
-// - processRefund()
-
-export default stripeConfig;
+export default stripe;

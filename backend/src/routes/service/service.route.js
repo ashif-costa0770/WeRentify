@@ -5,6 +5,7 @@ import {
   deleteServicePhoto,
   deleteServiceVideo,
   getAllServices,
+  getServicesByUser,
   getSingleService,
   updateService,
 } from "../../controllers/service/service.controller.js";
@@ -27,6 +28,7 @@ router.post(
 );
 
 router.get("/", getAllServices);
+router.get("/user", protect, getServicesByUser);
 router.get("/:id", getSingleService);
 router.put(
   "/:id",

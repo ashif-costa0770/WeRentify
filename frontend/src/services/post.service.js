@@ -7,6 +7,10 @@ export const createPost = (data) => api.post("/posts", data);
 export const getPosts = () =>
   api.get("/posts");
 
+// GET POSTS BY USER
+export const getPostsByUser = () =>
+  api.get("/posts/user");
+
 // GET SINGLE POST
 export const getPostById = (id) =>
   api.get(`/posts/${id}`);

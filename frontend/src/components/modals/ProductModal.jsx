@@ -21,14 +21,18 @@ export default function ProductModal({
   setSelectedItem,
   onViewOwner,
   items = [],
-  isLoggedIn = false,
-  setShowLogin = () => {},
   setShowBooking = () => {},
   setShowMessages = () => {},
   setSelectedConversation = () => {},
 }) {
-  const { favorites, addFavorite, removeFavorite, isLogin, setShowSignIn } =
-    useUser();
+  const {
+    favorites,
+    addFavorite,
+    removeFavorite,
+    isLogin,
+    setShowSignIn,
+    user,
+  } = useUser();
 
   if (!selectedItem) return null;
 
@@ -50,6 +54,13 @@ export default function ProductModal({
       : selectedItem.category;
 
   const selectedItemId = selectedItem._id || selectedItem.id;
+  const selectedOwnerId =
+    (typeof selectedItem.owner === "object"
+      ? selectedItem.owner?._id
+      : selectedItem.ownerId) || null;
+  const isOwnListing =
+    Boolean(user?._id && selectedOwnerId) &&
+    String(user._id) === String(selectedOwnerId);
 
   const existingFavorite = favorites.find(
     (fav) => {
@@ -103,6 +114,40 @@ export default function ProductModal({
     else if (result === "copied") toast.success("Link copied to clipboard!");
     else if (result !== "cancelled")
       toast.error("Unable to share listing right now");
+  };
+
+  const handleBookNow = () => {
+    if (!isLogin) {
+      setShowSignIn(true);
+      return;
+    }
+
+    if (isOwnListing) {
+      toast.error("You cannot book your own listing");
+      return;
+    }
+
+    setShowBooking(true);
+  };
+
+  const handleMessageOwner = () => {
+    if (!isLogin) {
+      setShowSignIn(true);
+      return;
+    }
+
+    if (isOwnListing) {
+      toast.error("You cannot message yourself");
+      return;
+    }
+
+    setSelectedConversation({
+      id: Date.now(),
+      itemId: selectedItemId,
+      itemName: selectedItem.itemName || selectedItem.name,
+      otherUser: ownerName,
+    });
+    setShowMessages(true);
   };
 
   return (
@@ -556,21 +601,21 @@ export default function ProductModal({
                   {/* Action Buttons */}
                   <div className="space-y-3">
                     <button
-                      onClick={() => {
-                        if (!isLoggedIn) {
-                          setShowLogin(true);
-                        } else {
-                          setShowBooking(true);
-                        }
-                      }}
-                      disabled={!selectedItem.isAvailable}
+                      onClick={handleBookNow}
+                      disabled={!selectedItem.isAvailable || isOwnListing}
                       className={`w-full cursor-pointer py-4 rounded-xl font-bold text-lg ${
-                        selectedItem.isAvailable
-                          ? "bg-linear-to-r from-indigo-600 to-purple-600 text-white hover:shadow-xl"
-                          : "bg-gray-300 text-gray-600 cursor-not-allowed"
+                        !selectedItem.isAvailable
+                          ? "bg-gray-300 text-gray-600 cursor-not-allowed"
+                          : isOwnListing
+                            ? "bg-gray-300 text-gray-600 cursor-not-allowed"
+                            : "bg-linear-to-r from-indigo-600 to-purple-600 text-white hover:shadow-xl"
                       }`}
                     >
-                      {selectedItem.isAvailable ? "Book Now" : "Not Available"}
+                      {!selectedItem.isAvailable
+                        ? "Not Available"
+                        : isOwnListing
+                          ? "Your Listing"
+                          : "Book Now"}
                     </button>
 
                     <div className="grid grid-cols-2 gap-3">
@@ -589,16 +634,13 @@ export default function ProductModal({
                         Save
                       </button>
                       <button
-                        onClick={() => {
-                          setSelectedConversation({
-                            id: Date.now(),
-                            itemId: selectedItem._id || selectedItem.id,
-                            itemName: selectedItem.itemName || selectedItem.name,
-                            otherUser: ownerName,
-                          });
-                          setShowMessages(true);
-                        }}
-                        className="bg-gray-900 cursor-pointer text-white rounded-xl py-3 font-semibold"
+                        onClick={handleMessageOwner}
+                        disabled={isOwnListing}
+                        className={`rounded-xl py-3 font-semibold ${
+                          isOwnListing
+                            ? "cursor-not-allowed bg-gray-300 text-gray-600"
+                            : "bg-gray-900 cursor-pointer text-white"
+                        }`}
                       >
                         <MessageCircle size={18} className="inline mr-2" />
                         Message

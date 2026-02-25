@@ -119,6 +119,7 @@ export const createUser = async (req, res) => {
       email,
       password: hashedPassword,
       isVerified: true,
+      lastLoginProvider: "email",
     });
 
     // ✅ AUTO LOGIN LOGIC
@@ -158,6 +159,11 @@ export const login = async (req, res) => {
     const isMatch = await argon2.verify(user.password, password);
 
     if (!isMatch) return errorResponse(res, 400, "Invalid credentials");
+
+    if (user.lastLoginProvider !== "email") {
+      user.lastLoginProvider = "email";
+      await user.save();
+    }
 
     const token = generateToken(user._id);
     res.cookie("token", token, { httpOnly: true });
@@ -223,7 +229,25 @@ export const facebookAuth = async (req, res) => {
         email,
         facebookId: id,
         isVerified: true,
+        lastLoginProvider: "facebook",
       });
+    } else {
+      if (user.facebookId && user.facebookId !== id) {
+        return errorResponse(
+          res,
+          409,
+          "This email is already linked to a different Facebook account",
+        );
+      }
+
+      // Link facebook login for existing email users (email/password or google).
+      if (!user.facebookId) {
+        user.facebookId = id;
+      }
+
+      if (!user.isVerified) user.isVerified = true;
+      user.lastLoginProvider = "facebook";
+      await user.save();
     }
 
     // ✅ Use SAME token logic as login

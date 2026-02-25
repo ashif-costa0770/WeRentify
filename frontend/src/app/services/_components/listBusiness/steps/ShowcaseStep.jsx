@@ -5,8 +5,16 @@ import Image from "next/image";
 import { Camera, Plus, Video, X } from "lucide-react";
 
 export default function ShowcaseStep() {
-  const { formData, addFiles, removeFile, updateFormData, errors, setErrors } =
-    useListBusiness();
+  const {
+    formData,
+    addFiles,
+    removeFile,
+    updateFormData,
+    errors,
+    setErrors,
+    modalMode,
+    existingMediaCounts,
+  } = useListBusiness();
 
   const photos = formData.photos || [];
   const videos = formData.videos || [];
@@ -20,6 +28,13 @@ export default function ShowcaseStep() {
 
   return (
     <div className="space-y-5">
+      {modalMode === "edit" && (
+        <div className="rounded-xl border border-indigo-200 bg-indigo-50 px-3 py-2 text-xs text-indigo-700">
+          Existing media: {existingMediaCounts?.photos || 0} photos,{" "}
+          {existingMediaCounts?.videos || 0} videos. New uploads are added to these.
+        </div>
+      )}
+
       <div>
         <p className="text-sm mb-2 font-semibold text-gray-900">Photos (minimum 3)</p>
         <div className="grid grid-cols-2 px-1 gap-3 sm:grid-cols-3">

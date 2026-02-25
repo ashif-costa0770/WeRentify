@@ -34,6 +34,10 @@ export const createListing = (fields = {}, media = {}) => {
 export const getListings = () =>
   api.get("/listings");
 
+// GET LISTINGS BY USER
+export const getListingsByUser = () =>
+  api.get("/listings/user");
+
 /* GET SINGLE LISTING */
 export const getListingById = (id) =>
   api.get(`/listings/${id}`);

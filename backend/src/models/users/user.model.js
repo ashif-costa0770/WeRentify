@@ -89,6 +89,11 @@ const userSchema = new mongoose.Schema(
       enum: ["renter", "host"],
       default: "renter",
     },
+    lastLoginProvider: {
+      type: String,
+      enum: ["email", "google", "facebook"],
+      default: "email",
+    },
     plan: {
       type: String,
       enum: ["basic", "pro"],

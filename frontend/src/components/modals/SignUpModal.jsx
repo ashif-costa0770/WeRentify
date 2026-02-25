@@ -6,6 +6,8 @@ import { loginWithFacebook } from "@/utils/facebookLogin";
 import { facebookAuth } from "@/services/auth.service";
 import { toast } from "sonner";
 
+const GOOGLE_AUTH_INTENT_KEY = "google_auth_intent";
+
 export default function SignUpModal({
   open,
   onClose,
@@ -19,6 +21,11 @@ export default function SignUpModal({
     if (loading) return;
     setLoading(true);
     onClose();
+
+    if (typeof window !== "undefined") {
+      window.sessionStorage.setItem(GOOGLE_AUTH_INTENT_KEY, "signup");
+    }
+
     window.location.href = `${process.env.NEXT_PUBLIC_API_URL}/auth/google`;
   };
 

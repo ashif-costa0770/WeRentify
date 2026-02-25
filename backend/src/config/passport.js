@@ -21,7 +21,30 @@ passport.use(
             firstname: profile.displayName,
             googleId: profile.id,
             isVerified: true,
+            lastLoginProvider: "google",
           });
+        } else {
+          let shouldSave = false;
+
+          // Link google login for existing email users.
+          if (!user.googleId) {
+            user.googleId = profile.id;
+            shouldSave = true;
+          }
+
+          if (!user.isVerified) {
+            user.isVerified = true;
+            shouldSave = true;
+          }
+
+          if (user.lastLoginProvider !== "google") {
+            user.lastLoginProvider = "google";
+            shouldSave = true;
+          }
+
+          if (shouldSave) {
+            await user.save();
+          }
         }
 
         return done(null, user);

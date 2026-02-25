@@ -36,23 +36,39 @@ const maskEmail = (email) => {
   return `${firstChar}${stars}${lastTwo}@${domain}`;
 };
 
+const getActiveConnections = (user) => {
+  if (user?.lastLoginProvider === "google") {
+    return { google: true, facebook: false };
+  }
+
+  if (user?.lastLoginProvider === "facebook") {
+    return { google: false, facebook: true };
+  }
+
+  return {
+    google: !!user?.googleId && !user?.facebookId,
+    facebook: !!user?.facebookId && !user?.googleId,
+  };
+};
+
 export default function SocialLoginSettings() {
   const { user, setUser, setIsLogin } = useUser();
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [isFacebookLoading, setIsFacebookLoading] = useState(false);
+  const activeConnections = getActiveConnections(user);
   const [connections, setConnections] = useState({
-    google: !!user?.googleId,
-    facebook: !!user?.facebookId,
+    google: activeConnections.google,
+    facebook: activeConnections.facebook,
     apple: false,
   });
 
   useEffect(() => {
     setConnections((prev) => ({
       ...prev,
-      google: !!user?.googleId,
-      facebook: !!user?.facebookId,
+      google: activeConnections.google,
+      facebook: activeConnections.facebook,
     }));
-  }, [user?.googleId, user?.facebookId]);
+  }, [activeConnections.facebook, activeConnections.google]);
 
   const maskedGoogleEmail = useMemo(() => maskEmail(user?.email), [user?.email]);
   const maskedFacebookEmail = useMemo(() => maskEmail(user?.email), [user?.email]);
@@ -102,7 +118,7 @@ export default function SocialLoginSettings() {
 
     try {
       setIsFacebookLoading(true);
-      const accessToken = await loginWithFacebook();
+      const accessToken = await loginWithFacebook({ forceDialog: true });
       await facebookAuth(accessToken);
 
       const profileRes = await getMe();
@@ -111,7 +127,7 @@ export default function SocialLoginSettings() {
       }
 
       setIsLogin(true);
-      setConnections((prev) => ({ ...prev, facebook: true }));
+      setConnections((prev) => ({ ...prev, google: false, facebook: true }));
       toast.success("Facebook login successful");
     } catch (error) {
       if (error?.message === "FACEBOOK_LOGIN_CANCELLED") {

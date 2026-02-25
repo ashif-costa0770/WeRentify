@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useState, useEffect } from "react";
 import { getMe } from "@/services/auth.service";
+import { toast } from "sonner";
 import {
   getFavorites,
   addFavorite as addFavoriteApi,
@@ -9,6 +10,7 @@ import {
 } from "@/services/favorite.service.js";
 
 const UserContext = createContext(null);
+const GOOGLE_AUTH_INTENT_KEY = "google_auth_intent";
 
 export function UserProvider({ children }) {
   const [user, setUser] = useState(null);
@@ -33,6 +35,24 @@ export function UserProvider({ children }) {
           setUser(res.data.data);
           setIsLogin(true);
 
+          if (typeof window !== "undefined") {
+            const googleAuthIntent = window.sessionStorage.getItem(
+              GOOGLE_AUTH_INTENT_KEY,
+            );
+
+            if (googleAuthIntent) {
+              window.sessionStorage.removeItem(GOOGLE_AUTH_INTENT_KEY);
+
+              if (res.data.data?.lastLoginProvider === "google") {
+                toast.success(
+                  googleAuthIntent === "signup"
+                    ? "Google sign up successful"
+                    : "Google login successful",
+                );
+              }
+            }
+          }
+
           // 🔥 Fetch favorites after login
           try {
             const favRes = await getFavorites();
@@ -49,6 +69,9 @@ export function UserProvider({ children }) {
         setUser(null);
         setIsLogin(false);
         setFavorites([]);
+        if (typeof window !== "undefined") {
+          window.sessionStorage.removeItem(GOOGLE_AUTH_INTENT_KEY);
+        }
       } finally {
         setIsAuthLoading(false);
       }

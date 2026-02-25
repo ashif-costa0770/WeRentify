@@ -33,6 +33,8 @@ const STEP_META = {
 export default function ListBusinessModal() {
   const {
     isOpen,
+    modalMode,
+    existingMediaCounts,
     closeModal,
     currentStep,
     nextStep,
@@ -112,7 +114,12 @@ export default function ListBusinessModal() {
     }
 
     if (currentStep === 3) {
-      if (!photos || photos.length < 3) {
+      const existingPhotos = Number(existingMediaCounts?.photos || 0);
+      const uploadedPhotos = Number(photos?.length || 0);
+      const totalPhotos =
+        modalMode === "edit" ? existingPhotos + uploadedPhotos : uploadedPhotos;
+
+      if (totalPhotos < 3) {
         stepErrors.photos = "Please add at least 3 photos.";
       }
       if (!hourlyRate || Number.isNaN(parsedRate) || parsedRate <= 0) {
@@ -211,10 +218,10 @@ export default function ListBusinessModal() {
             {isSubmitting ? (
               <>
                 <Loader2 size={16} className="animate-spin" />
-                Submitting...
+                {modalMode === "edit" ? "Updating..." : "Submitting..."}
               </>
             ) : currentStep === 4 ? (
-              "Start Subscription"
+              modalMode === "edit" ? "Update Service" : "Start Subscription"
             ) : (
               "Continue"
             )}
