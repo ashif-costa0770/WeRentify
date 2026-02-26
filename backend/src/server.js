@@ -25,6 +25,7 @@ import messageRoutes from "./routes/messages/message.route.js";
 import conversationRoutes from "./routes/messages/conversation.route.js";
 import Conversation from "./models/messages/conversation.model.js";
 import paymentRoutes from "./routes/payment.route.js";
+import connectRoutes from "./routes/connect.route.js";
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -86,7 +87,7 @@ app.use("/api/favorites", favoriteRoute);
 app.use("/api/conversations", conversationRoutes);
 app.use("/api/messages", messageRoutes);
 app.use("/api/payments", paymentRoutes);
-
+app.use("/api/connect", connectRoutes);
 
 /* HEALTH */
 /* -------------------------------------------------- */

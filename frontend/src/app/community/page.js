@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useEffect, useMemo, useState, useCallback } from "react";
 import CommunityFilters from "./_components/CommunityFilters";
@@ -100,6 +100,7 @@ export default function CommunityPage() {
             posts={filteredAndSortedPosts}
             currentUser={user}
             onUpdatePost={handleUpdatePost}
+            variant="default"
           />
         )}
       </div>

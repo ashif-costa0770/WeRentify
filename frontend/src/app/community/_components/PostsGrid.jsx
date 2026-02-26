@@ -7,7 +7,14 @@ import PostCard from "./PostCards";
 import CommentModal from "./modals/CommentModal";
 import MessageModal from "./modals/MessageModal";
 
-export default function PostsGrid({ posts, currentUser = null, onUpdatePost }) {
+export default function PostsGrid({
+  posts,
+  currentUser = null,
+  onUpdatePost,
+  variant = "default",
+  onEditPost,
+  onDeletePost,
+}) {
   const [selectedPost, setSelectedPost] = useState(null);
   const [messagePost, setMessagePost] = useState(null);
   const [showPostMessage, setShowPostMessage] = useState(false);
@@ -24,9 +31,14 @@ export default function PostsGrid({ posts, currentUser = null, onUpdatePost }) {
     return <p className="text-center text-gray-500 py-16">No posts found</p>;
   }
 
+  const gridColsClass =
+    variant === "my-posts"
+      ? "grid-cols-1 md:grid-cols-2"
+      : "grid-cols-1 md:grid-cols-3";
+
   return (
     <>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pb-8">
+      <div className={`grid ${gridColsClass} gap-6 pb-8`}>
         {posts.map((post) => (
           <PostCard
             key={post._id}
@@ -37,6 +49,10 @@ export default function PostsGrid({ posts, currentUser = null, onUpdatePost }) {
             setShowPostMessage={setShowPostMessage}
             setMessagePost={setMessagePost}
             onUpdatePost={onUpdatePost}
+            showMessageButton={variant !== "my-posts"}
+            showOwnerActions={variant === "my-posts"}
+            onEdit={onEditPost}
+            onDelete={onDeletePost}
           />
         ))}
       </div>

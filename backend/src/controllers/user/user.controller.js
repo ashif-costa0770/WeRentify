@@ -53,6 +53,27 @@ export const updateProfile = async (req, res) => {
   }
 };
 
+/**
+ * Update the authenticated user's plan (e.g. downgrade to Basic).
+ * Use this when the user selects Basic in the UI; paid upgrades go through Stripe + verifySession.
+ */
+export const updateMyPlan = async (req, res) => {
+  try {
+    const userId = req.user._id;
+    const { plan } = req.body;
+
+    const user = await User.findByIdAndUpdate(
+      userId,
+      { plan },
+      { new: true, runValidators: true }
+    );
+
+    return successResponse(res, 200, "Plan updated", user);
+  } catch (error) {
+    return errorResponse(res, 400, "Plan update failed", error.message);
+  }
+};
+
 export const sendPasswordChangeOtp = async (req, res) => {
   try {
     const email = req.user?.email;

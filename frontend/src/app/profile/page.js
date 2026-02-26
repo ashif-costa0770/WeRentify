@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React, { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
@@ -7,10 +7,7 @@ import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { useUser } from "@/context/UserContext";
 import { logout } from "@/services/auth.service";
-import {
-  updateProfile,
-  sendPasswordOtp,
-} from "@/services/user.service";
+import { updateProfile, sendPasswordOtp } from "@/services/user.service";
 import { toast } from "sonner";
 import {
   Camera,
@@ -27,6 +24,7 @@ import {
   Settings,
   LogOut,
   Lock,
+  MessageSquare,
 } from "lucide-react";
 
 const PricingModal = dynamic(() => import("@/components/modals/PricingModal"), {
@@ -36,9 +34,12 @@ const ChangePasswordModal = dynamic(
   () => import("@/app/profile/_modals/ChangePassword"),
   { ssr: false },
 );
-const AccountInfo = dynamic(() => import("@/app/profile/_components/AccountInfo"), {
-  ssr: false,
-});
+const AccountInfo = dynamic(
+  () => import("@/app/profile/_components/AccountInfo"),
+  {
+    ssr: false,
+  },
+);
 const AccountDeleteBtn = dynamic(
   () => import("@/app/profile/_components/AccountDeleteBtn"),
   {
@@ -52,9 +53,18 @@ const Messages = dynamic(() => import("@/app/profile/_components/Messages"), {
 const Favorites = dynamic(() => import("@/app/profile/_components/Favorites"), {
   ssr: false,
 });
-const MyListings = dynamic(() => import("@/app/profile/_components/MyListings"), {
-  ssr: false,
-});
+const MyListings = dynamic(
+  () => import("@/app/profile/_components/MyListings"),
+  {
+    ssr: false,
+  },
+);
+const MyPosts = dynamic(
+  () => import("@/app/profile/_components/MyPosts"),
+  {
+    ssr: false,
+  },
+);
 
 export default function AccountProfile() {
   const router = useRouter();
@@ -75,12 +85,33 @@ export default function AccountProfile() {
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [isSendingOtp, setIsSendingOtp] = useState(false);
   const [activeSection, setActiveSection] = useState("profile");
-  const [currentPlan, setCurrentPlan] = useState(() => {
-    if (typeof window === "undefined") return "basic";
-    return localStorage.getItem("userPlan") || "basic";
-  });
+  const [currentPlan, setCurrentPlan] = useState("basic");
 
   const { user, setUser, setIsLogin, isLogin, isAuthLoading } = useUser();
+
+  // Sync currentPlan with user context when user data changes
+  useEffect(() => {
+    if (user?.plan) {
+      setCurrentPlan(user.plan);
+      localStorage.setItem("userPlan", user.plan);
+    }
+  }, [user?.plan]);
+
+  // Listen for plan-updated event from payment-success page
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const handlePlanUpdate = (event) => {
+      const newPlan = event.detail?.plan;
+      if (newPlan) {
+        setCurrentPlan(newPlan);
+        localStorage.setItem("userPlan", newPlan);
+      }
+    };
+
+    window.addEventListener("plan-updated", handlePlanUpdate);
+    return () => window.removeEventListener("plan-updated", handlePlanUpdate);
+  }, []);
   const fullName = `${user?.firstname || ""} ${user?.lastname || ""}`.trim();
 
   const displayName = fullName || "Unknown";
@@ -261,7 +292,9 @@ export default function AccountProfile() {
                   )}
                 </div>
                 <div className="min-w-0">
-                  <h2 className="truncate text-xl font-bold text-gray-900">{displayName}</h2>
+                  <h2 className="truncate text-xl font-bold text-gray-900">
+                    {displayName}
+                  </h2>
                   <div className=" ms-[-1] flex items-center gap-1 text-sm text-gray-500">
                     <House size={14} />
                     <span>{displayMode} Mode</span>
@@ -295,6 +328,12 @@ export default function AccountProfile() {
                 onClick={() => setActiveSection("my-listings")}
                 active={activeSection === "my-listings"}
               />
+               <SidebarItem
+                icon={<MessageSquare size={16} />}
+                label="My Posts"
+                onClick={() => setActiveSection("my-posts")}
+                active={activeSection === "my-posts"}
+              />
             </nav>
 
             <div className="border-t border-gray-100" />
@@ -306,16 +345,45 @@ export default function AccountProfile() {
                 sublabel="List & earn money"
                 href="/switch-host"
               />
-              {/* TODO-> UPDATE user plan in backend */}
+              {/* Membership Plan - Shows Pro/Plus Member or Upgrade option */}
               <SidebarItem
-                icon={<Crown size={16} className="text-yellow-500" />}
-                label={currentPlan === "pro" ? "Pro Member" : "Upgrade to Pro"}
-                sublabel={currentPlan === "pro" ? "Active" : undefined}
-                sublabelClassName={currentPlan === "pro" ? "text-green-600" : "text-gray-400"}
+                icon={
+                  <Crown
+                    size={16}
+                    className={
+                      currentPlan === "pro"
+                        ? "text-purple-500"
+                        : currentPlan === "plus"
+                          ? "text-yellow-500"
+                          : "text-gray-400"
+                    }
+                  />
+                }
+                label={
+                  currentPlan === "pro"
+                    ? "Pro Member"
+                    : currentPlan === "plus"
+                      ? "Plus Member"
+                      : "Upgrade to Pro"
+                }
+                sublabel={
+                  currentPlan !== "basic" ? "Active" : "Unlock premium features"
+                }
+                sublabelClassName={
+                  currentPlan !== "basic" ? "text-green-600" : "text-gray-400"
+                }
                 onClick={() => setShowPricing(true)}
               />
-              <SidebarItem icon={<HelpCircle size={16} />} label="Help Center" href="/help" />
-              <SidebarItem icon={<Settings size={16} />} label="Settings" href="/settings" />
+              <SidebarItem
+                icon={<HelpCircle size={16} />}
+                label="Help Center"
+                href="/help"
+              />
+              <SidebarItem
+                icon={<Settings size={16} />}
+                label="Settings"
+                href="/settings"
+              />
             </nav>
 
             <div className="border-t border-gray-100" />
@@ -332,138 +400,170 @@ export default function AccountProfile() {
             {activeSection === "profile" ? (
               <>
                 <main className="bg-white rounded-2xl border border-gray-200 shadow-sm p-4 sm:p-8">
-              <h1 className="text-2xl font-semibold text-gray-900 mb-6">Profile Details</h1>
+                  <h1 className="text-2xl font-semibold text-gray-900 mb-6">
+                    Profile Details
+                  </h1>
 
-              <form className="space-y-6" onSubmit={handleSubmit}>
-                <div className="flex flex-col sm:flex-row sm:items-center gap-5">
-                  <div className="relative">
-                    <div className="w-20 h-20 rounded-full bg-gray-100 border border-gray-300 flex items-center justify-center overflow-hidden">
-                      {avatarUrl ? (
-                        <Image
-                          src={avatarUrl}
-                          height={80}
-                          width={80}
-                          alt="Profile Preview"
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <User className="w-10 h-10 text-gray-400" />
-                      )}
+                  <form className="space-y-6" onSubmit={handleSubmit}>
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-5">
+                      <div className="relative">
+                        <div className="w-20 h-20 rounded-full bg-gray-100 border border-gray-300 flex items-center justify-center overflow-hidden">
+                          {avatarUrl ? (
+                            <Image
+                              src={avatarUrl}
+                              height={80}
+                              width={80}
+                              alt="Profile Preview"
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <User className="w-10 h-10 text-gray-400" />
+                          )}
+                        </div>
+
+                        <label className="absolute bottom-0 right-0 bg-indigo-600 p-2 rounded-full text-white cursor-pointer shadow">
+                          <Camera size={12} />
+                          <input
+                            type="file"
+                            className="hidden"
+                            accept="image/*"
+                            onChange={handleImageChange}
+                          />
+                        </label>
+                      </div>
+
+                      <div>
+                        <p className="text-base font-medium text-gray-800">
+                          Profile Photo
+                        </p>
+                        <p className="text-sm text-gray-400 mt-1">
+                          Click the camera icon to upload. PNG,
+                          <br className="hidden sm:block" />
+                          JPG or GIF.
+                        </p>
+                      </div>
                     </div>
 
-                    <label className="absolute bottom-0 right-0 bg-indigo-600 p-2 rounded-full text-white cursor-pointer shadow">
-                      <Camera size={12} />
-                      <input
-                        type="file"
-                        className="hidden"
-                        accept="image/*"
-                        onChange={handleImageChange}
-                      />
-                    </label>
-                  </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                      <div>
+                        <label className="text-sm font-medium text-gray-700">
+                          First Name
+                        </label>
+                        <input
+                          type="text"
+                          placeholder="Jane"
+                          value={formValues.firstname}
+                          onChange={(e) =>
+                            handleInputChange("firstname", e.target.value)
+                          }
+                          className={`mt-1 w-full rounded-xl border px-4 py-3 outline-none focus:ring-2 focus:ring-indigo-200 ${
+                            errors.firstname
+                              ? "border-red-400 focus:border-red-400"
+                              : "border-gray-200 focus:border-indigo-500"
+                          }`}
+                        />
+                        {errors.firstname && (
+                          <p className="mt-1 text-xs text-red-500">
+                            {errors.firstname}
+                          </p>
+                        )}
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium text-gray-700">
+                          Last Name
+                        </label>
+                        <input
+                          type="text"
+                          placeholder="Doe"
+                          value={formValues.lastname}
+                          onChange={(e) =>
+                            handleInputChange("lastname", e.target.value)
+                          }
+                          className={`mt-1 w-full rounded-xl border px-4 py-3 outline-none focus:ring-2 focus:ring-indigo-200 ${
+                            errors.lastname
+                              ? "border-red-400 focus:border-red-400"
+                              : "border-gray-200 focus:border-indigo-500"
+                          }`}
+                        />
+                        {errors.lastname && (
+                          <p className="mt-1 text-xs text-red-500">
+                            {errors.lastname}
+                          </p>
+                        )}
+                      </div>
+                    </div>
 
-                  <div>
-                    <p className="text-base font-medium text-gray-800">Profile Photo</p>
-                    <p className="text-sm text-gray-400 mt-1">
-                      Click the camera icon to upload. PNG,
-                      <br className="hidden sm:block" />
-                      JPG or GIF.
-                    </p>
-                  </div>
-                </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-700">
+                        Email Address
+                      </label>
+                      <div className="relative mt-1">
+                        <Mail
+                          className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"
+                          size={18}
+                        />
+                        <input
+                          type="email"
+                          value={email}
+                          readOnly
+                          className="w-full rounded-xl border border-gray-200 bg-gray-50 pl-12 pr-4 py-3 text-gray-500 italic"
+                        />
+                      </div>
+                    </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                  <div>
-                    <label className="text-sm font-medium text-gray-700">First Name</label>
-                    <input
-                      type="text"
-                      placeholder="Jane"
-                      value={formValues.firstname}
-                      onChange={(e) => handleInputChange("firstname", e.target.value)}
-                      className={`mt-1 w-full rounded-xl border px-4 py-3 outline-none focus:ring-2 focus:ring-indigo-200 ${
-                        errors.firstname ? "border-red-400 focus:border-red-400" : "border-gray-200 focus:border-indigo-500"
-                      }`}
-                    />
-                    {errors.firstname && (
-                      <p className="mt-1 text-xs text-red-500">{errors.firstname}</p>
-                    )}
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-gray-700">Last Name</label>
-                    <input
-                      type="text"
-                      placeholder="Doe"
-                      value={formValues.lastname}
-                      onChange={(e) => handleInputChange("lastname", e.target.value)}
-                      className={`mt-1 w-full rounded-xl border px-4 py-3 outline-none focus:ring-2 focus:ring-indigo-200 ${
-                        errors.lastname ? "border-red-400 focus:border-red-400" : "border-gray-200 focus:border-indigo-500"
-                      }`}
-                    />
-                    {errors.lastname && (
-                      <p className="mt-1 text-xs text-red-500">{errors.lastname}</p>
-                    )}
-                  </div>
-                </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-700">
+                        Phone Number
+                      </label>
+                      <div className="relative mt-1">
+                        <Phone
+                          className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"
+                          size={18}
+                        />
+                        <input
+                          type="tel"
+                          placeholder="+91 98765 43210"
+                          value={formValues.phone}
+                          onChange={(e) =>
+                            handleInputChange(
+                              "phone",
+                              e.target.value.replace(/[^\d+]/g, ""),
+                            )
+                          }
+                          className={`w-full rounded-xl border pl-12 pr-4 py-3 outline-none focus:ring-2 focus:ring-indigo-200 ${
+                            errors.phone
+                              ? "border-red-400 focus:border-red-400"
+                              : "border-gray-200 focus:border-indigo-500"
+                          }`}
+                        />
+                        {errors.phone && (
+                          <p className="mt-1 text-xs text-red-500">
+                            {errors.phone}
+                          </p>
+                        )}
+                      </div>
+                    </div>
 
-                <div>
-                  <label className="text-sm font-medium text-gray-700">Email Address</label>
-                  <div className="relative mt-1">
-                    <Mail
-                      className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"
-                      size={18}
-                    />
-                    <input
-                      type="email"
-                      value={email}
-                      readOnly
-                      className="w-full rounded-xl border border-gray-200 bg-gray-50 pl-12 pr-4 py-3 text-gray-500 italic"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="text-sm font-medium text-gray-700">Phone Number</label>
-                  <div className="relative mt-1">
-                    <Phone
-                      className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"
-                      size={18}
-                    />
-                    <input
-                      type="tel"
-                      placeholder="+91 98765 43210"
-                      value={formValues.phone}
-                      onChange={(e) =>
-                        handleInputChange("phone", e.target.value.replace(/[^\d+]/g, ""))
-                      }
-                      className={`w-full rounded-xl border pl-12 pr-4 py-3 outline-none focus:ring-2 focus:ring-indigo-200 ${
-                        errors.phone ? "border-red-400 focus:border-red-400" : "border-gray-200 focus:border-indigo-500"
-                      }`}
-                    />
-                    {errors.phone && <p className="mt-1 text-xs text-red-500">{errors.phone}</p>}
-                  </div>
-                </div>
-
-                <div className="pt-2 flex justify-between border-t border-gray-100">
-                  <button
-                    type="submit"
-                    disabled={isSaving}
-                    className="inline-flex cursor-pointer items-center gap-2 rounded-xl bg-indigo-600 px-6 py-3 text-white font-semibold shadow disabled:opacity-70 disabled:cursor-not-allowed"
-                  >
-                    <Save size={18} />
-                    <span>{isSaving ? "Saving..." : "Save Changes"}</span>
-                  </button>
-                   <button
-                     type="button"  
-                     onClick={handleChangePassword}          
-                     disabled={isSendingOtp}
-                     className="inline-flex cursor-pointer items-center gap-2 text-indigo-600 font-semibold disabled:opacity-70 disabled:cursor-not-allowed"
-                   >
-                     <Lock  size={18} />
-                     {isSendingOtp ? "Sending OTP..." : "Change Password"}
-                   </button>
-                  
-                </div>
-              </form>            
+                    <div className="pt-2 flex justify-between border-t border-gray-100">
+                      <button
+                        type="submit"
+                        disabled={isSaving}
+                        className="inline-flex cursor-pointer items-center gap-2 rounded-xl bg-indigo-600 px-6 py-3 text-white font-semibold shadow disabled:opacity-70 disabled:cursor-not-allowed"
+                      >
+                        <Save size={18} />
+                        <span>{isSaving ? "Saving..." : "Save Changes"}</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleChangePassword}
+                        disabled={isSendingOtp}
+                        className="inline-flex cursor-pointer items-center gap-2 text-indigo-600 font-semibold disabled:opacity-70 disabled:cursor-not-allowed"
+                      >
+                        <Lock size={18} />
+                        {isSendingOtp ? "Sending OTP..." : "Change Password"}
+                      </button>
+                    </div>
+                  </form>
                 </main>
                 <AccountInfo />
                 <AccountDeleteBtn />
@@ -474,9 +574,10 @@ export default function AccountProfile() {
               <Favorites />
             ) : activeSection === "my-listings" ? (
               <MyListings />
+            ) : activeSection === "my-posts" ? (
+              <MyPosts />
             ) : null}
           </div>
-          
         </div>
       </div>
       <PricingModal
@@ -506,7 +607,9 @@ function SidebarItem({
 }) {
   const content = (
     <>
-      <span className={active ? "text-indigo-600" : "text-gray-500"}>{icon}</span>
+      <span className={active ? "text-indigo-600" : "text-gray-500"}>
+        {icon}
+      </span>
       <div>
         <p
           className={`text-sm cursor-pointer font-medium ${
@@ -515,14 +618,19 @@ function SidebarItem({
         >
           {label}
         </p>
-        {sublabel && <p className={`text-xs ${sublabelClassName}`}>{sublabel}</p>}
+        {sublabel && (
+          <p className={`text-xs ${sublabelClassName}`}>{sublabel}</p>
+        )}
       </div>
     </>
   );
 
   if (href) {
     return (
-      <Link href={href} className="w-full flex items-center gap-3 px-5 py-3 text-left">
+      <Link
+        href={href}
+        className="w-full flex items-center gap-3 px-5 py-3 text-left"
+      >
         {content}
       </Link>
     );

@@ -185,7 +185,11 @@ export default function ListItemModal({
       case 3:
         return formData.dailyRate !== "";
       case 5:
-        return mode === "edit" ? true : formData.stripeConnected;
+        return (
+          mode === "edit" ||
+          formData.stripeConnected ||
+          Boolean(user?.stripeConnectAccountId)
+        );
       default:
         return true;
     }
@@ -430,7 +434,10 @@ export default function ListItemModal({
               onClick={handleNext}
               disabled={!validateStep(currentStep) || isSubmitting}
               className={`flex-1 cursor-pointer rounded-xl px-4 py-3 font-bold text-white transition-all duration-200 sm:px-6 sm:py-3.5 ${
-                currentStep === totalSteps && (formData.stripeConnected || mode === "edit")
+                currentStep === totalSteps &&
+                (formData.stripeConnected ||
+                  user?.stripeConnectAccountId ||
+                  mode === "edit")
                   ? "bg-linear-to-r from-green-500 to-emerald-500 hover:shadow-lg hover:shadow-green-500/25"
                   : "bg-linear-to-r from-[#5B4FE9] to-[#9F4AE8] hover:shadow-lg hover:shadow-purple-500/25"
               } disabled:cursor-not-allowed disabled:opacity-50`}

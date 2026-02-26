@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { X, Check, Package, Star, Crown, Loader2 } from "lucide-react";
  import api from "@/lib/api";
+ import { updatePlan } from "@/services/user.service";
 
 const plans = [
   {
@@ -76,14 +77,32 @@ const handleSelectPlan = async (planId) => {
     setProcessingPlan(planId);
     setIsProcessing(true);
 
+    if (planId === "basic") {
+      await updatePlan({ plan: "basic" });
+      setSelectedPlan("basic");
+      onPlanSelect?.("basic");
+      if (typeof window !== "undefined") {
+        localStorage.setItem("userPlan", "basic");
+        window.dispatchEvent(
+          new CustomEvent("plan-updated", { detail: { plan: "basic" } })
+        );
+      }
+      setIsProcessing(false);
+      setProcessingPlan(null);
+      onClose?.();
+      return;
+    }
+
     const res = await api.post("/payments/create-checkout-session", {
       planId,
     });
 
     window.location.href = res.data.url;
-
   } catch (err) {
-    console.error("Stripe Redirect Error:", err);
+    console.error(
+      planId === "basic" ? "Plan update error:" : "Stripe Redirect Error:",
+      err
+    );
     setIsProcessing(false);
     setProcessingPlan(null);
   }

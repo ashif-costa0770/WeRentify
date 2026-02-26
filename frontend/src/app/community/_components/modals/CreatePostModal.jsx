@@ -1,9 +1,9 @@
-﻿"use client";
+"use client";
 
 import Image from "next/image";
-import { createPost } from "@/services/post.service";
+import { createPost, updatePost } from "@/services/post.service";
 import { toast } from "sonner";
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { X, Wrench, Package, Camera, Calendar } from "lucide-react";
 import RichTextEditor from "@/components/tiptap-editor/RichTextEditor";
 
@@ -36,7 +36,12 @@ function todayLocalISO() {
   return new Date(now.getTime() - tz).toISOString().slice(0, 10);
 }
 
-export default function CreatePostModal({ isOpen, onClose, onSubmit }) {
+export default function CreatePostModal({
+  isOpen,
+  onClose,
+  onSubmit,
+  initialPost = null,
+}) {
   const [formData, setFormData] = useState(emptyForm);
   const [errors, setErrors] = useState({});
   const [photoPreviews, setPhotoPreviews] = useState(emptyPreviews);
@@ -44,6 +49,39 @@ export default function CreatePostModal({ isOpen, onClose, onSubmit }) {
   const fileInputRefs = [useRef(null), useRef(null), useRef(null)];
 
   const minDate = useMemo(() => todayLocalISO(), []);
+  const isEditMode = Boolean(initialPost?._id);
+
+  useEffect(() => {
+    // Sync form when an initialPost is provided (edit mode)
+    if (initialPost && initialPost._id) {
+      const [city = "", state = ""] = (initialPost.location || "")
+        .split(",")
+        .map((part) => part.trim());
+
+      setFormData({
+        type: initialPost.type || "service",
+        title: initialPost.title || "",
+        description: initialPost.description || "",
+        category: initialPost.category || "",
+        city,
+        state,
+        dateNeeded: initialPost.dateNeeded
+          ? String(initialPost.dateNeeded).slice(0, 10)
+          : "",
+        budget: initialPost.budget || "",
+        photos: [],
+      });
+      setErrors({});
+      setPhotoPreviews(emptyPreviews);
+    }
+
+    // When the modal is fully closed and there's no initial post, reset to empty
+    if (!isOpen && !initialPost) {
+      setFormData(emptyForm);
+      setErrors({});
+      setPhotoPreviews(emptyPreviews);
+    }
+  }, [initialPost, isOpen]);
 
   if (!isOpen) return null;
 
@@ -194,11 +232,15 @@ export default function CreatePostModal({ isOpen, onClose, onSubmit }) {
       formData.photos.forEach((file) => {
         if (file) payload.append("photos", file);
       });
+      if (isEditMode && initialPost?._id) {
+        await updatePost(initialPost._id, payload);
+        toast.success("Post updated successfully!");
+      } else {
+        await createPost(payload);
+        toast.success("Post created successfully!");
+      }
 
-      await createPost(payload);
       if (onSubmit) await onSubmit();
-
-      toast.success("Post created successfully!");
       closeAndReset();
     } catch (err) {
       const msg =
@@ -223,10 +265,12 @@ export default function CreatePostModal({ isOpen, onClose, onSubmit }) {
           <div className="flex items-start justify-between gap-3">
             <div>
               <h2 className="text-2xl font-black bg-gradient-to-r from-[#5B4FE9] to-[#E95FC8] bg-clip-text text-transparent sm:text-3xl">
-                Create Post
+                {isEditMode ? "Edit Post" : "Create Post"}
               </h2>
               <p className="mt-1 text-sm text-gray-600">
-                Request a service or item from your community
+                {isEditMode
+                  ? "Update your community request details"
+                  : "Request a service or item from your community"}
               </p>
             </div>
             <button
@@ -521,7 +565,13 @@ export default function CreatePostModal({ isOpen, onClose, onSubmit }) {
               disabled={isSubmitting}
               className="w-full cursor-pointer rounded-xl bg-gradient-to-r from-[#5B4FE9] to-[#E95FC8] py-3.5 font-bold text-white transition-all duration-200 hover:shadow-lg hover:shadow-purple-500/25 disabled:cursor-not-allowed disabled:opacity-70"
             >
-              {isSubmitting ? "Posting..." : "Post to Community"}
+              {isSubmitting
+                ? isEditMode
+                  ? "Updating..."
+                  : "Posting..."
+                : isEditMode
+                  ? "Update Post"
+                  : "Post to Community"}
             </button>
           </div>
         </form>

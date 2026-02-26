@@ -15,8 +15,19 @@ function SuccessContent() {
 
     const verifyPayment = async () => {
       try {
-        await api.get(`/payments/verify-session/${sessionId}`);
+        const res = await api.get(`/payments/verify-session/${sessionId}`);
         console.log("✅ Plan upgrade confirmed");
+
+        // Get the plan from the response and update localStorage
+        if (res.data?.plan && typeof window !== "undefined") {
+          localStorage.setItem("userPlan", res.data.plan);
+          // Trigger a custom event to notify other components
+          window.dispatchEvent(
+            new CustomEvent("plan-updated", {
+              detail: { plan: res.data.plan },
+            }),
+          );
+        }
       } catch (err) {
         console.error("❌ Verification failed", err);
       }
@@ -42,7 +53,6 @@ function SuccessContent() {
         </h1>
         <p className="text-gray-500 mb-8">
           Your account has been upgraded successfully.
-        
         </p>
 
         {/* Action Button */}

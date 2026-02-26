@@ -39,6 +39,19 @@ router.put(
   validate(updatePostSchema),  
   updatePost,
 );
-router.delete("/:id",protect, validate(postByIdSchema), deletePost);
+// Delete uses param-based validation instead of body validation middleware
+router.delete(
+  "/:id",
+  protect,
+  (req, res, next) => {
+    const parsed = postByIdSchema.safeParse({ id: req.params.id });
+    if (!parsed.success) {
+      const message = parsed.error?.issues?.[0]?.message || "Invalid post ID";
+      return res.status(400).json({ success: false, message });
+    }
+    return next();
+  },
+  deletePost,
+);
 
 export default router;

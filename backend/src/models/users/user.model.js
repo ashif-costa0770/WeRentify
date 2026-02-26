@@ -96,7 +96,7 @@ const userSchema = new mongoose.Schema(
     },
     plan: {
       type: String,
-      enum: ["basic", "pro"],
+      enum: ["basic", "pro", "plus"],
       default: "basic",
     },
 
@@ -110,6 +110,13 @@ const userSchema = new mongoose.Schema(
     profileCompleted: {
       type: Boolean,
       default: false,
+    },
+
+    // 7. Stripe Connect (for hosts to receive payouts)
+    stripeConnectAccountId: {
+      type: String,
+      default: null,
+      sparse: true,
     },
   },
   {

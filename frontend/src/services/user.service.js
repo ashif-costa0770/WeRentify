@@ -18,3 +18,5 @@ export const changePassword = (data) => api.post(`/user/change-password`, data);
 export const deleteAccount = ()=> {
   return api.delete(`/user/delete-account`);
 }
+
+export const updatePlan = (data) => api.patch(`/user/plan`, data);

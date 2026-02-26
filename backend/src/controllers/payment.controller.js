@@ -59,8 +59,8 @@ export const createCheckoutSession = async (req, res) => {
         },
       ],
 
-      success_url: `${process.env.FRONTEND_URL}/payment-success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${process.env.FRONTEND_URL}/payment-cancel`,
+      success_url: `${process.env.FRONTEND_URL}/payment/success?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${process.env.FRONTEND_URL}/payment/cancel`,
 
       metadata: {
         userId: req.user._id.toString(),
@@ -75,40 +75,40 @@ export const createCheckoutSession = async (req, res) => {
   }
 };
 
+//! User it in production
 //! Stripe Webhook
-export const stripeWebhook = async (req, res) => {
-  const sig = req.headers["stripe-signature"];
+// export const stripeWebhook = async (req, res) => {
+//   const sig = req.headers["stripe-signature"];
 
-  let event;
+//   let event;
 
-  try {
-    event = stripe.webhooks.constructEvent(
-      req.body,
-      sig,
-      process.env.STRIPE_WEBHOOK_SECRET,
-    );
-  } catch (err) {
-    console.log("Webhook signature verification failed.");
-    return res.status(400).send(`Webhook Error: ${err.message}`);
-  }
+//   try {
+//     event = stripe.webhooks.constructEvent(
+//       req.body,
+//       sig,
+//       process.env.STRIPE_WEBHOOK_SECRET,
+//     );
+//   } catch (err) {
+//     console.log("Webhook signature verification failed.");
+//     return res.status(400).send(`Webhook Error: ${err.message}`);
+//   }
 
-  // ✅ Most important event for you
-  if (event.type === "checkout.session.completed") {
-    const session = event.data.object;
+//   // ✅ Most important event for you
+//   if (event.type === "checkout.session.completed") {
+//     const session = event.data.object;
 
-    const userId = session.metadata.userId;
-    const planId = session.metadata.planId;
+//     const userId = session.metadata.userId;
+//     const planId = session.metadata.planId;
 
-    console.log("✅ Payment Successful:", userId, planId);
+//     console.log("✅ Payment Successful:", userId, planId);
 
-    await User.findByIdAndUpdate(userId, {
-      plan: planId,
-    });
-  }
+//     await User.findByIdAndUpdate(userId, {
+//       plan: planId,
+//     });
+//   }
 
-  res.json({ received: true });
-};
-
+//   res.json({ received: true });
+// };
 
 //! session Verify API
 export const verifySession = async (req, res) => {
@@ -129,8 +129,7 @@ export const verifySession = async (req, res) => {
       plan: planId,
     });
 
-    res.json({ success: true });
-
+    res.json({ success: true, plan: planId });
   } catch (error) {
     console.error("Stripe Verification Error:", error);
 

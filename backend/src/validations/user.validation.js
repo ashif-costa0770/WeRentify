@@ -40,3 +40,10 @@ export const changePasswordSchema = z
     message: "Passwords do not match",
     path: ["confirmPassword"],
   });
+
+/** Plan must match User schema enum: basic | plus | pro */
+export const updatePlanSchema = z.object({
+  plan: z.enum(["basic", "plus", "pro"], {
+    message: "Plan must be basic, plus, or pro",
+  }),
+});

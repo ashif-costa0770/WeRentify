@@ -1,6 +1,13 @@
 "use client";
 
-import { Heart, MessageCircle, Share, Bookmark } from "lucide-react";
+import {
+  Heart,
+  MessageCircle,
+  Share,
+  Bookmark,
+  Pencil,
+  Trash2,
+} from "lucide-react";
 import { timeAgo } from "@/utils/timeAgo";
 import { likePost, savePost } from "@/services/post.service";
 import { formatDate } from "@/utils/formatDate";
@@ -15,6 +22,10 @@ export default function PostCard({
   setMessagePost = () => {},
   setShowPostMessage = () => {},
   onUpdatePost = () => {},
+  showMessageButton = true,
+  showOwnerActions = false,
+  onEdit = () => {},
+  onDelete = () => {},
 }) {
   const isService = post.type === "service";
   const authorName =
@@ -184,13 +195,33 @@ export default function PostCard({
             <Share size={18} />
           </button>
         </div>
-
-        <button
-          onClick={handleMessage}
-          className="px-4 py-2 rounded-xl text-sm font-semibold text-white bg-linear-to-r from-indigo-500 to-pink-500 cursor-pointer hover:shadow-md transition-all active:scale-95"
-        >
-          💬 Message
-        </button>
+        {showOwnerActions ? (
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => onEdit(post)}
+              className="inline-flex cursor-pointer items-center gap-1 rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-semibold text-gray-700 transition hover:bg-gray-50"
+            >
+              <Pencil size={14} />
+              Edit
+            </button>
+            <button
+              type="button"
+              onClick={() => onDelete(post)}
+              className="inline-flex cursor-pointer items-center gap-1 rounded-lg border border-red-200 px-3 py-1.5 text-xs font-semibold text-red-600 transition hover:bg-red-50"
+            >
+              <Trash2 size={14} />
+              Delete
+            </button>
+          </div>
+        ) : showMessageButton ? (
+          <button
+            onClick={handleMessage}
+            className="px-4 py-2 rounded-xl text-sm font-semibold text-white bg-linear-to-r from-indigo-500 to-pink-500 cursor-pointer hover:shadow-md transition-all active:scale-95"
+          >
+            💬 Message
+          </button>
+        ) : null}
       </div>
     </div>
   );

@@ -149,6 +149,25 @@ export function UserProvider({ children }) {
     }
   }, []);
 
+  // Listen for plan-updated event and refresh user data
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const handlePlanUpdate = async () => {
+      try {
+        const res = await getMe();
+        if (res.data.success) {
+          setUser(res.data.data);
+        }
+      } catch (error) {
+        console.error("Failed to refresh user after plan update:", error);
+      }
+    };
+
+    window.addEventListener("plan-updated", handlePlanUpdate);
+    return () => window.removeEventListener("plan-updated", handlePlanUpdate);
+  }, []);
+
   // Save favorites to localStorage whenever they change
   useEffect(() => {
     if (isLoaded && typeof window !== "undefined") {
