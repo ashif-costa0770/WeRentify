@@ -26,6 +26,8 @@ import conversationRoutes from "./routes/messages/conversation.route.js";
 import Conversation from "./models/messages/conversation.model.js";
 import paymentRoutes from "./routes/payment.route.js";
 import connectRoutes from "./routes/connect.route.js";
+import planRoutes from "./routes/plan.route.js";
+import adminRoutes from "./routes/admin.route.js";
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -78,6 +80,7 @@ app.use(passport.session());
 /* -------------------------------------------------- */
 app.use("/api/auth", authRoutes);
 app.use("/api/user", userRoutes);
+app.use("/api/admin", adminRoutes);
 app.use("/api/listings", listingRoutes);
 app.use("/api/posts", postRoutes);
 app.use("/api/posts", commentRoutes);
@@ -88,6 +91,7 @@ app.use("/api/conversations", conversationRoutes);
 app.use("/api/messages", messageRoutes);
 app.use("/api/payments", paymentRoutes);
 app.use("/api/connect", connectRoutes);
+app.use("/api/plans", planRoutes);
 
 /* HEALTH */
 /* -------------------------------------------------- */

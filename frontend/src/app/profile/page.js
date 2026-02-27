@@ -67,6 +67,18 @@ const MyPosts = dynamic(
 );
 
 export default function AccountProfile() {
+  const extractPlanId = (planValue) => {
+    if (!planValue) return "";
+    if (typeof planValue === "string") return planValue;
+    if (typeof planValue === "object") return planValue._id || planValue.id || "";
+    return "";
+  };
+
+  const extractPlanName = (planValue) => {
+    if (!planValue || typeof planValue === "string") return "";
+    return planValue?.name || "";
+  };
+
   const router = useRouter();
   const [profileImage, setProfileImage] = useState(null);
   const [avatarFile, setAvatarFile] = useState(null);
@@ -85,15 +97,20 @@ export default function AccountProfile() {
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [isSendingOtp, setIsSendingOtp] = useState(false);
   const [activeSection, setActiveSection] = useState("profile");
-  const [currentPlan, setCurrentPlan] = useState("basic");
+  const [currentPlan, setCurrentPlan] = useState("");
+  const [currentPlanName, setCurrentPlanName] = useState("");
 
   const { user, setUser, setIsLogin, isLogin, isAuthLoading } = useUser();
 
   // Sync currentPlan with user context when user data changes
   useEffect(() => {
     if (user?.plan) {
-      setCurrentPlan(user.plan);
-      localStorage.setItem("userPlan", user.plan);
+      const planId = extractPlanId(user.plan);
+      const planName = extractPlanName(user.plan);
+
+      setCurrentPlan(planId);
+      setCurrentPlanName(planName);
+      localStorage.setItem("userPlan", planId);
     }
   }, [user?.plan]);
 
@@ -104,8 +121,9 @@ export default function AccountProfile() {
     const handlePlanUpdate = (event) => {
       const newPlan = event.detail?.plan;
       if (newPlan) {
-        setCurrentPlan(newPlan);
-        localStorage.setItem("userPlan", newPlan);
+        const planId = extractPlanId(newPlan) || String(newPlan);
+        setCurrentPlan(planId);
+        localStorage.setItem("userPlan", planId);
       }
     };
 
@@ -163,6 +181,11 @@ export default function AccountProfile() {
     setCurrentPlan(planId);
     localStorage.setItem("userPlan", planId);
   };
+
+  const normalizedPlanName = currentPlanName.toLowerCase();
+  const isProPlan = normalizedPlanName === "pro";
+  const isPlusPlan = normalizedPlanName === "plus";
+  const isBasicPlan = normalizedPlanName === "basic" || !normalizedPlanName;
 
   const handleLogout = async () => {
     try {
@@ -351,26 +374,26 @@ export default function AccountProfile() {
                   <Crown
                     size={16}
                     className={
-                      currentPlan === "pro"
+                      isProPlan
                         ? "text-purple-500"
-                        : currentPlan === "plus"
+                        : isPlusPlan
                           ? "text-yellow-500"
                           : "text-gray-400"
                     }
                   />
                 }
                 label={
-                  currentPlan === "pro"
+                  isProPlan
                     ? "Pro Member"
-                    : currentPlan === "plus"
+                    : isPlusPlan
                       ? "Plus Member"
                       : "Upgrade to Pro"
                 }
                 sublabel={
-                  currentPlan !== "basic" ? "Active" : "Unlock premium features"
+                  !isBasicPlan ? "Active" : "Unlock premium features"
                 }
                 sublabelClassName={
-                  currentPlan !== "basic" ? "text-green-600" : "text-gray-400"
+                  !isBasicPlan ? "text-green-600" : "text-gray-400"
                 }
                 onClick={() => setShowPricing(true)}
               />

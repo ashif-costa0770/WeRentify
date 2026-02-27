@@ -6,7 +6,7 @@ import { successResponse, errorResponse } from "../../utils/response.js";
 import { sendOtpEmail } from "../../utils/mailer.js";
 import argon2 from "argon2";
 import axios from "axios";
-
+import Plan from "../../models/plan.model.js";
 
 const RESEND_COOLDOWN_SECONDS = 60;
 
@@ -101,7 +101,7 @@ export const resendOtp = async (req, res) => {
 //! Step 3
 export const createUser = async (req, res) => {
   try {
-    const {firstname, email, password, confirmPassword } = req.body;
+    const { firstname, email, password, confirmPassword } = req.body;
 
     const existingUser = await User.findOne({ email });
 
@@ -114,22 +114,24 @@ export const createUser = async (req, res) => {
 
     const hashedPassword = await argon2.hash(password);
 
+    const basicPlan = await Plan.findOne({ name: "Basic" });
+
     const user = await User.create({
       firstname,
       email,
       password: hashedPassword,
       isVerified: true,
       lastLoginProvider: "email",
+      plan: basicPlan._id,
     });
-
     // ✅ AUTO LOGIN LOGIC
     const token = generateToken(user._id);
-    res.cookie("token", token, {httpOnly: true});
+    res.cookie("token", token, { httpOnly: true });
 
     await OTP.deleteMany({ email });
     return successResponse(res, 200, "Account created successfully", {
       _id: user._id,
-      firstname:user.firstname,
+      firstname: user.firstname,
       email: user.email,
       token,
     });
@@ -146,7 +148,7 @@ export const createUser = async (req, res) => {
 /!* LOGIN ENDPOINT */;
 export const login = async (req, res) => {
   try {
-    const {firstname, email, password } = req.body;
+    const { firstname, email, password } = req.body;
 
     const user = await User.findOne({ email });
 
@@ -170,7 +172,7 @@ export const login = async (req, res) => {
 
     return successResponse(res, 200, "Login successful", {
       _id: user._id,
-      firstname:user.firstname,
+      firstname: user.firstname,
       email: user.email,
       token,
     });
@@ -181,7 +183,7 @@ export const login = async (req, res) => {
 
 export const getMe = async (req, res) => {
   try {
-    const user = await User.findById(req.user._id);
+    const user = await User.findById(req.user._id).populate("plan");
 
     if (!user) {
       return errorResponse(res, 404, "User not found");

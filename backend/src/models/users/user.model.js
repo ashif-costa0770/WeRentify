@@ -19,7 +19,7 @@ const userSchema = new mongoose.Schema(
     password: {
       type: String,
       required: function () {
-        return !this.googleId && !this.facebookId; 
+        return !this.googleId && !this.facebookId;
       },
     },
 
@@ -29,12 +29,11 @@ const userSchema = new mongoose.Schema(
       sparse: true, // important if you allow email signup too
     },
 
-     facebookId: {
+    facebookId: {
       type: String,
       unique: true,
       sparse: true, // important if you allow email signup too
     },
-
 
     isVerified: {
       type: Boolean,
@@ -94,10 +93,10 @@ const userSchema = new mongoose.Schema(
       enum: ["email", "google", "facebook"],
       default: "email",
     },
+
     plan: {
-      type: String,
-      enum: ["basic", "pro", "plus"],
-      default: "basic",
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Plan",
     },
 
     // 5. Reputation & Metrics
