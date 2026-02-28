@@ -99,6 +99,11 @@ const userSchema = new mongoose.Schema(
       ref: "Plan",
     },
 
+    isActive: {
+      type: Boolean,
+      default: true,
+    },
+
     // 5. Reputation & Metrics
     rating: { type: Number, default: 0 },
     reviewsCount: { type: Number, default: 0 },

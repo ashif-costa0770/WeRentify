@@ -1,13 +1,13 @@
 "use client";
 import Link from "next/link";
 
-export default function Logo() {
+export default function Logo({ href = "/", className = "" }) {
   return (
-    <Link href="/">
+    <Link href={href}>
       <svg
         xmlns="http://www.w3.org/2000/svg"
         viewBox="0 0 400 200"
-        className="h-16 w-auto sm:h-20 md:h-24 lg:h-28 filter drop-shadow-lg cursor-pointer select-none transition-transform hover:scale-105"
+        className={`h-16 w-auto sm:h-20 md:h-24 lg:h-28 filter drop-shadow-lg cursor-pointer select-none transition-transform hover:scale-105 ${className}`}
       >
         <defs>
           <linearGradient id="brandGrad" x1="0%" y1="0%" x2="100%" y2="0%">
