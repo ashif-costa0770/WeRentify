@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 
 const API_URL = (process.env.NEXT_PUBLIC_API_URL || "/backend-api").replace(
   /\/+$/,
-  ""
+  "",
 );
 
 export default function AdminLoginPage() {
@@ -83,7 +83,9 @@ export default function AdminLoginPage() {
       });
 
       if (!sessionRes.ok) {
-        throw new Error("Login succeeded but session cookie was not stored.");
+        throw new Error(
+          "Login succeeded but session cookie was not stored. Check HTTPS, FRONTEND_URL/FRONTEND_URLS, and ADMIN_COOKIE_* settings on backend.",
+        );
       }
 
       router.replace("/admin/dashboard");
@@ -109,11 +111,7 @@ export default function AdminLoginPage() {
       <div className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-8 shadow-[0_24px_60px_rgba(15,23,42,0.16)]">
         <div className="mb-8 text-center">
           <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-indigo-100 text-indigo-600">
-            <svg
-              aria-hidden="true"
-              viewBox="0 0 24 24"
-              className="h-7 w-7"
-            >
+            <svg aria-hidden="true" viewBox="0 0 24 24" className="h-7 w-7">
               <path
                 d="M7 10V8a5 5 0 1 1 10 0v2"
                 fill="none"
@@ -177,7 +175,7 @@ export default function AdminLoginPage() {
           </div>
 
           {error ? (
-            <p className="rounded-lg border border-red-400/30 bg-red-500/10 px-3 py-2 text-sm text-red-200">
+            <p className="rounded-lg border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-700">
               {error}
             </p>
           ) : null}

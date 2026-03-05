@@ -12,11 +12,19 @@ import mongoose from "mongoose";
 
 const getAdminCookieOptions = () => {
   const isProduction = process.env.NODE_ENV === "production";
-  const sameSite = (process.env.ADMIN_COOKIE_SAMESITE || (isProduction ? "none" : "lax")).toLowerCase();
+  const secureOverride = process.env.ADMIN_COOKIE_SECURE;
+  const secure =
+    typeof secureOverride === "string"
+      ? secureOverride.toLowerCase() === "true"
+      : isProduction;
+  const requestedSameSite = (
+    process.env.ADMIN_COOKIE_SAMESITE || (secure ? "none" : "lax")
+  ).toLowerCase();
+  const sameSite = requestedSameSite === "none" && !secure ? "lax" : requestedSameSite;
 
   const options = {
     httpOnly: true,
-    secure: isProduction,
+    secure,
     sameSite,
     path: "/",
     maxAge: 7 * 24 * 60 * 60 * 1000,
