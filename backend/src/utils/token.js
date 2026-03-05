@@ -1,13 +1,15 @@
 import jwt from "jsonwebtoken";
 
-const generateToken = (id) => {
-  return jwt.sign({ id }, process.env.JWT_SECRET, {
-    expiresIn: "30d",
-  });
+const resolveSecret = (secret) => secret || process.env.JWT_SECRET;
+
+const generateToken = (id, options = {}) => {
+  const { secret, expiresIn = "30d" } = options;
+  return jwt.sign({ id }, resolveSecret(secret), { expiresIn });
 };
 
-const verifyToken = (token) => {
-  return jwt.verify(token, process.env.JWT_SECRET);
+const verifyToken = (token, options = {}) => {
+  const { secret } = options;
+  return jwt.verify(token, resolveSecret(secret));
 };
 
 export { generateToken, verifyToken };

@@ -10,6 +10,25 @@ import Comment from "../models/community/comment.model.js";
 import Favorite from "../models/favorite.model.js";
 import mongoose from "mongoose";
 
+const getAdminCookieOptions = () => {
+  const isProduction = process.env.NODE_ENV === "production";
+  const sameSite = (process.env.ADMIN_COOKIE_SAMESITE || (isProduction ? "none" : "lax")).toLowerCase();
+
+  const options = {
+    httpOnly: true,
+    secure: isProduction,
+    sameSite,
+    path: "/",
+    maxAge: 7 * 24 * 60 * 60 * 1000,
+  };
+
+  if (process.env.ADMIN_COOKIE_DOMAIN) {
+    options.domain = process.env.ADMIN_COOKIE_DOMAIN;
+  }
+
+  return options;
+};
+
 
 //! Admin login
 export const adminLogin = async (req, res) => {
@@ -30,14 +49,12 @@ export const adminLogin = async (req, res) => {
   admin.lastLoginAt = new Date();
   await admin.save();
 
-  const token = generateToken(admin._id);
-  
-  res.cookie("adminToken", token, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "strict",
-    maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+  const token = generateToken(admin._id, {
+    secret: process.env.ADMIN_JWT_SECRET || process.env.JWT_SECRET,
+    expiresIn: "7d",
   });
+
+  res.cookie("adminToken", token, getAdminCookieOptions());
 
   return successResponse(res, 200, "Admin logged in successfully", {
     _id: admin._id,
@@ -73,7 +90,7 @@ export const getAdminProfile = async (req, res) => {
 //! Admin logout
 export const adminLogout = async (req, res) => {
   try {
-    res.clearCookie("adminToken");
+    res.clearCookie("adminToken", getAdminCookieOptions());
     return successResponse(res, 200, "Admin logged out successfully");
   } catch (error) {
     return errorResponse(res, 500, "Server error logging out admin", error.message);

@@ -1,13 +1,38 @@
-import { cookies } from "next/headers";
-import { redirect } from "next/navigation";
+"use client";
 
-export default async function AdminEntryPage() {
-  const cookieStore = await cookies();
-  const adminToken = cookieStore.get("adminToken");
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 
-  if (adminToken?.value) {
-    redirect("/admin/dashboard");
-  }
+const API_URL = (process.env.NEXT_PUBLIC_API_URL || "/backend-api").replace(
+  /\/+$/,
+  ""
+);
 
-  redirect("/admin/login");
+export default function AdminEntryPage() {
+  const router = useRouter();
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function routeBySession() {
+      try {
+        const res = await fetch(`${API_URL}/admin/me`, {
+          credentials: "include",
+          cache: "no-store",
+        });
+
+        if (cancelled) return;
+        router.replace(res.ok ? "/admin/dashboard" : "/admin/login");
+      } catch {
+        if (!cancelled) router.replace("/admin/login");
+      }
+    }
+
+    routeBySession();
+    return () => {
+      cancelled = true;
+    };
+  }, [router]);
+
+  return null;
 }

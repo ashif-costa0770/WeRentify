@@ -1,4 +1,9 @@
 /** @type {import('next').NextConfig} */
+const backendTarget = (process.env.BACKEND_URL || "http://localhost:5000").replace(
+  /\/+$/,
+  ""
+);
+
 const nextConfig = {
   images: {
     remotePatterns: [
@@ -13,7 +18,7 @@ const nextConfig = {
     return [
       {
         source: "/backend-api/:path*",
-        destination: "http://localhost:5000/api/:path*",
+        destination: `${backendTarget}/api/:path*`,
       },
     ];
   },

@@ -9,7 +9,14 @@ export const verifyAdmin = async (req, res, next) => {
     return errorResponse(res, 401, "No token provided");
   }
 
-  const decoded = verifyToken(token);
+  let decoded;
+  try {
+    decoded = verifyToken(token, {
+      secret: process.env.ADMIN_JWT_SECRET || process.env.JWT_SECRET,
+    });
+  } catch {
+    return errorResponse(res, 401, "Invalid or expired admin token");
+  }
 
   const admin = await Admin.findById(decoded.id);
 

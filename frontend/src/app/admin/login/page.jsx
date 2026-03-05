@@ -76,6 +76,16 @@ export default function AdminLoginPage() {
         throw new Error(payload?.message || "Admin login failed");
       }
 
+      // Confirm cookie-backed session before routing to protected pages.
+      const sessionRes = await fetch(`${API_URL}/admin/me`, {
+        credentials: "include",
+        cache: "no-store",
+      });
+
+      if (!sessionRes.ok) {
+        throw new Error("Login succeeded but session cookie was not stored.");
+      }
+
       router.replace("/admin/dashboard");
     } catch (submitError) {
       setError(submitError.message || "Something went wrong");
@@ -86,30 +96,46 @@ export default function AdminLoginPage() {
 
   if (checkingSession) {
     return (
-      <div className="min-h-screen relative overflow-hidden bg-slate-950 px-4 flex items-center justify-center">
-        <div className="absolute -top-24 -left-24 h-72 w-72 rounded-full bg-indigo-500/30 blur-3xl" />
-        <div className="absolute -bottom-24 -right-24 h-80 w-80 rounded-full bg-fuchsia-500/20 blur-3xl" />
-        <div className="relative rounded-2xl border border-white/10 bg-white/5 px-6 py-4 backdrop-blur-xl">
-          <p className="text-slate-200">Checking session...</p>
+      <div className="min-h-screen bg-slate-100 px-4 flex items-center justify-center">
+        <div className="rounded-2xl border border-slate-200 bg-white px-6 py-4 shadow-[0_20px_50px_rgba(15,23,42,0.12)]">
+          <p className="text-slate-600">Checking session...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen relative overflow-hidden bg-slate-950 px-4 py-10 flex items-center justify-center">
-      <div className="absolute -top-28 -left-24 h-80 w-80 rounded-full bg-indigo-500/30 blur-3xl" />
-      <div className="absolute -bottom-28 -right-24 h-80 w-80 rounded-full bg-fuchsia-500/20 blur-3xl" />
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.08),_transparent_40%)]" />
-
-      <div className="relative w-full max-w-md rounded-2xl border border-white/15 bg-white/10 p-7 shadow-2xl backdrop-blur-xl">
-        <div className="mb-7">
-          <span className="inline-flex items-center rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs font-medium tracking-wide text-slate-100">
-            WE RENTIFY ADMIN
-          </span>
-          <h1 className="mt-4 text-3xl font-semibold text-white">Welcome back</h1>
-          <p className="mt-2 text-sm text-slate-300">
-            Sign in to continue to your admin dashboard.
+    <div className="min-h-screen bg-slate-100 px-4 py-10 flex items-center justify-center">
+      <div className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-8 shadow-[0_24px_60px_rgba(15,23,42,0.16)]">
+        <div className="mb-8 text-center">
+          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-indigo-100 text-indigo-600">
+            <svg
+              aria-hidden="true"
+              viewBox="0 0 24 24"
+              className="h-7 w-7"
+            >
+              <path
+                d="M7 10V8a5 5 0 1 1 10 0v2"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.8"
+                strokeLinecap="round"
+              />
+              <rect
+                x="5"
+                y="10"
+                width="14"
+                height="10"
+                rx="2"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.8"
+              />
+            </svg>
+          </div>
+          <h1 className="text-3xl font-semibold text-slate-900">Admin Login</h1>
+          <p className="mt-2 text-sm text-slate-600">
+            Sign in to securely access your admin dashboard.
           </p>
         </div>
 
@@ -117,81 +143,37 @@ export default function AdminLoginPage() {
           <div>
             <label
               htmlFor="admin-email"
-              className="mb-1.5 block text-sm font-medium text-slate-200"
+              className="mb-1.5 block text-sm font-medium text-slate-700"
             >
               Email
             </label>
-            <div className="relative">
-              <svg
-                aria-hidden="true"
-                viewBox="0 0 24 24"
-                className="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400"
-              >
-                <path
-                  d="M4 6h16v12H4z"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1.6"
-                />
-                <path
-                  d="m5 7 7 6 7-6"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1.6"
-                />
-              </svg>
-              <input
-                id="admin-email"
-                type="email"
-                value={email}
-                onChange={(event) => setEmail(event.target.value)}
-                placeholder="admin@example.com"
-                autoComplete="username"
-                className="w-full rounded-xl border border-white/20 bg-black/20 py-2.5 pl-10 pr-3 text-slate-100 placeholder:text-slate-400 outline-none transition focus:border-indigo-400 focus:ring-2 focus:ring-indigo-500/40"
-              />
-            </div>
+            <input
+              id="admin-email"
+              type="email"
+              value={email}
+              onChange={(event) => setEmail(event.target.value)}
+              placeholder="📧 admin@example.com"
+              autoComplete="username"
+              className="w-full rounded-xl border border-slate-300 bg-white py-2.5 px-3 text-slate-900 placeholder:text-slate-400 outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20"
+            />
           </div>
 
           <div>
             <label
               htmlFor="admin-password"
-              className="mb-1.5 block text-sm font-medium text-slate-200"
+              className="mb-1.5 block text-sm font-medium text-slate-700"
             >
               Password
             </label>
-            <div className="relative">
-              <svg
-                aria-hidden="true"
-                viewBox="0 0 24 24"
-                className="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400"
-              >
-                <path
-                  d="M7 11V8a5 5 0 1 1 10 0v3"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1.6"
-                />
-                <rect
-                  x="5"
-                  y="11"
-                  width="14"
-                  height="10"
-                  rx="2"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1.6"
-                />
-              </svg>
-              <input
-                id="admin-password"
-                type="password"
-                value={password}
-                onChange={(event) => setPassword(event.target.value)}
-                placeholder="Enter password"
-                autoComplete="current-password"
-                className="w-full rounded-xl border border-white/20 bg-black/20 py-2.5 pl-10 pr-3 text-slate-100 placeholder:text-slate-400 outline-none transition focus:border-indigo-400 focus:ring-2 focus:ring-indigo-500/40"
-              />
-            </div>
+            <input
+              id="admin-password"
+              type="password"
+              value={password}
+              onChange={(event) => setPassword(event.target.value)}
+              placeholder="🔒 Enter password"
+              autoComplete="current-password"
+              className="w-full rounded-xl border border-slate-300 bg-white py-2.5 px-3 text-slate-900 placeholder:text-slate-400 outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20"
+            />
           </div>
 
           {error ? (
