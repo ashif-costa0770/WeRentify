@@ -16,8 +16,8 @@ import { useUser } from "@/context/UserContext";
 import { useListBusiness } from "@/context/ListBusinessContext";
 import { deleteListing, getListingsByUser } from "@/services/item.service";
 import { deleteService, getServicesByUser } from "@/services/services.service";
-import ConfirmDeleteModal from "@/components/modals/confirmDeleteModal";
-import ListItemModal from "@/components/modals/listItemModal/ListItemModal";
+import ConfirmDeleteModal from "@/app/_components/modals/confirmDeleteModal";
+import ListItemModal from "@/app/_components/modals/listItemModal/ListItemModal";
 import ListBusinessModal from "@/app/services/_components/modals/ListBusinessModal";
 
 const getArrayFromResponse = (response, fallbackKey) => {
@@ -193,7 +193,9 @@ export default function MyListings() {
       <section className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm sm:p-6">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <h2 className="text-2xl font-semibold text-gray-900">My Listings</h2>
+            <h2 className="text-2xl font-semibold text-gray-900">
+              My Listings
+            </h2>
             <p className="mt-1 text-sm text-gray-500">
               Manage your active rental listings and services.
             </p>
@@ -220,7 +222,9 @@ export default function MyListings() {
       <section className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm sm:p-6">
         <div className="mb-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <h3 className="text-lg font-semibold text-gray-900">Rental Listings</h3>
+            <h3 className="text-lg font-semibold text-gray-900">
+              Rental Listings
+            </h3>
             <span className="rounded-full bg-gray-100 px-2.5 py-1 text-xs font-semibold text-gray-700">
               {listings.length}
             </span>
@@ -243,7 +247,8 @@ export default function MyListings() {
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
             {listings.map((listing) => {
               const imageUrl = listing?.photos?.[0]?.url || listing?.imageUrl;
-              const listingName = listing?.itemName || listing?.name || "Unnamed listing";
+              const listingName =
+                listing?.itemName || listing?.name || "Unnamed listing";
               const location = listing?.pickupLocation || "Location not set";
               const price = listing?.dailyRate || listing?.hourlyRate || 0;
 
@@ -280,7 +285,10 @@ export default function MyListings() {
                     <p className="truncate text-xs text-gray-500">{location}</p>
                     <div className="mt-2 flex items-center justify-between gap-2">
                       <p className="text-sm font-semibold text-indigo-600">
-                        {formatCurrency(price, listing?.dailyRate ? "/day" : "/hr")}
+                        {formatCurrency(
+                          price,
+                          listing?.dailyRate ? "/day" : "/hr",
+                        )}
                       </p>
                       <div className="flex items-center gap-2">
                         <button
@@ -342,7 +350,9 @@ export default function MyListings() {
             {services.map((service) => {
               const imageUrl = service?.photos?.[0]?.url || service?.imageUrl;
               const serviceName =
-                service?.businessName || service?.serviceType || "Unnamed service";
+                service?.businessName ||
+                service?.serviceType ||
+                "Unnamed service";
               const location = service?.location || "Location not set";
 
               return (
@@ -370,7 +380,10 @@ export default function MyListings() {
 
                   <div className="space-y-1 p-3">
                     <div className="flex items-center gap-2">
-                      <BriefcaseBusiness size={14} className="text-indigo-600" />
+                      <BriefcaseBusiness
+                        size={14}
+                        className="text-indigo-600"
+                      />
                       <p className="truncate text-sm font-semibold text-gray-900">
                         {serviceName}
                       </p>

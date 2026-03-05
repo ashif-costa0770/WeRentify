@@ -1,7 +1,7 @@
 ﻿"use client";
 import React from "react";
 import { Suspense } from "react";
-import Navbar from "@/components/navbar/Navbar";
+import Navbar from "@/app/_components/navbar/Navbar";
 import ServicesSearch from "./ServicesSearch";
 
 export default function ServicesNavbarWrapper() {

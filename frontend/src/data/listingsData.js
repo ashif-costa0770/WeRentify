@@ -533,7 +533,7 @@ import {
   VacationIcon,
   WinterIcon,
   OtherIcon,
-} from "../components/icons/GridIcons";
+} from "../app/_components/icons/GridIcons";
 
 export const categories = [
   { id: "all", name: "All Items", icon: AllItemsIcon },

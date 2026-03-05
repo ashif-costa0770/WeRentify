@@ -1,5 +1,5 @@
 ﻿import "./globals.css";
-import Footer from "@/components/footer/Footer";
+import Footer from "@/app/_components/footer/Footer";
 import { UserProvider } from "@/context/UserContext";
 import { Toaster } from "sonner";
 import Script from "next/script";

@@ -27,9 +27,12 @@ import {
   MessageSquare,
 } from "lucide-react";
 
-const PricingModal = dynamic(() => import("@/components/modals/PricingModal"), {
-  ssr: false,
-});
+const PricingModal = dynamic(
+  () => import("@/app/_components/modals/PricingModal"),
+  {
+    ssr: false,
+  },
+);
 const ChangePasswordModal = dynamic(
   () => import("@/app/profile/_modals/ChangePassword"),
   { ssr: false },
@@ -59,18 +62,16 @@ const MyListings = dynamic(
     ssr: false,
   },
 );
-const MyPosts = dynamic(
-  () => import("@/app/profile/_components/MyPosts"),
-  {
-    ssr: false,
-  },
-);
+const MyPosts = dynamic(() => import("@/app/profile/_components/MyPosts"), {
+  ssr: false,
+});
 
 export default function AccountProfile() {
   const extractPlanId = (planValue) => {
     if (!planValue) return "";
     if (typeof planValue === "string") return planValue;
-    if (typeof planValue === "object") return planValue._id || planValue.id || "";
+    if (typeof planValue === "object")
+      return planValue._id || planValue.id || "";
     return "";
   };
 
@@ -351,7 +352,7 @@ export default function AccountProfile() {
                 onClick={() => setActiveSection("my-listings")}
                 active={activeSection === "my-listings"}
               />
-               <SidebarItem
+              <SidebarItem
                 icon={<MessageSquare size={16} />}
                 label="My Posts"
                 onClick={() => setActiveSection("my-posts")}
@@ -389,9 +390,7 @@ export default function AccountProfile() {
                       ? "Plus Member"
                       : "Upgrade to Pro"
                 }
-                sublabel={
-                  !isBasicPlan ? "Active" : "Unlock premium features"
-                }
+                sublabel={!isBasicPlan ? "Active" : "Unlock premium features"}
                 sublabelClassName={
                   !isBasicPlan ? "text-green-600" : "text-gray-400"
                 }

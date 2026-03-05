@@ -10,10 +10,26 @@ import {
   getAdminDashboardStats,
   getAdminProfile,
   getAllUsers,
+  getAllListingsByAdmin,
+  getAllServicesByAdmin,
+  getListingDetailsByAdmin,
+  getServiceDetailsByAdmin,
+  getAllPostsByAdmin,
+  getPostDetailsByAdmin,
+  getAllPlansByAdmin,
+  createPlanByAdmin,
+  getPlanDetailsByAdmin,
+  updatePlanByAdmin,
+  deleteListingByAdmin,
+  deleteServiceByAdmin,
+  deletePostByAdmin,
+  deactivatePlanByAdmin,
+  activatePlanByAdmin,
   getUserDetailsByAdmin,
 } from "../controllers/admin.conroller.js";
 import validate from "../middlewares/validate.js";
 import { adminLoginSchema } from "../validations/admin.validation.js";
+import { createPlanSchema, updatePlanSchema } from "../validations/plan.validation.js";
 import { verifyAdmin } from "../middlewares/admin.middleware.js";
 
 const router = express.Router();
@@ -32,6 +48,29 @@ router.get("/dashboard-stats", verifyAdmin, getAdminDashboardStats);
 
 //get all users
 router.get("/users", verifyAdmin, getAllUsers);
+
+//get all listings
+router.get("/listings", verifyAdmin, getAllListingsByAdmin);
+router.get("/listings/:listingId", verifyAdmin, getListingDetailsByAdmin);
+router.delete("/listings/:listingId", verifyAdmin, deleteListingByAdmin);
+
+//get all services
+router.get("/services", verifyAdmin, getAllServicesByAdmin);
+router.get("/services/:serviceId", verifyAdmin, getServiceDetailsByAdmin);
+router.delete("/services/:serviceId", verifyAdmin, deleteServiceByAdmin);
+
+//get all posts
+router.get("/posts", verifyAdmin, getAllPostsByAdmin);
+router.get("/posts/:postId", verifyAdmin, getPostDetailsByAdmin);
+router.delete("/posts/:postId", verifyAdmin, deletePostByAdmin);
+
+//get all plans
+router.get("/plans", verifyAdmin, getAllPlansByAdmin);
+router.post("/plans", verifyAdmin, validate(createPlanSchema), createPlanByAdmin);
+router.get("/plans/:planId", verifyAdmin, getPlanDetailsByAdmin);
+router.put("/plans/:planId", verifyAdmin, validate(updatePlanSchema), updatePlanByAdmin);
+router.patch("/plans/:planId/deactivate", verifyAdmin, deactivatePlanByAdmin);
+router.patch("/plans/:planId/activate", verifyAdmin, activatePlanByAdmin);
 
 //deactivate user
 router.patch("/users/:userId/deactivate", verifyAdmin, deactivateUser);

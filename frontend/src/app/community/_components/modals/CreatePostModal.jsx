@@ -5,7 +5,7 @@ import { createPost, updatePost } from "@/services/post.service";
 import { toast } from "sonner";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { X, Wrench, Package, Camera, Calendar } from "lucide-react";
-import RichTextEditor from "@/components/tiptap-editor/RichTextEditor";
+import RichTextEditor from "@/app/_components/tiptap-editor/RichTextEditor";
 
 const MAX_PHOTO_SIZE_MB = 5;
 

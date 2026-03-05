@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import { useUser } from "@/context/UserContext";
 import { getPostsByUser, deletePost } from "@/services/post.service";
 import PostsGrid from "@/app/community/_components/PostsGrid";
-import ConfirmDeleteModal from "@/components/modals/confirmDeleteModal";
+import ConfirmDeleteModal from "@/app/_components/modals/confirmDeleteModal";
 
 const CreatePostModal = dynamic(
   () => import("@/app/community/_components/modals/CreatePostModal"),

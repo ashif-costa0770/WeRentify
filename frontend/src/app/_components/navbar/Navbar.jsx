@@ -1,14 +1,14 @@
 ﻿"use client";
 import Link from "next/link";
-import Logo from "@/components/navbar/Logo";
-import PackageIcon from "@/components/icons/PackageIcon";
-import HomeIcon from "@/components/icons/HomeIcon";
-import UsersIcon from "@/components/icons/UsersIcon";
+import Logo from "@/app/_components/navbar/Logo";
+import PackageIcon from "@/app/_components/icons/PackageIcon";
+import HomeIcon from "@/app/_components/icons/HomeIcon";
+import UsersIcon from "@/app/_components/icons/UsersIcon";
 import { useEffect, useRef, useState } from "react";
-import SignUpModal from "@/components/modals/SignUpModal";
-import SignInModal from "@/components/modals/SignInModal";
-import LanguageCurrencyModal from "@/components/modals/LanguageCurrencyModal";
-import MessageSlider from "@/components/modals/MessageSlider";
+import SignUpModal from "@/app/_components/modals/SignUpModal";
+import SignInModal from "@/app/_components/modals/SignInModal";
+import LanguageCurrencyModal from "@/app/_components/modals/LanguageCurrencyModal";
+import MessageSlider from "@/app/_components/modals/MessageSlider";
 import { useUser } from "@/context/UserContext";
 import ProfileDropdown from "./ProfileDropdown";
 

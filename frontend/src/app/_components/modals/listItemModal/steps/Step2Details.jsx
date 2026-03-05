@@ -2,7 +2,7 @@
 
 import { MapPin } from "lucide-react";
 // import { categories } from "@/data/listingsData";
-import RichTextEditor from "@/components/tiptap-editor/RichTextEditor";
+import RichTextEditor from "@/app/_components/tiptap-editor/RichTextEditor";
 import { useState, useEffect } from "react";
 import { getAllCategory } from "@/services/category.service";
 

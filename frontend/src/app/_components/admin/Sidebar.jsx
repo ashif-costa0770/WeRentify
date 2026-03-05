@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import Logo from "@/components/navbar/Logo";
+import Logo from "@/app/_components/navbar/Logo";
 
 const navItems = [
   { label: "Dashboard", href: "/admin/dashboard" },

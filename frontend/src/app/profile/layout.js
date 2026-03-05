@@ -1,5 +1,5 @@
 import { Suspense } from "react";
-import Navbar from "@/components/navbar/Navbar";
+import Navbar from "@/app/_components/navbar/Navbar";
 import { ListBusinessProvider } from "@/context/ListBusinessContext";
 
 export default function ProfileLayout({ children }) {

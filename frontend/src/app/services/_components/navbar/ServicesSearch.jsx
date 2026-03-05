@@ -2,7 +2,7 @@
 import React from "react";
 import { useState } from "react";
 import { Search } from "lucide-react";
-import DatePickerModal from "@/components/modals/DatePicker";
+import DatePickerModal from "@/app/_components/modals/DatePicker";
 
 export default function ServicesSearch() {
   const [showDatePicker, setShowDatePicker] = useState(false);

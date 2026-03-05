@@ -98,96 +98,119 @@ export default function AdminLoginPage() {
 
   if (checkingSession) {
     return (
-      <div className="min-h-screen bg-slate-100 px-4 flex items-center justify-center">
-        <div className="rounded-2xl border border-slate-200 bg-white px-6 py-4 shadow-[0_20px_50px_rgba(15,23,42,0.12)]">
-          <p className="text-slate-600">Checking session...</p>
+      <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#090B12] px-4">
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(56,189,248,0.2),transparent_45%),radial-gradient(circle_at_80%_0%,rgba(99,102,241,0.18),transparent_40%),radial-gradient(circle_at_50%_100%,rgba(168,85,247,0.12),transparent_45%)]" />
+        <div className="relative rounded-2xl border border-white/15 bg-white/90 px-6 py-4 shadow-[0_24px_80px_rgba(2,8,23,0.45)] backdrop-blur">
+          <p className="text-sm font-medium text-slate-700">Checking session...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-slate-100 px-4 py-10 flex items-center justify-center">
-      <div className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-8 shadow-[0_24px_60px_rgba(15,23,42,0.16)]">
-        <div className="mb-8 text-center">
-          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-indigo-100 text-indigo-600">
-            <svg aria-hidden="true" viewBox="0 0 24 24" className="h-7 w-7">
-              <path
-                d="M7 10V8a5 5 0 1 1 10 0v2"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.8"
-                strokeLinecap="round"
-              />
-              <rect
-                x="5"
-                y="10"
-                width="14"
-                height="10"
-                rx="2"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.8"
-              />
-            </svg>
-          </div>
-          <h1 className="text-3xl font-semibold text-slate-900">Admin Login</h1>
-          <p className="mt-2 text-sm text-slate-600">
-            Sign in to securely access your admin dashboard.
+    <div className="relative min-h-screen overflow-hidden bg-[#090B12] px-4 py-12 text-slate-100">
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(56,189,248,0.22),transparent_45%),radial-gradient(circle_at_80%_0%,rgba(99,102,241,0.2),transparent_42%),radial-gradient(circle_at_50%_100%,rgba(168,85,247,0.14),transparent_46%)]" />
+      <div className="pointer-events-none absolute inset-0 opacity-[0.07] [background-image:linear-gradient(rgba(255,255,255,0.6)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.6)_1px,transparent_1px)] [background-size:40px_40px]" />
+
+      <div className="relative mx-auto flex min-h-[calc(100vh-6rem)] w-full max-w-6xl items-center justify-center">
+        <div className="hidden w-full max-w-xl pr-12 lg:block">
+          <span className="inline-flex items-center rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs font-medium tracking-wide text-slate-200">
+            WeRentify Admin
+          </span>
+          <h1 className="mt-6 text-4xl font-semibold leading-tight text-white">
+            Secure operations,
+            <br />
+            modern control panel.
+          </h1>
+          <p className="mt-5 max-w-md text-sm leading-6 text-slate-300">
+            Manage listings, services, and community content from a central
+            dashboard designed for speed and clarity.
           </p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label
-              htmlFor="admin-email"
-              className="mb-1.5 block text-sm font-medium text-slate-700"
-            >
-              Email
-            </label>
-            <input
-              id="admin-email"
-              type="email"
-              value={email}
-              onChange={(event) => setEmail(event.target.value)}
-              placeholder="📧 admin@example.com"
-              autoComplete="username"
-              className="w-full rounded-xl border border-slate-300 bg-white py-2.5 px-3 text-slate-900 placeholder:text-slate-400 outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20"
-            />
-          </div>
-
-          <div>
-            <label
-              htmlFor="admin-password"
-              className="mb-1.5 block text-sm font-medium text-slate-700"
-            >
-              Password
-            </label>
-            <input
-              id="admin-password"
-              type="password"
-              value={password}
-              onChange={(event) => setPassword(event.target.value)}
-              placeholder="🔒 Enter password"
-              autoComplete="current-password"
-              className="w-full rounded-xl border border-slate-300 bg-white py-2.5 px-3 text-slate-900 placeholder:text-slate-400 outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20"
-            />
-          </div>
-
-          {error ? (
-            <p className="rounded-lg border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-700">
-              {error}
+        <div className="w-full max-w-md rounded-3xl border border-white/15 bg-white/[0.96] p-8 text-slate-900 shadow-[0_30px_90px_rgba(2,8,23,0.55)] backdrop-blur-xl sm:p-9">
+          <div className="mb-8">
+            <div className="mb-4 inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-indigo-200 bg-gradient-to-br from-indigo-50 to-sky-50 text-indigo-600">
+              <svg aria-hidden="true" viewBox="0 0 24 24" className="h-5 w-5">
+                <path
+                  d="M7 10V8a5 5 0 1 1 10 0v2"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.8"
+                  strokeLinecap="round"
+                />
+                <rect
+                  x="5"
+                  y="10"
+                  width="14"
+                  height="10"
+                  rx="2"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.8"
+                />
+              </svg>
+            </div>
+            <h2 className="text-[1.75rem] font-semibold tracking-tight text-slate-950">
+              Admin login
+            </h2>
+            <p className="mt-2 text-sm leading-6 text-slate-600">
+              Enter your credentials to access the admin dashboard.
             </p>
-          ) : null}
+          </div>
 
-          <button
-            type="submit"
-            disabled={!isFormValid || isSubmitting}
-            className="w-full rounded-xl bg-gradient-to-r from-indigo-500 to-fuchsia-500 py-2.5 font-medium text-white shadow-lg shadow-indigo-900/30 transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-55"
-          >
-            {isSubmitting ? "Signing in..." : "Sign in"}
-          </button>
-        </form>
+          <form onSubmit={handleSubmit} className="space-y-5">
+            <div className="space-y-1.5">
+              <label
+                htmlFor="admin-email"
+                className="block text-sm font-medium text-slate-700"
+              >
+                Email
+              </label>
+              <input
+                id="admin-email"
+                type="email"
+                value={email}
+                onChange={(event) => setEmail(event.target.value)}
+                placeholder="admin@company.com"
+                autoComplete="username"
+                className="w-full rounded-xl border border-slate-300 bg-slate-50 py-2.5 px-3 text-slate-900 placeholder:text-slate-400 outline-none transition duration-150 focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/10"
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <label
+                htmlFor="admin-password"
+                className="block text-sm font-medium text-slate-700"
+              >
+                Password
+              </label>
+              <input
+                id="admin-password"
+                type="password"
+                value={password}
+                onChange={(event) => setPassword(event.target.value)}
+                placeholder="Enter your password"
+                autoComplete="current-password"
+                className="w-full rounded-xl border border-slate-300 bg-slate-50 py-2.5 px-3 text-slate-900 placeholder:text-slate-400 outline-none transition duration-150 focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/10"
+              />
+            </div>
+
+            {error ? (
+              <p className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700">
+                {error}
+              </p>
+            ) : null}
+
+            <button
+              type="submit"
+              disabled={!isFormValid || isSubmitting}
+              className="w-full cursor-pointer   rounded-xl bg-slate-900 py-2.5 font-medium text-white shadow-[0_14px_28px_rgba(15,23,42,0.28)] transition duration-150 hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-55"
+            >
+              {isSubmitting ? "Signing in..." : "Sign in"}
+            </button>
+          </form>
+        </div>
       </div>
     </div>
   );

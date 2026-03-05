@@ -12,12 +12,20 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import StatCard from "@/components/admin/StatCard";
-import DataTable from "@/components/admin/DataTable";
+import StatCard from "@/app/_components/admin/StatCard";
+import { Badge } from "@/components/ui/badge";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 const API_URL = (process.env.NEXT_PUBLIC_API_URL || "/backend-api").replace(
   /\/+$/,
-  ""
+  "",
 );
 
 const revenueData = [
@@ -38,70 +46,26 @@ const growthData = [
   { month: "Jun", users: 220 },
 ];
 
-const activityColumns = [
-  { key: "title", label: "Title" },
-  { key: "type", label: "Type" },
-  { key: "status", label: "Status" },
-  { key: "date", label: "Date" },
-];
+function getStatusBadgeClass(status) {
+  const value = String(status || "").toLowerCase();
+  if (value === "active" || value === "approved" || value === "published" || value === "live") {
+    return "bg-emerald-100 text-emerald-700";
+  }
+  if (value === "pending" || value === "pending_verification") {
+    return "bg-amber-100 text-amber-700";
+  }
+  if (value === "inactive" || value === "suspended") {
+    return "bg-slate-100 text-slate-700";
+  }
+  return "bg-indigo-100 text-indigo-700";
+}
 
-const activityRows = [
-  {
-    id: 1,
-    title: "Urban Apartment Listing",
-    type: "Listing",
-    status: (
-      <span className="rounded-full bg-emerald-100 text-emerald-700 px-2.5 py-1 text-xs font-medium">
-        Published
-      </span>
-    ),
-    date: "2026-02-20",
-  },
-  {
-    id: 2,
-    title: "Business Cleaning Service",
-    type: "Service",
-    status: (
-      <span className="rounded-full bg-amber-100 text-amber-700 px-2.5 py-1 text-xs font-medium">
-        Pending
-      </span>
-    ),
-    date: "2026-02-21",
-  },
-  {
-    id: 3,
-    title: "Community Safety Update",
-    type: "Post",
-    status: (
-      <span className="rounded-full bg-indigo-100 text-indigo-700 px-2.5 py-1 text-xs font-medium">
-        Live
-      </span>
-    ),
-    date: "2026-02-22",
-  },
-  {
-    id: 4,
-    title: "Premium Plan Purchase",
-    type: "Plan",
-    status: (
-      <span className="rounded-full bg-blue-100 text-blue-700 px-2.5 py-1 text-xs font-medium">
-        Paid
-      </span>
-    ),
-    date: "2026-02-24",
-  },
-  {
-    id: 5,
-    title: "Downtown Co-Working Space",
-    type: "Listing",
-    status: (
-      <span className="rounded-full bg-emerald-100 text-emerald-700 px-2.5 py-1 text-xs font-medium">
-        Approved
-      </span>
-    ),
-    date: "2026-02-27",
-  },
-];
+function formatActivityDate(dateValue) {
+  if (!dateValue) return "-";
+  const date = new Date(dateValue);
+  if (Number.isNaN(date.getTime())) return "-";
+  return date.toISOString().slice(0, 10);
+}
 
 export default function AdminDashboardPage() {
   const [stats, setStats] = useState({
@@ -114,6 +78,7 @@ export default function AdminDashboardPage() {
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [recentActivity, setRecentActivity] = useState([]);
 
   useEffect(() => {
     let cancelled = false;
@@ -144,6 +109,9 @@ export default function AdminDashboardPage() {
             totalOrders: payload?.data?.totalOrders ?? 0,
             revenue: payload?.data?.revenue ?? 0,
           });
+          setRecentActivity(
+            Array.isArray(payload?.data?.recentActivity) ? payload.data.recentActivity : []
+          );
         }
       } catch (fetchError) {
         if (!cancelled) {
@@ -193,7 +161,7 @@ export default function AdminDashboardPage() {
         colorClass: "bg-indigo-500",
       },
     ],
-    [stats]
+    [stats],
   );
 
   return (
@@ -265,7 +233,52 @@ export default function AdminDashboardPage() {
         <h2 className="text-base font-semibold text-slate-800 mb-3">
           Recent Activity
         </h2>
-        <DataTable columns={activityColumns} rows={activityRows} />
+        <div className="rounded-xl border bg-white shadow-md overflow-hidden">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="px-5 py-3">Title</TableHead>
+                <TableHead className="px-5 py-3">Type</TableHead>
+                <TableHead className="px-5 py-3">User</TableHead>
+                <TableHead className="px-5 py-3">Status</TableHead>
+                <TableHead className="px-5 py-3">Date</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {recentActivity.length > 0 ? (
+                recentActivity.map((item) => (
+                  <TableRow key={item.id}>
+                    <TableCell className="px-5 py-4 text-sm font-medium text-slate-700">
+                      {item.title || "-"}
+                    </TableCell>
+                    <TableCell className="px-5 py-4 text-sm text-slate-700">
+                      {item.type || "-"}
+                    </TableCell>
+                    <TableCell className="px-5 py-4 text-sm text-slate-700">
+                      {item.user || "-"}
+                    </TableCell>
+                    <TableCell className="px-5 py-4">
+                      <Badge className={getStatusBadgeClass(item.status)}>
+                        {String(item.status || "-")
+                          .replaceAll("_", " ")
+                          .replace(/\b\w/g, (char) => char.toUpperCase())}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="px-5 py-4 text-sm text-slate-500">
+                      {formatActivityDate(item.createdAt)}
+                    </TableCell>
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={5} className="h-20 text-center text-slate-500">
+                    No recent activity
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </div>
       </div>
     </section>
   );

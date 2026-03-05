@@ -11,7 +11,7 @@ import {
   Wrench,
   Lightbulb,
 } from "lucide-react";
-import RichTextEditor from "@/components/tiptap-editor/RichTextEditor";
+import RichTextEditor from "@/app/_components/tiptap-editor/RichTextEditor";
 import { formatDate } from "@/utils/formatDate";
 import { toast } from "sonner";
 import {

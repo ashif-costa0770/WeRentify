@@ -2,22 +2,31 @@
 
 import { useMemo, useState, useEffect } from "react";
 import dynamic from "next/dynamic";
-import NavbarWrapper from "@/components/navbar/NavbarWrapper";
-import ItemCategoriesSection from "@/components/CategoryGrid/ItemCategoriesSection";
-import ItemGrid from "@/components/itemCards/ItemGrid";
+import NavbarWrapper from "@/app/_components/navbar/NavbarWrapper";
+import ItemCategoriesSection from "@/app/_components/CategoryGrid/ItemCategoriesSection";
+import ItemGrid from "@/app/_components/itemCards/ItemGrid";
 import { getListings } from "@/services/item.service";
 
-const FiltersSlicer = dynamic(() => import("@/components/modals/FiltersSlicer"), {
-  ssr: false,
-});
-const ProductModal = dynamic(() => import("@/components/modals/ProductModal"), {
-  ssr: false,
-});
-const MessageSlider = dynamic(() => import("@/components/modals/MessageSlider"), {
-  ssr: false,
-});
+const FiltersSlicer = dynamic(
+  () => import("@/app/_components/modals/FiltersSlicer"),
+  {
+    ssr: false,
+  },
+);
+const ProductModal = dynamic(
+  () => import("@/app/_components/modals/ProductModal"),
+  {
+    ssr: false,
+  },
+);
+const MessageSlider = dynamic(
+  () => import("@/app/_components/modals/MessageSlider"),
+  {
+    ssr: false,
+  },
+);
 const OwnerProfileModal = dynamic(
-  () => import("@/components/modals/OwnerProfileModal"),
+  () => import("@/app/_components/modals/OwnerProfileModal"),
   { ssr: false },
 );
 

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useListBusiness } from "@/context/ListBusinessContext";
-import RichTextEditor from "@/components/tiptap-editor/RichTextEditor";
+import RichTextEditor from "@/app/_components/tiptap-editor/RichTextEditor";
 import { getAllCategory } from "@/services/category.service";
 
 export default function BusinessInfoStep() {

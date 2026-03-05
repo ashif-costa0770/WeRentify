@@ -3,6 +3,8 @@
 import Image from "next/image";
 import { useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
+import { toast } from "sonner";
+import RecentContentTable from "./components/recent-content-table";
 
 const API_URL = (process.env.NEXT_PUBLIC_API_URL || "/backend-api").replace(
   /\/+$/,
@@ -46,28 +48,6 @@ function normalizeProvider(provider) {
   if (value === "google") return "Google";
   if (value === "facebook") return "Facebook";
   return "Local";
-}
-
-function getTypeBadgeClass(type) {
-  const value = String(type || "").toLowerCase();
-  if (value === "listing") return "bg-blue-100 text-blue-700 ring-1 ring-blue-200";
-  if (value === "service") return "bg-teal-100 text-teal-700 ring-1 ring-teal-200";
-  if (value === "post") return "bg-violet-100 text-violet-700 ring-1 ring-violet-200";
-  return "bg-slate-100 text-slate-700 ring-1 ring-slate-200";
-}
-
-function getStatusBadgeClass(status) {
-  const value = String(status || "").toLowerCase();
-  if (value === "active" || value === "published") {
-    return "bg-emerald-100 text-emerald-700 ring-1 ring-emerald-200";
-  }
-  if (value === "inactive" || value === "suspended") {
-    return "bg-rose-100 text-rose-700 ring-1 ring-rose-200";
-  }
-  if (value === "under_maintenance") {
-    return "bg-amber-100 text-amber-700 ring-1 ring-amber-200";
-  }
-  return "bg-slate-100 text-slate-700 ring-1 ring-slate-200";
 }
 
 export default function AdminUserDetailPage() {
@@ -185,9 +165,11 @@ export default function AdminUserDetailPage() {
       }
 
       setNotice(nextIsActive ? "User activated successfully." : "User suspended successfully.");
+      toast.success(nextIsActive ? "User activated successfully." : "User suspended successfully.");
     } catch (actionError) {
       setUserData((prev) => (prev ? { ...prev, isActive: !nextIsActive } : prev));
       setError(actionError?.message || "Failed to update user status");
+      toast.error(actionError?.message || "Failed to update user status");
     } finally {
       setActionLoading(false);
     }
@@ -216,9 +198,11 @@ export default function AdminUserDetailPage() {
         throw new Error(payload?.message || "Failed to delete user");
       }
 
+      toast.success("User deleted successfully.");
       router.replace("/admin/users");
     } catch (actionError) {
       setError(actionError?.message || "Failed to delete user");
+      toast.error(actionError?.message || "Failed to delete user");
       setActionLoading(false);
     }
   };
@@ -346,68 +330,7 @@ export default function AdminUserDetailPage() {
         ))}
       </div>
 
-      <div className="bg-white rounded-xl shadow-md p-6">
-        <h2 className="text-lg font-semibold text-slate-800 mb-4">Recent Content</h2>
-        <div className="overflow-x-auto rounded-lg border border-slate-200">
-          <table className="min-w-full divide-y divide-slate-200">
-            <thead className="bg-slate-50">
-              <tr>
-                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
-                  Title
-                </th>
-                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
-                  Type
-                </th>
-                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
-                  Status
-                </th>
-                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
-                  Date
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {recentContent.length > 0 ? (
-                recentContent.map((item) => (
-                  <tr key={item.id} className="border-t border-slate-100">
-                    <td className="px-4 py-3 text-sm font-semibold text-slate-700">{item.title}</td>
-                    <td className="px-4 py-3">
-                      <span
-                        className={`inline-flex px-2.5 py-1 rounded-full text-xs font-semibold capitalize ${getTypeBadgeClass(
-                          item.type
-                        )}`}
-                      >
-                        {item.type}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3">
-                      <span
-                        className={`inline-flex px-2.5 py-1 rounded-full text-xs font-semibold capitalize ${getStatusBadgeClass(
-                          item.status
-                        )}`}
-                      >
-                        {item.status}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-sm text-slate-500">
-                      {formatDate(item.createdAt)}
-                    </td>
-                  </tr>
-                ))
-              ) : (
-                <tr>
-                  <td
-                    colSpan={4}
-                    className="px-4 py-8 text-center text-sm text-slate-500"
-                  >
-                    No recent activity
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
+      <RecentContentTable rows={recentContent} formatDate={formatDate} />
 
       <div className="rounded-2xl border border-red-200 bg-gradient-to-r from-red-50 to-rose-50 p-6 shadow-sm">
         <div className="flex items-start gap-3">
