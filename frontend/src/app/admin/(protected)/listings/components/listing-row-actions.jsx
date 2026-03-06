@@ -12,7 +12,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-export default function ListingRowActions({ listingId, isDeleting, onDelete }) {
+export default function ListingRowActions({ listingId, onDelete, onToggleStatus, actionLoadingId, isActive }) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -33,11 +33,18 @@ export default function ListingRowActions({ listingId, isDeleting, onDelete }) {
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem
+          onClick={() => onToggleStatus(listingId, isActive)}
+          disabled={actionLoadingId === listingId}
+          className={isActive ? "text-red-600" : "text-green-600"}
+        >
+          {actionLoadingId === listingId ? "Updating..." : isActive ? "Deactivate" : "Activate"}
+        </DropdownMenuItem>
+        <DropdownMenuItem
           onClick={() => onDelete(listingId)}
-          disabled={isDeleting}
+          disabled={actionLoadingId === listingId}
           className="cursor-pointer text-destructive focus:text-destructive"
         >
-          {isDeleting ? "Deleting..." : "Delete"}
+          {actionLoadingId === listingId ? "Deleting..." : "Delete"}
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

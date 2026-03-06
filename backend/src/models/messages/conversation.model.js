@@ -23,7 +23,7 @@ const conversationSchema = new mongoose.Schema(
 
     refModel: {
       type: String,
-      enum: ["Listing", "Post"],
+      enum: ["Listing", "Post", "Service"],
       required: true,
     },
 

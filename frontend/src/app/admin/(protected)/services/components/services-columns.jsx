@@ -21,7 +21,7 @@ function getStatusClass(status) {
   return "bg-slate-100 text-slate-700";
 }
 
-export function getServicesColumns({ deletingId, onDelete }) {
+export function getServicesColumns({ actionLoadingId, onDelete, onToggleStatus }) {
   return [
     {
       id: "service",
@@ -109,10 +109,14 @@ export function getServicesColumns({ deletingId, onDelete }) {
       enableGlobalFilter: false,
       cell: ({ row }) => {
         const serviceId = row.original?._id;
+        const status = String(row.original?.status || "").toLowerCase();
+        const isActive = status === "active";
         return (
           <ServiceRowActions
             serviceId={serviceId}
-            isDeleting={deletingId === serviceId}
+            isActive={isActive}
+            actionLoadingId={actionLoadingId}
+            onToggleStatus={onToggleStatus}
             onDelete={onDelete}
           />
         );

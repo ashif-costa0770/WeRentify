@@ -1,10 +1,35 @@
 import Service from "../../models/service/service.model.js";
+import stripe from "../../config/stripe.js";
 import { successResponse, errorResponse } from "../../utils/response.js";
 import {
   uploadBufferToCloudinary,
   deleteFromCloudinary,
   deleteMultipleFromCloudinary,
 } from "../../config/cloudinary.js";
+
+const parseTimeToMinutes = (value) => {
+  const [hours, minutes] = String(value || "").split(":").map(Number);
+  if (!Number.isFinite(hours) || !Number.isFinite(minutes)) return null;
+  return hours * 60 + minutes;
+};
+
+const formatMinutesToTime = (minutes) => {
+  const hrs = Math.floor(minutes / 60);
+  const mins = minutes % 60;
+  return `${String(hrs).padStart(2, "0")}:${String(mins).padStart(2, "0")}`;
+};
+
+const buildHourlySlots = (startTime, endTime) => {
+  const start = parseTimeToMinutes(startTime);
+  const end = parseTimeToMinutes(endTime);
+  if (start === null || end === null || end <= start) return [];
+
+  const slots = [];
+  for (let cursor = start; cursor + 60 <= end; cursor += 60) {
+    slots.push(formatMinutesToTime(cursor));
+  }
+  return slots;
+};
 
 //! Create Service
 export const createService = async (req, res) => {
@@ -40,11 +65,37 @@ export const createService = async (req, res) => {
 
       uploadedVideos = await Promise.all(videoUploadPromises);
     }
+
+    // 1️⃣ Create Product in Stripe
+    const product = await stripe.products.create({
+      name: req.body.businessName,
+    });
+
+    // 2️⃣ Create Price in Stripe (amount in smallest unit)
+    const stripePrice = await stripe.prices.create({
+      product: product.id,
+      unit_amount: Math.round(Number(req.body.hourlyRate) * 100),
+      currency: "usd",
+    });
+
+    const workingDays = Array.isArray(req.body.workingDays)
+      ? req.body.workingDays
+      : [];
+    const hourlySlots = buildHourlySlots(req.body.startTime, req.body.endTime);
+
+    const availableSlots = workingDays.map((day) => ({
+      day,
+      slots: hourlySlots,
+    }));
+
     // 📝 Create Service
     const service = await Service.create({
       ...req.body,
+      stripePriceId: stripePrice.id,
+      stripeProductId: product.id,
       photos: uploadedPhotos,
       videos: uploadedVideos, // optional
+      availableSlots,
       owner: req.user._id,
     });
 
@@ -60,7 +111,7 @@ export const createService = async (req, res) => {
 //! Get all services
 export const getAllServices = async (req, res) => {
   try {
-    const services = await Service.find()
+    const services = await Service.find({ status: "active" })
       .populate("owner")
       .populate("category")
       .sort({ createdAt: -1 });

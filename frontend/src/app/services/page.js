@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useMemo, useState, useEffect, useCallback } from "react"; // âœ… useCallback added
 import ServicesNavbarWrapper from "./_components/navbar/SearchNavbarWrapper";
@@ -7,34 +7,7 @@ import ServicesCardsWrapper from "./_components/serviceCards/ServicesCardsWrappe
 import { getServices } from "@/services/services.service";
 import ListBusinessModal from "./_components/modals/ListBusinessModal";
 import { useListBusiness } from "@/context/ListBusinessContext"; // âœ… added
-
-function mapBackendService(service) {
-  const categoryName = service.category?.name || "other";
-  const categoryId = service.category?._id || service.category?.toString?.() || null;
-  const iconUrl = service.category?.icon.url || service.category?.toString?.() || "other";
-  const hourlyRateNum = parseFloat(service.hourlyRate) || 0;
-  const providerName =
-    `${service.owner?.firstname || ""} ${service.owner?.lastname || ""}`.trim() ||
-    service.owner?.firstname ||
-    "Provider";
-  return {
-    ...service,
-    id: service._id,
-    name: service.businessName || service.serviceType || "Unnamed Service",
-    imageUrl: service.photos?.[0]?.url || "https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=400&h=300&fit=crop",
-    hourlyRate: service.hourlyRate,
-    _hourlyRateNum: hourlyRateNum,
-    rating: service.rating ?? 0,
-    description: service.description ?? "Professional service with guaranteed quality",
-    reviews: service.reviewCount ?? 0,
-    verified: service.verified,
-    provider: providerName,
-    categoryName:categoryName,
-    category: categoryId,
-    distance: service.serviceRadius ?? 0,
-    image: iconUrl,
-  };
-}
+import { mapBackendService } from "./_lib/mapBackendService";
 
 export default function ServicesPage() {
   const { registerSuccessCallback } = useListBusiness(); // âœ…

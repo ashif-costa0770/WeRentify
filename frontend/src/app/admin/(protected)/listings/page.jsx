@@ -95,6 +95,46 @@ export default function ListingsPage() {
   const canGoPrevious = currentPage > 1;
   const canGoNext = currentPage < totalPages;
 
+  const handleToggleListingStatus = async (listingId, isCurrentlyActive) => {
+    const nextIsActive = !isCurrentlyActive;
+    setError("");
+    setActionLoadingId(listingId);
+    // Optimistic update for instant UI feedback.
+    setListings((prev) =>
+      prev.map((item) =>
+        item?._id === listingId
+          ? { ...item, status: nextIsActive ? "active" : "inactive" }
+          : item
+      )
+    );
+
+    try {
+      const res = await fetch(`${API_URL}/admin/listings/${listingId}/toggle-status`, {
+        method: "PATCH",
+        credentials: "include",
+        cache: "no-store",
+      });
+      const payload = await res.json().catch(() => null);
+
+      if (!res.ok || !payload?.success) {
+        throw new Error(payload?.message || "Failed to update listing status");
+      }
+      toast.success(nextIsActive ? "Listing activated successfully." : "Listing deactivated successfully.");
+    } catch (actionError) {
+      setListings((prev) =>
+        prev.map((item) =>
+          item?._id === listingId
+            ? { ...item, status: isCurrentlyActive ? "active" : "inactive" }
+            : item
+        )
+      );
+      setError(actionError.message || "Failed to update listing status");
+      toast.error(actionError.message || "Failed to update listing status");
+    } finally {
+      setActionLoadingId(null);
+    }
+  };
+
   const handleDeleteListing = async (listingId) => {
     const previousListings = listings;
     const previousPagination = pagination;
@@ -133,8 +173,9 @@ export default function ListingsPage() {
   };
 
   const columns = getListingsColumns({
-    deletingId: actionLoadingId,
+    actionLoadingId: actionLoadingId,
     onDelete: handleDeleteListing,
+    onToggleStatus: handleToggleListingStatus,
   });
 
   return (

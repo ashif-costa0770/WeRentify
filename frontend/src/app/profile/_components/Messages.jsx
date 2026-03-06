@@ -7,6 +7,7 @@ import { useUser } from "@/context/UserContext";
 import { getConversations } from "@/services/message.service";
 import { getListingById } from "@/services/item.service";
 import { getPostById } from "@/services/post.service";
+import { getServiceById } from "@/services/services.service";
 
 const formatMessageTime = (value) => {
   if (!value) return "";
@@ -56,11 +57,21 @@ export default function Messages() {
         return res?.data?.data?.title || "Post conversation";
       }
 
+      if (conversation.refModel === "Service") {
+        const res = await getServiceById(conversation.refId);
+        return (
+          res?.data?.data?.service?.businessName ||
+          res?.data?.data?.service?.serviceType ||
+          res?.data?.service?.businessName ||
+          "Service conversation"
+        );
+      }
+
       return "Conversation";
     } catch {
-      return conversation?.refModel === "Post"
-        ? "Post conversation"
-        : "Listing conversation";
+      if (conversation?.refModel === "Post") return "Post conversation";
+      if (conversation?.refModel === "Service") return "Service conversation";
+      return "Listing conversation";
     }
   }, []);
 
@@ -121,6 +132,8 @@ export default function Messages() {
         titles[titleKey] ||
         (conversation.refModel === "Post"
           ? "Post conversation"
+          : conversation.refModel === "Service"
+            ? "Service conversation"
           : "Listing conversation");
 
       return {

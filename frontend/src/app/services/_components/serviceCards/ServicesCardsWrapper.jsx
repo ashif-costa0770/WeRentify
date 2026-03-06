@@ -1,10 +1,9 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { categoryMap } from "@/data/servicesData";
+import { useMemo } from "react";
+import { useRouter } from "next/navigation";
 import ServiceCategoryBlock from "./ServiceCategoryBlock";
 import GlobalServicesHeader from "./GlobalServicesHeader";
-import ServiceModal from "../modals/ServiceModal";
 
 export default function ServicesCardsWrapper({
   services,
@@ -14,18 +13,12 @@ export default function ServicesCardsWrapper({
   loading = false,
   error = null,
 }) {
-  // 🔹 Modal state
-  const [selectedService, setSelectedService] = useState(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const router = useRouter();
 
-  const openServiceModal = (service) => {
-    setSelectedService(service);
-    setIsModalOpen(true);
-  };
-
-  const closeServiceModal = () => {
-    setIsModalOpen(false);
-    setSelectedService(null);
+  const openServicePage = (service) => {
+    const serviceId = service?._id || service?.id;
+    if (!serviceId) return;
+    router.push(`/services/${serviceId}`);
   };
 
   // 🔹 Group services by category
@@ -39,7 +32,6 @@ export default function ServicesCardsWrapper({
         items: [],
       };
     }
-    console.log()
 
     acc[key].items.push(service);
     return acc;
@@ -100,14 +92,9 @@ export default function ServicesCardsWrapper({
             key={key}
             categoryLabel={group.name}
             services={group.items}
-            onServiceClick={openServiceModal}
+            onServiceClick={openServicePage}
           />
         ))
-      )}
-
-      {/* ✅ Service Modal (render once) */}
-      {isModalOpen && selectedService && (
-        <ServiceModal service={selectedService} onClose={closeServiceModal} />
       )}
     </div>
   );

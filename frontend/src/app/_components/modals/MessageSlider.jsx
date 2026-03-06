@@ -21,6 +21,7 @@ import {
 } from "@/services/message.service";
 import { getListingById } from "@/services/item.service";
 import { getPostById } from "@/services/post.service";
+import { getServiceById } from "@/services/services.service";
 import { socket } from "@/lib/socket";
 
 const formatTime = (value) => {
@@ -157,9 +158,21 @@ export default function MessageSlider({
         return res?.data?.data?.title || "Post";
       }
 
+      if (conversation.refModel === "Service") {
+        const res = await getServiceById(conversation.refId);
+        return (
+          res?.data?.data?.service?.businessName ||
+          res?.data?.data?.service?.serviceType ||
+          res?.data?.service?.businessName ||
+          "Service"
+        );
+      }
+
       return "Conversation";
     } catch {
-      return conversation?.refModel === "Post" ? "Post" : "Listing";
+      if (conversation?.refModel === "Post") return "Post";
+      if (conversation?.refModel === "Service") return "Service";
+      return "Listing";
     }
   }, []);
 
@@ -245,9 +258,10 @@ export default function MessageSlider({
       if (!selection.itemId) return false;
 
       try {
+        const refModel = selection.refModel || "Listing";
         const res = await createOrGetConversation({
           refId: selection.itemId,
-          refModel: "Listing",
+          refModel,
         });
         const conversation = res?.data?.data;
         if (!conversation?._id) return false;
@@ -458,7 +472,9 @@ export default function MessageSlider({
                       conversationTitles[titleKey] ||
                       (conversation?.refModel === "Post"
                         ? "Post"
-                        : conversation?.refModel === "Listing"
+                        : conversation?.refModel === "Service"
+                          ? "Service"
+                          : conversation?.refModel === "Listing"
                           ? "Listing"
                           : "Conversation");
                     const shortTitle = shortenTitle(title);

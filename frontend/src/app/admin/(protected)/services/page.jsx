@@ -94,6 +94,48 @@ export default function ServicesPage() {
   const canGoPrevious = currentPage > 1;
   const canGoNext = currentPage < totalPages;
 
+  const handleToggleServiceStatus = async (serviceId, isCurrentlyActive) => {
+    const nextIsActive = !isCurrentlyActive;
+
+    setError("");
+    setActionLoadingId(serviceId);
+    // Optimistic update for instant UI feedback.
+    setServices((prev) =>
+      prev.map((service) =>
+        service?._id === serviceId
+          ? { ...service, status: nextIsActive ? "active" : "inactive" }
+          : service
+      )
+    );
+
+    try {
+      const res = await fetch(`${API_URL}/admin/services/${serviceId}/toggle-status`, {
+        method: "PATCH",
+        credentials: "include",
+        cache: "no-store",
+      });
+      const payload = await res.json().catch(() => null);
+
+      if (!res.ok || !payload?.success) {
+        throw new Error(payload?.message || "Failed to update service status");
+      }
+      toast.success(nextIsActive ? "Service activated successfully." : "Service deactivated successfully.");
+    } catch (actionError) {
+      // Revert optimistic update on failure.
+      setServices((prev) =>
+        prev.map((service) =>
+          service?._id === serviceId
+            ? { ...service, status: isCurrentlyActive ? "active" : "inactive" }
+            : service
+        )
+      );
+      setError(actionError.message || "Failed to update service status");
+      toast.error(actionError.message || "Failed to update service status");
+    } finally {
+      setActionLoadingId(null);
+    }
+  };
+
   const handleDeleteService = async (serviceId) => {
     const previousServices = services;
     const previousPagination = pagination;
@@ -132,8 +174,9 @@ export default function ServicesPage() {
   };
 
   const columns = getServicesColumns({
-    deletingId: actionLoadingId,
+    actionLoadingId,
     onDelete: handleDeleteService,
+    onToggleStatus: handleToggleServiceStatus,
   });
 
   return (

@@ -8,6 +8,10 @@ export const createService = (data) =>
 export const getServices = () =>
   api.get("/services");
 
+// GET SINGLE SERVICE
+export const getServiceById = (id) =>
+  api.get(`/services/${id}`);
+
 // Get services by user
 export const getServicesByUser = () =>
   api.get("/services/user");

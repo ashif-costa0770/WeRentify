@@ -12,7 +12,13 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-export default function ServiceRowActions({ serviceId, isDeleting, onDelete }) {
+export default function ServiceRowActions({
+  serviceId,
+  isActive,
+  actionLoadingId,
+  onToggleStatus,
+  onDelete,
+}) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -33,11 +39,18 @@ export default function ServiceRowActions({ serviceId, isDeleting, onDelete }) {
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem
+          onClick={() => onToggleStatus(serviceId, isActive)}
+          disabled={actionLoadingId === serviceId}
+          className={isActive ? "text-red-600" : "text-green-600"}
+        >
+          {actionLoadingId === serviceId ? "Updating..." : isActive ? "Deactivate" : "Activate"}
+        </DropdownMenuItem>
+        <DropdownMenuItem
           onClick={() => onDelete(serviceId)}
-          disabled={isDeleting}
+          disabled={actionLoadingId === serviceId}
           className="cursor-pointer text-destructive focus:text-destructive"
         >
-          {isDeleting ? "Deleting..." : "Delete"}
+          {actionLoadingId === serviceId ? "Deleting..." : "Delete"}
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

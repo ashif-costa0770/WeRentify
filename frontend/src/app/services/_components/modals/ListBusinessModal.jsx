@@ -7,6 +7,7 @@ import StepIndicator from "../listBusiness/StepIndicator";
 import BusinessInfoStep from "../listBusiness/steps/BusinessInfoStep";
 import ContactLocationStep from "../listBusiness/steps/ContactLocationStep";
 import ShowcaseStep from "../listBusiness/steps/ShowcaseStep";
+import AvailabilityStep from "../listBusiness/steps/AvailabilityStep";
 import PlanSelectionStep from "../listBusiness/steps/PlanSelectionStep";
 import { toast } from "sonner";
 
@@ -25,6 +26,10 @@ const STEP_META = {
     subtitle: "Add media and your hourly price.",
   },
   4: {
+    title: "Service Availability",
+    subtitle: "Set delivery mode, working days, and working hours.",
+  },
+  5: {
     title: "Choose a Plan",
     subtitle: "Select a plan that fits your growth stage.",
   },
@@ -60,6 +65,10 @@ export default function ListBusinessModal() {
       email,
       photos,
       hourlyRate,
+      serviceMode,
+      workingDays,
+      startTime,
+      endTime,
       plan,
       website,
     } = formData;
@@ -127,7 +136,26 @@ export default function ListBusinessModal() {
       }
     }
 
-    if (currentStep === 4 && !plan) {
+    if (currentStep === 4) {
+      const selectedDays = Array.isArray(workingDays) ? workingDays : [];
+      if (!serviceMode) {
+        stepErrors.serviceMode = "Please select a service delivery mode.";
+      }
+      if (selectedDays.length === 0) {
+        stepErrors.workingDays = "Select at least one working day.";
+      }
+      if (!startTime) {
+        stepErrors.startTime = "Start time is required.";
+      }
+      if (!endTime) {
+        stepErrors.endTime = "End time is required.";
+      }
+      if (startTime && endTime && startTime >= endTime) {
+        stepErrors.endTime = "End time must be later than start time.";
+      }
+    }
+
+    if (currentStep === 5 && !plan) {
       stepErrors.plan = "Please choose a plan.";
     }
 
@@ -153,6 +181,8 @@ export default function ListBusinessModal() {
       case 3:
         return <ShowcaseStep />;
       case 4:
+        return <AvailabilityStep />;
+      case 5:
         return <PlanSelectionStep />;
       default:
         return null;
@@ -207,7 +237,7 @@ export default function ListBusinessModal() {
             onClick={() => {
               if (!validateStep()) return;
               clearErrors();
-              if (currentStep === 4) {
+              if (currentStep === 5) {
                 submitBusiness();
               } else {
                 nextStep();
@@ -220,7 +250,7 @@ export default function ListBusinessModal() {
                 <Loader2 size={16} className="animate-spin" />
                 {modalMode === "edit" ? "Updating..." : "Submitting..."}
               </>
-            ) : currentStep === 4 ? (
+            ) : currentStep === 5 ? (
               modalMode === "edit" ? "Update Service" : "Start Subscription"
             ) : (
               "Continue"

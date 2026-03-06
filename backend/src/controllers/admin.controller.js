@@ -1226,3 +1226,35 @@ export const deleteServiceByAdmin = async (req, res) => {
     return errorResponse(res, 500, "Failed to delete service", error.message);
   }
 };
+
+//!Toggle listing status by admin
+export const toggleListingStatusByAdmin = async (req, res) =>{
+  try {
+    const {listingId} = req.params;
+    const listing = await Listing.findById(listingId);
+    if(!listing){
+      return errorResponse(res, 404, "Listing not found");
+    }
+    listing.status = listing.status === "active" ? "inactive" : "active";
+    await listing.save();
+    return successResponse(res, 200, "Listing status updated successfully", listing);
+  } catch (error) {
+    return errorResponse(res, 500, "Failed to update listing status", error.message);    
+  }
+}
+
+//!Toggle service status by admin
+export const toggleServiceStatusByAdmin = async (req, res) =>{
+  try {
+    const {serviceId} = req.params;
+    const service = await Service.findById(serviceId);
+    if(!service){
+      return errorResponse(res, 404, "Service not found");
+    }
+    service.status = service.status === "active" ? "inactive" : "active";
+    await service.save();
+    return successResponse(res, 200, "Service status updated successfully", service);
+  } catch (error) {
+    return errorResponse(res, 500, "Failed to update service status", error.message);    
+  }
+}

@@ -54,7 +54,7 @@ export default function ServiceCard({ service, onClick }) {
     const result = await shareOrCopyLink({
       title: service.name,
       text: `Check out this ${service.name}!`,
-      url: `/services?service=${service._id || ""}`,
+      url: `/services/${service._id || service.id || ""}`,
     });
 
     if (result === "shared") toast.success("Service shared!");

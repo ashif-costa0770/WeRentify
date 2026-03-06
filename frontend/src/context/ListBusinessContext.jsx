@@ -21,7 +21,53 @@ const EMPTY_FORM_DATA = {
   hourlyRate: "",
   photos: [],
   videos: [],
+  serviceMode: "onsite",
+  workingDays: [],
+  startTime: "",
+  endTime: "",
   plan: "",
+};
+
+const parseTimeToMinutes = (value) => {
+  const [hh, mm] = String(value || "").split(":").map(Number);
+  if (!Number.isFinite(hh) || !Number.isFinite(mm)) return null;
+  return hh * 60 + mm;
+};
+
+const formatMinutesToTime = (value) => {
+  const hour = Math.floor(value / 60);
+  const minute = value % 60;
+  return `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`;
+};
+
+const deriveAvailabilityFromSlots = (availableSlots = []) => {
+  if (!Array.isArray(availableSlots) || availableSlots.length === 0) {
+    return {
+      workingDays: [],
+      startTime: "",
+      endTime: "",
+    };
+  }
+
+  const workingDays = availableSlots
+    .map((item) => String(item?.day || "").trim())
+    .filter(Boolean);
+
+  const firstDaySlots = Array.isArray(availableSlots[0]?.slots)
+    ? availableSlots[0].slots.map((slot) => String(slot).trim()).filter(Boolean)
+    : [];
+
+  if (firstDaySlots.length === 0) {
+    return { workingDays, startTime: "", endTime: "" };
+  }
+
+  const sortedSlots = [...firstDaySlots].sort();
+  const startTime = sortedSlots[0];
+  const lastSlot = sortedSlots[sortedSlots.length - 1];
+  const lastMinutes = parseTimeToMinutes(lastSlot);
+  const endTime = lastMinutes === null ? "" : formatMinutesToTime(lastMinutes + 60);
+
+  return { workingDays, startTime, endTime };
 };
 
 const mapServiceToFormData = (service = {}) => ({
@@ -43,6 +89,8 @@ const mapServiceToFormData = (service = {}) => ({
   hourlyRate: service?.hourlyRate ?? "",
   photos: [],
   videos: [],
+  serviceMode: service?.serviceMode || "onsite",
+  ...deriveAvailabilityFromSlots(service?.availableSlots),
   plan: service?.plan || "basic",
 });
 
@@ -111,7 +159,7 @@ export function ListBusinessProvider({ children }) {
     clearErrors();
   };
 
-  const nextStep = () => setCurrentStep((prev) => Math.min(prev + 1, 4));
+  const nextStep = () => setCurrentStep((prev) => Math.min(prev + 1, 5));
   const prevStep = () => setCurrentStep((prev) => Math.max(prev - 1, 1));
   const goToStep = (step) => setCurrentStep(step);
 
@@ -142,6 +190,8 @@ export function ListBusinessProvider({ children }) {
       Object.entries(formData).forEach(([key, value]) => {
         if (key === "photos" || key === "videos") {
           value.forEach((file) => payload.append(key, file));
+        } else if (Array.isArray(value)) {
+          payload.append(key, JSON.stringify(value));
         } else {
           payload.append(key, value ?? "");
         }

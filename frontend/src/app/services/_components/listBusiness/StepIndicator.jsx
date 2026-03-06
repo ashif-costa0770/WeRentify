@@ -6,14 +6,15 @@ const STEPS = [
   { id: 1, label: "Business" },
   { id: 2, label: "Contact" },
   { id: 3, label: "Showcase" },
-  { id: 4, label: "Plan" },
+  { id: 4, label: "Availability" },
+  { id: 5, label: "Plan" },
 ];
 
 export default function StepIndicator() {
   const { currentStep } = useListBusiness();
 
   return (
-    <div className="grid grid-cols-4 gap-2">
+    <div className="grid grid-cols-5 gap-2">
       {STEPS.map((step, index) => {
         const isActive = currentStep === step.id;
         const isCompleted = currentStep > step.id;

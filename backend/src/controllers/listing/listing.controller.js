@@ -82,7 +82,7 @@ export const createListing = async (req, res) => {
 //! Get all listings with filters
 export const getAllListings = async (req, res) => {
   try {
-    const listings = await Listing.find()
+    const listings = await Listing.find({ status: "active" })
       .populate("owner")
       .populate("category")
       .sort({ createdAt: -1 });

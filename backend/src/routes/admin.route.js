@@ -26,7 +26,9 @@ import {
   deactivatePlanByAdmin,
   activatePlanByAdmin,
   getUserDetailsByAdmin,
-} from "../controllers/admin.conroller.js";
+  toggleListingStatusByAdmin,
+  toggleServiceStatusByAdmin,
+} from "../controllers/admin.controller.js";
 import validate from "../middlewares/validate.js";
 import { adminLoginSchema } from "../validations/admin.validation.js";
 import { createPlanSchema, updatePlanSchema } from "../validations/plan.validation.js";
@@ -83,5 +85,11 @@ router.delete("/users/:userId", verifyAdmin, deleteUserByAdmin);
 
 //get user details
 router.get("/users/:userId", verifyAdmin, getUserDetailsByAdmin);
+
+//toggle listing status
+router.patch("/listings/:listingId/toggle-status", verifyAdmin, toggleListingStatusByAdmin);
+
+//toggle service status
+router.patch("/services/:serviceId/toggle-status", verifyAdmin, toggleServiceStatusByAdmin);
 
 export default router;

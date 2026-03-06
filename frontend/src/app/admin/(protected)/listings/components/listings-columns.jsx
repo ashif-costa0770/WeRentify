@@ -31,7 +31,7 @@ function formatDailyPriceUsd(amount) {
   }).format(numeric);
 }
 
-export function getListingsColumns({ deletingId, onDelete }) {
+export function getListingsColumns({ actionLoadingId, onDelete, onToggleStatus }) {
   return [
     {
       id: "itemName",
@@ -129,10 +129,14 @@ export function getListingsColumns({ deletingId, onDelete }) {
       enableGlobalFilter: false,
       cell: ({ row }) => {
         const listingId = row.original?._id;
+        const status = String(row.original?.status || "").toLowerCase();
+        const isActive = status === "active";
         return (
           <ListingRowActions
             listingId={listingId}
-            isDeleting={deletingId === listingId}
+            isActive={isActive}
+            actionLoadingId={actionLoadingId}
+            onToggleStatus={onToggleStatus}
             onDelete={onDelete}
           />
         );

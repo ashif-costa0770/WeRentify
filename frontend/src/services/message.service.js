@@ -4,7 +4,7 @@ import api from "@/lib/api";
 /* CONVERSATIONS */
 /* ------------------------------------------ */
 
-// Create OR fetch conversation (Listing / Post)
+// Create OR fetch conversation (Listing / Post / Service)
 export const createOrGetConversation = (data) =>
   api.post("/conversations", data);
 

@@ -1,6 +1,7 @@
 import Conversation from "../../models/messages/conversation.model.js";
 import Listing from "../../models/listing/listing.model.js";
 import Post from "../../models/community/post.model.js";
+import Service from "../../models/service/service.model.js";
 import { successResponse, errorResponse } from "../../utils/response.js";
 
 export const createOrGetConversation = async (req, res) => {
@@ -25,6 +26,15 @@ export const createOrGetConversation = async (req, res) => {
         return errorResponse(res, 404, "Post not found");
 
       receiverId = post.author;
+    }
+
+    if (refModel === "Service") {
+      const service = await Service.findById(refId);
+      if (!service) {
+        return errorResponse(res, 404, "Service not found");
+      }
+
+      receiverId = service.owner;
     }
 
     if (!receiverId)

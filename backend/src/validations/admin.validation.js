@@ -60,10 +60,9 @@ export const updateAdminSchema = z.object({
     .optional(),
 
   email: z
-    .string()
+    .email("Invalid email format")
     .trim()
     .toLowerCase()
-    .email()
     .optional(),
 
   role: adminRoleEnum.optional(),
