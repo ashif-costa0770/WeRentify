@@ -11,3 +11,11 @@ export const createPlanCheckoutSession = (planId) => {
 export const verifySession = (sessionId) => {
   return api.get(`/payments/verify-session/${sessionId}`);
 };
+
+export const createServiceBookingCheckoutSession = (payload) => {
+  return api.post("/payments/service-booking/create-checkout-session", payload);
+};
+
+export const verifyServiceBookingSession = (sessionId) => {
+  return api.get(`/payments/service-booking/verify-session/${sessionId}`);
+};

@@ -1,5 +1,6 @@
 import Service from "../../models/service/service.model.js";
 import stripe from "../../config/stripe.js";
+import mongoose from "mongoose";
 import { successResponse, errorResponse } from "../../utils/response.js";
 import {
   uploadBufferToCloudinary,
@@ -52,6 +53,7 @@ export const createService = async (req, res) => {
 
     // 🎥 Upload Videos (Optional)
     let uploadedVideos = [];
+    const serviceId = new mongoose.Types.ObjectId()
 
     if (req.files?.videos) {
       // Limit max video
@@ -69,6 +71,11 @@ export const createService = async (req, res) => {
     // 1️⃣ Create Product in Stripe
     const product = await stripe.products.create({
       name: req.body.businessName,
+      images: uploadedPhotos[0].url,
+      metadata: {
+        serviceId: serviceId.toString(),
+        providerId: req.user._id.toString(),
+      }
     });
 
     // 2️⃣ Create Price in Stripe (amount in smallest unit)
@@ -91,6 +98,7 @@ export const createService = async (req, res) => {
     // 📝 Create Service
     const service = await Service.create({
       ...req.body,
+      _id: serviceId.toString(),
       stripePriceId: stripePrice.id,
       stripeProductId: product.id,
       photos: uploadedPhotos,
@@ -223,10 +231,38 @@ export const updateService = async (req, res) => {
 
       updatedVideos = [...updatedVideos, ...newVideos];
     }
+    //! if hourly rate is changing, create new stripe price
+    if (req.body.hourlyRate !== undefined && req.body.hourlyRate !== service.hourlyRate){
+      const priceInSmallestUnit = Math.round(Number(req.body.hourlyRate)*100);
+      const stripePrice = await stripe.prices.create({
+        product: service.stripeProductId,
+        unit_amount: priceInSmallestUnit,        
+        currency: "usd",
+      });
+      service.stripePriceId = stripePrice.id;
+      service.hourlyRate = req.body.hourlyRate;
+    }
+
+    
+    //! if service name is changing, update service name in stripe
+    if (req.body.businessName !== undefined && req.body.businessName !== service.businessName){
+      await stripe.products.update(service.stripeProductId, {
+        name: req.body.businessName,
+      });
+      service.businessName = req.body.businessName;
+    }
+    //! if photos are changing, update photos in stripe
+    if (updatedPhotos.length > 0) {
+      await stripe.products.update(service.stripeProductId, {
+        images: [updatedPhotos[0].url], // only one image sent to Stripe
+      });
+      service.photos = updatedPhotos;
+    }
 
     // ===============================
     // 📝 UPDATE SERVICE DATA
     // ===============================
+
 
     const updatedService = await Service.findByIdAndUpdate(
       id,
@@ -271,6 +307,19 @@ export const deleteService = async (req, res) => {
         service.videos.map((v) => v.public_id),
         "video",
       );
+    }
+    // we can't delete the stripe product if it has used
+    //! deactivate stripe product
+    if(service.stripeProductId){
+      await stripe.products.update(service.stripeProductId, {
+        active: false
+      })
+    }
+    //! deactivate stripe price
+    if(service.stripePriceId){
+      await stripe.prices.update(service.stripePriceId, {
+        active: false
+      })
     }
 
     await Service.findByIdAndDelete(id);

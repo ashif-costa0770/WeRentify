@@ -30,7 +30,15 @@ export default function ServiceDetailsPage() {
   const [error, setError] = useState("");
   const [showBookingModal, setShowBookingModal] = useState(false);
 
+  const ownerId =
+    (typeof service?.owner === "object" ? service.owner?._id : service?.owner) || service?.ownerId || null;
+  const isOwnService = Boolean(user?._id && ownerId) && String(user._id) === String(ownerId);
+
   const handleOpenBooking = () => {
+    if (isOwnService) {
+      toast.error("You cannot book your own service");
+      return;
+    }
     if (!isLogin) {
       setShowSignIn(true);
       return;
@@ -39,18 +47,12 @@ export default function ServiceDetailsPage() {
   };
 
   const handleContactProvider = () => {
-    if (!isLogin) {
-      setShowSignIn(true);
-      return;
-    }
-
-    const ownerId =
-      (typeof service?.owner === "object" ? service.owner?._id : service?.ownerId) || null;
-    const isOwnService =
-      Boolean(user?._id && ownerId) && String(user._id) === String(ownerId);
-
     if (isOwnService) {
       toast.error("You cannot message yourself");
+      return;
+    }
+    if (!isLogin) {
+      setShowSignIn(true);
       return;
     }
 
@@ -189,7 +191,13 @@ export default function ServiceDetailsPage() {
           <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
             <button
               onClick={handleOpenBooking}
-              className="flex cursor-pointer items-center justify-center gap-2 rounded-xl bg-linear-to-r from-indigo-500 to-pink-500 px-6 py-4 font-semibold text-white transition hover:opacity-90"
+              disabled={isOwnService}
+              title={isOwnService ? "You cannot book your own service" : undefined}
+              className={`flex items-center justify-center gap-2 rounded-xl px-6 py-4 font-semibold text-white transition ${
+                isOwnService
+                  ? "cursor-not-allowed bg-slate-300"
+                  : "cursor-pointer bg-linear-to-r from-indigo-500 to-pink-500 hover:opacity-90"
+              }`}
             >
               <Calendar size={18} />
               Book Now
@@ -197,7 +205,13 @@ export default function ServiceDetailsPage() {
 
             <button
               onClick={handleContactProvider}
-              className="flex cursor-pointer items-center justify-center gap-2 rounded-xl border-2 border-orange-500 px-6 py-4 font-semibold text-orange-600 transition hover:bg-orange-50"
+              disabled={isOwnService}
+              title={isOwnService ? "You cannot contact your own service" : undefined}
+              className={`flex items-center justify-center gap-2 rounded-xl border-2 px-6 py-4 font-semibold transition ${
+                isOwnService
+                  ? "cursor-not-allowed border-slate-300 text-slate-400"
+                  : "cursor-pointer border-orange-500 text-orange-600 hover:bg-orange-50"
+              }`}
             >
               <MessageCircle size={18} />
               Contact Provider

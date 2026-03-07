@@ -2,9 +2,10 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { CalendarDays, CreditCard, Loader2, MapPin, ShieldCheck, X } from "lucide-react";
+import { CalendarDays, Loader2, MapPin, X } from "lucide-react";
 import { toast } from "sonner";
 import { createBooking, getBookedServiceSlots } from "@/services/booking.service";
+import { createServiceBookingCheckoutSession } from "@/services/payments.service";
 import { useUser } from "@/context/UserContext";
 
 function normalizeDay(value) {
@@ -95,7 +96,7 @@ export default function ServiceBookingModal({ service, open, onClose }) {
   const [paymentMethod, setPaymentMethod] = useState("cod");
   const [errors, setErrors] = useState({});
   const [isProcessing, setIsProcessing] = useState(false);
-  const [step, setStep] = useState("form"); // form | stripe | confirmation
+  const [step, setStep] = useState("form"); // form | confirmation
   const [confirmationData, setConfirmationData] = useState(null);
   const [createdBookingId, setCreatedBookingId] = useState(null);
   const [bookedSlots, setBookedSlots] = useState([]);
@@ -238,8 +239,19 @@ export default function ServiceBookingModal({ service, open, onClose }) {
     setIsProcessing(true);
     try {
       if (paymentMethod === "card") {
-        // For card flow: move to Stripe step first.
-        setStep("stripe");
+        const serviceRefId = service?._id || service?.id;
+        const checkoutRes = await createServiceBookingCheckoutSession({
+          serviceId: serviceRefId,
+          bookingDate: selectedDate,
+          timeSlot: selectedTime,
+          address: isOnsite ? address.trim() : undefined,
+          notes: notes.trim() || undefined,
+        });
+        const checkoutUrl = checkoutRes?.data?.data?.url;
+        if (!checkoutUrl) {
+          throw new Error("Checkout URL not found");
+        }
+        window.location.href = checkoutUrl;
         return;
       }
 
@@ -248,19 +260,6 @@ export default function ServiceBookingModal({ service, open, onClose }) {
       toast.success("Booking confirmed successfully.");
     } catch (error) {
       toast.error(error?.response?.data?.message || "Failed to confirm booking");
-    } finally {
-      setIsProcessing(false);
-    }
-  };
-
-  const handleCompleteCardPayment = async () => {
-    setIsProcessing(true);
-    try {
-      await createBookingRequest();
-      completeBooking("card");
-      toast.success("Payment successful. Booking confirmed.");
-    } catch (error) {
-      toast.error(error?.response?.data?.message || "Payment completed but booking failed");
     } finally {
       setIsProcessing(false);
     }
@@ -465,66 +464,6 @@ export default function ServiceBookingModal({ service, open, onClose }) {
                 </div>
               </div>
             </aside>
-          </div>
-        ) : null}
-
-        {step === "stripe" ? (
-          <div className="space-y-6 p-6 lg:p-8">
-            <div>
-              <h2 className="text-2xl font-bold text-slate-900">Stripe Checkout</h2>
-              <p className="mt-1 text-sm text-slate-500">
-                Redirected to secure payment interface. Complete payment to confirm your booking.
-              </p>
-            </div>
-
-            <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5">
-              <p className="text-sm text-slate-700">
-                <span className="font-semibold text-slate-900">Service:</span> {service.name}
-              </p>
-              <p className="mt-1 text-sm text-slate-700">
-                <span className="font-semibold text-slate-900">Date & Time:</span>{" "}
-                {formatDateLabel(selectedDate)} at {selectedTime}
-              </p>
-              <p className="mt-1 text-sm text-slate-700">
-                <span className="font-semibold text-slate-900">Amount:</span> ${totalPrice.toFixed(2)}
-              </p>
-            </div>
-
-            <div className="rounded-2xl border border-indigo-200 bg-indigo-50 p-4 text-sm text-indigo-800">
-              <p className="flex items-center gap-2">
-                <ShieldCheck size={16} />
-                Card payment is processed securely through Stripe.
-              </p>
-            </div>
-
-            <div className="flex flex-wrap gap-3">
-              <button
-                type="button"
-                onClick={() => setStep("form")}
-                className="cursor-pointer rounded-xl border border-slate-300 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-100"
-                disabled={isProcessing}
-              >
-                Back
-              </button>
-              <button
-                type="button"
-                onClick={handleCompleteCardPayment}
-                disabled={isProcessing}
-                className="cursor-pointer inline-flex items-center rounded-xl bg-gradient-to-r from-indigo-600 to-fuchsia-600 px-5 py-2.5 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-70"
-              >
-                {isProcessing ? (
-                  <>
-                    <Loader2 size={16} className="mr-2 animate-spin" />
-                    Processing...
-                  </>
-                ) : (
-                  <>
-                    <CreditCard size={16} className="mr-2" />
-                    Complete Card Payment
-                  </>
-                )}
-              </button>
-            </div>
           </div>
         ) : null}
 
