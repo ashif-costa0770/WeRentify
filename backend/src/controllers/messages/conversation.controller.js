@@ -13,7 +13,7 @@ export const createOrGetConversation = async (req, res) => {
 
     /* Resolve receiver */
     if (refModel === "Listing") {
-      const listing = await Listing.findById(refId);
+      const listing = await Listing.findById(refId).select("owner").lean();
       if (!listing)
         return errorResponse(res, 404, "Listing not found");
 
@@ -21,7 +21,7 @@ export const createOrGetConversation = async (req, res) => {
     }
 
     if (refModel === "Post") {
-      const post = await Post.findById(refId);
+      const post = await Post.findById(refId).select("author").lean();
       if (!post)
         return errorResponse(res, 404, "Post not found");
 
@@ -29,7 +29,7 @@ export const createOrGetConversation = async (req, res) => {
     }
 
     if (refModel === "Service") {
-      const service = await Service.findById(refId);
+      const service = await Service.findById(refId).select("owner").lean();
       if (!service) {
         return errorResponse(res, 404, "Service not found");
       }
@@ -50,7 +50,7 @@ export const createOrGetConversation = async (req, res) => {
       participantsKey,
       refId,
       refModel,
-    });
+    }).lean();
 
     if (!conversation) {
       try {
@@ -72,7 +72,7 @@ export const createOrGetConversation = async (req, res) => {
           participantsKey,
           refId,
           refModel,
-        });
+        }).lean();
       }
     }
 
@@ -90,18 +90,38 @@ export const createOrGetConversation = async (req, res) => {
 export const getUserConversations = async (req, res) => {
   try {
     const userId = req.user._id;
+    const page = Math.max(Number.parseInt(req.query.page, 10) || 1, 1);
+    const limit = Math.min(
+      Math.max(Number.parseInt(req.query.limit, 10) || 20, 1),
+      50,
+    );
+    const skip = (page - 1) * limit;
+    const query = { participants: userId };
 
-    const conversations = await Conversation.find({
-      participants: userId,
-    })
-      .sort({ updatedAt: -1 }) // ✅ newest activity first
-      .populate("participants", "firstname avatar email"); // adjust fields as needed
+    const [conversations, totalItems] = await Promise.all([
+      Conversation.find(query)
+        .select("participants refModel refId lastMessage unreadCounts updatedAt")
+        .sort({ updatedAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .populate("participants", "firstname lastname avatar email")
+        .lean(),
+      Conversation.countDocuments(query),
+    ]);
 
     return successResponse(
       res,
       200,
       "Conversations fetched successfully",
-      conversations
+      {
+        conversations,
+        pagination: {
+          page,
+          limit,
+          totalItems,
+          totalPages: Math.ceil(totalItems / limit),
+        },
+      }
     );
   } catch (error) {
     return errorResponse(res, 500, "Fetch conversations failed", error.message);

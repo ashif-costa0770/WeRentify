@@ -17,7 +17,9 @@ export const sendMessage = async (req, res) => {
       return errorResponse(res, 400, "Invalid conversationId");
     }
 
-    const conversation = await Conversation.findById(conversationId).select("participants");
+    const conversation = await Conversation.findById(conversationId)
+      .select("participants")
+      .lean();
 
     if (!conversation) return errorResponse(res, 404, "Conversation not found");
 
@@ -72,18 +74,44 @@ export const getConversationMessages = async (req, res) => {
       return errorResponse(res, 400, "Invalid conversationId");
     }
 
-    const conversation = await Conversation.findById(conversationId).select("participants");
+    const conversation = await Conversation.findById(conversationId)
+      .select("participants")
+      .lean();
 
     if (!conversation) return errorResponse(res, 404, "Conversation not found");
 
     const isParticipant = hasParticipant(conversation.participants, userId);
     if (!isParticipant) return errorResponse(res, 403, "Unauthorized access");
 
-    const messages = await Message.find({
-      conversation: conversationId,
-    }).sort({ createdAt: 1 });
+    const page = Math.max(Number.parseInt(req.query.page, 10) || 1, 1);
+    const limit = Math.min(
+      Math.max(Number.parseInt(req.query.limit, 10) || 30, 1),
+      100,
+    );
+    const skip = (page - 1) * limit;
+    const messageQuery = { conversation: conversationId };
 
-    return successResponse(res, 200, "Messages fetched successfully", messages);
+    const [messages, totalItems] = await Promise.all([
+      Message.find(messageQuery)
+        .select("conversation sender receiver text seen createdAt")
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .lean(),
+      Message.countDocuments(messageQuery),
+    ]);
+
+    messages.reverse();
+
+    return successResponse(res, 200, "Messages fetched successfully", {
+      messages,
+      pagination: {
+        page,
+        limit,
+        totalItems,
+        totalPages: Math.ceil(totalItems / limit),
+      },
+    });
   } catch (error) {
     return errorResponse(res, 500, "Fetch messages failed", error.message);
   }
@@ -98,26 +126,29 @@ export const markMessagesSeen = async (req, res) => {
       return errorResponse(res, 400, "Invalid conversationId");
     }
 
-    const conversation = await Conversation.findById(conversationId).select("participants");
+    const conversation = await Conversation.findById(conversationId)
+      .select("participants")
+      .lean();
 
     if (!conversation) return errorResponse(res, 404, "Conversation not found");
 
     const isParticipant = hasParticipant(conversation.participants, userId);
     if (!isParticipant) return errorResponse(res, 403, "Unauthorized access");
 
-    await Message.updateMany(
-      {
-        conversation: conversationId,
-        receiver: userId,
-        seen: false,
-      },
-      { seen: true },
-    );
-
-    await Conversation.updateOne(
-      { _id: conversationId },
-      { $set: { [`unreadCounts.${userId.toString()}`]: 0 } },
-    );
+    await Promise.all([
+      Message.updateMany(
+        {
+          conversation: conversationId,
+          receiver: userId,
+          seen: false,
+        },
+        { seen: true },
+      ),
+      Conversation.updateOne(
+        { _id: conversationId },
+        { $set: { [`unreadCounts.${userId.toString()}`]: 0 } },
+      ),
+    ]);
 
     return successResponse(res, 200, "Messages marked as seen");
   } catch (error) {

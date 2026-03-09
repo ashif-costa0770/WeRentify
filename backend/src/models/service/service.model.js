@@ -175,8 +175,14 @@ const serviceSchema = new mongoose.Schema(
   { timestamps: true },
 );
 
-// Indexes for better query performance
-serviceSchema.index({ category: 1, status: 1 });
+// Indexes for high-traffic read queries
+serviceSchema.index({ owner: 1 });
+serviceSchema.index({ category: 1 });
+serviceSchema.index({ status: 1, createdAt: -1 });
+serviceSchema.index({ category: 1, status: 1, createdAt: -1 });
+serviceSchema.index({ owner: 1, status: 1, createdAt: -1 });
+serviceSchema.index({ createdAt: -1 });
+serviceSchema.index({ _id: 1, status: 1 });
 
 const Service = mongoose.model("Service", serviceSchema);
 export default Service;

@@ -65,6 +65,12 @@ conversationSchema.index(
   { participantsKey: 1, refModel: 1, refId: 1 },
   { unique: true }
 );
+conversationSchema.index({ participants: 1, updatedAt: -1 });
+conversationSchema.index({ refModel: 1, refId: 1 });
+conversationSchema.index(
+  { refId: 1, updatedAt: -1 },
+  { partialFilterExpression: { refModel: "Service" } }
+);
 
 conversationSchema.statics.buildParticipantsKey = buildParticipantsKey;
 

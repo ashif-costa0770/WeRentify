@@ -8,6 +8,35 @@ import {
   deleteMultipleFromCloudinary,
 } from "../../config/cloudinary.js";
 
+const SERVICE_LIST_CACHE_TTL_MS = 60 * 1000;
+const serviceListCache = new Map();
+
+const buildServiceListCacheKey = ({ page, limit, category }) =>
+  `${page}:${limit}:${category || "all"}`;
+
+const getCachedServiceList = (key) => {
+  const cached = serviceListCache.get(key);
+  if (!cached) return null;
+
+  if (Date.now() - cached.createdAt > SERVICE_LIST_CACHE_TTL_MS) {
+    serviceListCache.delete(key);
+    return null;
+  }
+
+  return cached.data;
+};
+
+const setCachedServiceList = (key, data) => {
+  if (serviceListCache.size > 100) {
+    serviceListCache.clear();
+  }
+  serviceListCache.set(key, { createdAt: Date.now(), data });
+};
+
+const clearServiceListCache = () => {
+  serviceListCache.clear();
+};
+
 const parseTimeToMinutes = (value) => {
   const [hours, minutes] = String(value || "").split(":").map(Number);
   if (!Number.isFinite(hours) || !Number.isFinite(minutes)) return null;
@@ -107,6 +136,8 @@ export const createService = async (req, res) => {
       owner: req.user._id,
     });
 
+    clearServiceListCache();
+
     return successResponse(res, 201, "Service created successfully", {
       service,
     });
@@ -119,19 +150,66 @@ export const createService = async (req, res) => {
 //! Get all services
 export const getAllServices = async (req, res) => {
   try {
-    const services = await Service.find({ status: "active" })
-      .populate("owner")
-      .populate("category")
-      .sort({ createdAt: -1 });
+    const page = Math.max(Number.parseInt(req.query.page, 10) || 1, 1);
+    const limit = Math.min(
+      Math.max(Number.parseInt(req.query.limit, 10) || 12, 1),
+      50,
+    );
+    const skip = (page - 1) * limit;
 
-    if (!services) {
+    const query = { status: "active" };
+    if (
+      req.query.category &&
+      mongoose.Types.ObjectId.isValid(req.query.category)
+    ) {
+      query.category = req.query.category;
+    }
+
+    const cacheKey = buildServiceListCacheKey({
+      page,
+      limit,
+      category: query.category,
+    });
+    const cached = getCachedServiceList(cacheKey);
+    if (cached) {
+      return successResponse(res, 200, "All Services fetched successfully", cached);
+    }
+
+    const [services, totalItems] = await Promise.all([
+      Service.find(query)
+        .select(
+          "businessName serviceType category owner location hourlyRate rating reviewCount views bookings plan serviceMode createdAt photos",
+        )
+        .slice("photos", 1)
+        .populate("owner", "firstname lastname avatar")
+        .populate("category", "name icon")
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .lean(),
+      Service.countDocuments(query),
+    ]);
+
+    if (!services.length) {
       return errorResponse(res, 404, "No services found");
     }
-    return successResponse(res, 200, "All Services fetched successfully", {
+
+    const payload = {
       services,
-    });
+      pagination: {
+        page,
+        limit,
+        totalItems,
+        totalPages: Math.ceil(totalItems / limit),
+      },
+    };
+
+    setCachedServiceList(cacheKey, payload);
+
+    return successResponse(res, 200, "All Services fetched successfully", payload);
   } catch (error) {
     console.log("Error in fetching all servies", error.message);
+    return errorResponse(res, 500, "Failed to fetch services", error.message);
   }
 };
 
@@ -140,8 +218,10 @@ export const getAllServices = async (req, res) => {
 export const getSingleService = async (req, res) => {
   try {
     const service = await Service.findById(req.params.id)
-      .populate("owner")
-      .populate("category");
+      .select("-__v")
+      .populate("owner", "firstname lastname avatar email")
+      .populate("category", "name icon")
+      .lean();
     if (!service) {
       return errorResponse(res, 404, "No service found");
     }
@@ -150,6 +230,7 @@ export const getSingleService = async (req, res) => {
     });
   } catch (error) {
     console.log("Error in fetching single servie", error.message);
+    return errorResponse(res, 500, "Failed to fetch service", error.message);
   }
 };
 
@@ -161,7 +242,13 @@ export const getServicesByUser = async (req, res) => {
     const services = await Service.find({
       owner: userId,
       status: "active",
-    }).populate("owner" , "email firstname lastname avatar _id");
+    })
+      .select(
+        "businessName serviceType category owner location hourlyRate rating reviewCount views bookings plan serviceMode createdAt photos",
+      )
+      .slice("photos", 1)
+      .populate("owner" , "email firstname lastname avatar _id")
+      .lean();
 
     if (services.length === 0) {
       return errorResponse(res, 404, "User has no services");
@@ -274,6 +361,8 @@ export const updateService = async (req, res) => {
       { new: true, runValidators: true },
     );
 
+    clearServiceListCache();
+
     return successResponse(res, 200, "Service updated successfully", {
       service: updatedService,
     });
@@ -323,6 +412,7 @@ export const deleteService = async (req, res) => {
     }
 
     await Service.findByIdAndDelete(id);
+    clearServiceListCache();
     return successResponse(res, 200, "Service deleted successfully", {
       service,
     });
@@ -366,6 +456,7 @@ export const deleteServicePhoto = async (req, res) => {
     service.photos = service.photos.filter((p) => p.public_id !== publicId);
 
     await service.save();
+    clearServiceListCache();
 
     return successResponse(res, 200, "Photo deleted successfully", service);
   } catch (error) {
@@ -404,6 +495,7 @@ export const deleteServiceVideo = async (req, res) => {
     service.videos = service.videos.filter((v) => v.public_id !== publicId);
 
     await service.save();
+    clearServiceListCache();
 
     return successResponse(res, 200, "Video deleted successfully", service);
   } catch (error) {
