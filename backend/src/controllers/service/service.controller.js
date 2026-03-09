@@ -114,11 +114,11 @@ export const createService = async (req, res) => {
     // 1️⃣ Create Product in Stripe
     const product = await stripe.products.create({
       name: req.body.businessName,
-      images: uploadedPhotos[0].url,
+      images: [uploadedPhotos[0].url],
       metadata: {
         serviceId: serviceId.toString(),
         providerId: req.user._id.toString(),
-      }
+      },
     });
 
     // 2️⃣ Create Price in Stripe (amount in smallest unit)
