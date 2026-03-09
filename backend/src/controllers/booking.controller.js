@@ -5,11 +5,18 @@ import { errorResponse, successResponse } from "../utils/response.js";
 
 const ACTIVE_SLOT_STATUSES = ["pending", "accepted", "confirmed"];
 
+const getIdString = (value) => {
+  if (!value) return null;
+  if (typeof value === "string") return value;
+  if (typeof value === "object" && value._id) return String(value._id);
+  return String(value);
+};
+
 const canAccessBooking = (user, booking) => {
   if (!user || !booking) return false;
   const userId = String(user._id);
-  const isCustomer = String(booking.customer) === userId;
-  const isProvider = String(booking.provider) === userId;
+  const isCustomer = getIdString(booking.customer) === userId;
+  const isProvider = getIdString(booking.provider) === userId;
   const isAdmin = user.role === "admin";
   return isCustomer || isProvider || isAdmin;
 };
@@ -163,9 +170,8 @@ export const getBookedServiceSlotsByDate = async (req, res) => {
 export const getMyBookings = async (req, res) => {
   try {
     const bookings = await Booking.find({ customer: req.user._id })
-      .populate("customer", "firstname lastname email avatar")
-      .populate("provider", "firstname lastname email avatar")
-      .populate("resource")
+      .populate("provider", "firstname lastname")
+      .populate({ path: "resource", select: "itemName businessName" })
       .sort({ createdAt: -1 })
       .lean();
 

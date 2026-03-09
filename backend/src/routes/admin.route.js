@@ -28,6 +28,9 @@ import {
   getUserDetailsByAdmin,
   toggleListingStatusByAdmin,
   toggleServiceStatusByAdmin,
+  getAdminBookings,
+  updateBookingStatusByAdmin,
+  getBookingDetailsByAdmin,
 } from "../controllers/admin.controller.js";
 import validate from "../middlewares/validate.js";
 import { adminLoginSchema } from "../validations/admin.validation.js";
@@ -65,6 +68,11 @@ router.delete("/services/:serviceId", verifyAdmin, deleteServiceByAdmin);
 router.get("/posts", verifyAdmin, getAllPostsByAdmin);
 router.get("/posts/:postId", verifyAdmin, getPostDetailsByAdmin);
 router.delete("/posts/:postId", verifyAdmin, deletePostByAdmin);
+
+//bookings
+router.get("/bookings", verifyAdmin, getAdminBookings);
+router.get("/bookings/:bookingId", verifyAdmin, getBookingDetailsByAdmin);
+router.patch("/bookings/:bookingId/status", verifyAdmin, updateBookingStatusByAdmin);
 
 //get all plans
 router.get("/plans", verifyAdmin, getAllPlansByAdmin);

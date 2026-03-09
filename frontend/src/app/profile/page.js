@@ -25,6 +25,7 @@ import {
   LogOut,
   Lock,
   MessageSquare,
+  CalendarCheck,
 } from "lucide-react";
 
 const PricingModal = dynamic(
@@ -65,6 +66,10 @@ const MyListings = dynamic(
 const MyPosts = dynamic(() => import("@/app/profile/_components/MyPosts"), {
   ssr: false,
 });
+const MyBookings = dynamic(
+  () => import("@/app/profile/_components/MyBookings"),
+  { ssr: false },
+);
 
 export default function AccountProfile() {
   const extractPlanId = (planValue) => {
@@ -295,7 +300,7 @@ export default function AccountProfile() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="min-h-screen bg-gray-100 overflow-x-hidden">
       <div className="max-w-7xl mx-auto px-4 py-10 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-6 items-start">
           <aside className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden flex flex-col">
@@ -358,6 +363,12 @@ export default function AccountProfile() {
                 onClick={() => setActiveSection("my-posts")}
                 active={activeSection === "my-posts"}
               />
+              <SidebarItem
+                icon={<CalendarCheck size={16} />}
+                label="My Bookings"
+                onClick={() => setActiveSection("my-bookings")}
+                active={activeSection === "my-bookings"}
+              />
             </nav>
 
             <div className="border-t border-gray-100" />
@@ -418,7 +429,7 @@ export default function AccountProfile() {
             />
           </aside>
 
-          <div className="space-y-6">
+          <div className="space-y-6 min-w-0">
             {activeSection === "profile" ? (
               <>
                 <main className="bg-white rounded-2xl border border-gray-200 shadow-sm p-4 sm:p-8">
@@ -598,6 +609,8 @@ export default function AccountProfile() {
               <MyListings />
             ) : activeSection === "my-posts" ? (
               <MyPosts />
+            ) : activeSection === "my-bookings" ? (
+              <MyBookings />
             ) : null}
           </div>
         </div>

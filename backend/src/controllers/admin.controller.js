@@ -13,6 +13,7 @@ import Favorite from "../models/favorite.model.js";
 import mongoose from "mongoose";
 import { deleteMultipleFromCloudinary } from "../config/cloudinary.js";
 import stripe from "../config/stripe.js";
+import Booking from "../models/booking.model.js";
 
 const LOCALHOST_HOSTNAMES = new Set(["localhost", "127.0.0.1", "::1"]);
 
@@ -1258,3 +1259,86 @@ export const toggleServiceStatusByAdmin = async (req, res) =>{
     return errorResponse(res, 500, "Failed to update service status", error.message);    
   }
 }
+
+//! Update booking status (admin)
+export const updateBookingStatusByAdmin = async (req, res) => {
+  try {
+    const { bookingId } = req.params;
+    const { status } = req.body;
+
+    const VALID_STATUSES = ["pending", "accepted", "confirmed", "completed", "cancelled", "rejected"];
+
+    if (!status || !VALID_STATUSES.includes(status)) {
+      return errorResponse(res, 400, `Invalid status. Must be one of: ${VALID_STATUSES.join(", ")}`);
+    }
+
+    const booking = await Booking.findById(bookingId);
+    if (!booking) {
+      return errorResponse(res, 404, "Booking not found");
+    }
+
+    booking.status = status;
+    await booking.save();
+
+    return successResponse(res, 200, "Booking status updated successfully", { bookingId, status });
+  } catch (error) {
+    return errorResponse(res, 500, "Failed to update booking status", error.message);
+  }
+};
+
+//! Get all bookings with pagination (admin)
+export const getAdminBookings = async (req, res) => {
+  try {
+
+    const page = Math.max(parseInt(req.query.page, 10) || 1, 1);
+    const limit = Math.min(Math.max(parseInt(req.query.limit, 10) || 10, 1), 50);
+
+    const skip = (page - 1) * limit;
+
+    const [bookings, totalBookings] = await Promise.all([
+      Booking.find({})
+        .populate("customer", "firstname lastname email")
+        .populate("provider", "firstname lastname email")
+        .populate("resource", "itemName businessName")
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .lean(),
+      Booking.countDocuments(),
+    ]);
+
+    return successResponse(res, 200, "Bookings fetched successfully", {
+      bookings,
+      pagination: {
+        total: totalBookings,
+        page,
+        limit,
+        totalPages: Math.ceil(totalBookings / limit)
+      }
+    });
+
+  } catch (error) {
+    return errorResponse(res, 500, "Failed to fetch bookings", error.message);
+  }
+};
+
+//! Get single booking details (admin)
+export const getBookingDetailsByAdmin = async (req, res) => {
+  try {
+    const { bookingId } = req.params;
+
+    const booking = await Booking.findById(bookingId)
+      .populate("customer", "firstname lastname email avatar")
+      .populate("provider", "firstname lastname email avatar")
+      .populate("resource")
+      .lean();
+
+    if (!booking) {
+      return errorResponse(res, 404, "Booking not found");
+    }
+
+    return successResponse(res, 200, "Booking fetched successfully", booking);
+  } catch (error) {
+    return errorResponse(res, 500, "Failed to fetch booking", error.message);
+  }
+};
