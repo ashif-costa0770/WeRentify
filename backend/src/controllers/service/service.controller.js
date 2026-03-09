@@ -1,6 +1,7 @@
 import Service from "../../models/service/service.model.js";
 import stripe from "../../config/stripe.js";
 import mongoose from "mongoose";
+import NodeCache from "node-cache";
 import { successResponse, errorResponse } from "../../utils/response.js";
 import {
   uploadBufferToCloudinary,
@@ -8,33 +9,46 @@ import {
   deleteMultipleFromCloudinary,
 } from "../../config/cloudinary.js";
 
-const SERVICE_LIST_CACHE_TTL_MS = 60 * 1000;
-const serviceListCache = new Map();
+const SERVICE_LIST_CACHE_TTL_SECONDS = 60;
+const SERVICE_DETAILS_CACHE_TTL_SECONDS = 60;
+const serviceCache = new NodeCache({
+  stdTTL: SERVICE_LIST_CACHE_TTL_SECONDS,
+  checkperiod: 120,
+  useClones: false,
+});
 
 const buildServiceListCacheKey = ({ page, limit, category }) =>
   `${page}:${limit}:${category || "all"}`;
+const buildServiceDetailsCacheKey = (serviceId) => `service:${serviceId}`;
 
 const getCachedServiceList = (key) => {
-  const cached = serviceListCache.get(key);
-  if (!cached) return null;
-
-  if (Date.now() - cached.createdAt > SERVICE_LIST_CACHE_TTL_MS) {
-    serviceListCache.delete(key);
-    return null;
-  }
-
-  return cached.data;
+  return serviceCache.get(key) || null;
 };
 
 const setCachedServiceList = (key, data) => {
-  if (serviceListCache.size > 100) {
-    serviceListCache.clear();
-  }
-  serviceListCache.set(key, { createdAt: Date.now(), data });
+  serviceCache.set(key, data, SERVICE_LIST_CACHE_TTL_SECONDS);
 };
 
 const clearServiceListCache = () => {
-  serviceListCache.clear();
+  const keys = serviceCache.keys().filter((key) => !key.startsWith("service:"));
+  if (keys.length) {
+    serviceCache.del(keys);
+  }
+};
+
+const getCachedServiceDetails = (serviceId) => {
+  const key = buildServiceDetailsCacheKey(serviceId);
+  return serviceCache.get(key) || null;
+};
+
+const setCachedServiceDetails = (serviceId, data) => {
+  const key = buildServiceDetailsCacheKey(serviceId);
+  serviceCache.set(key, data, SERVICE_DETAILS_CACHE_TTL_SECONDS);
+};
+
+const clearServiceDetailsCache = (serviceId) => {
+  const key = buildServiceDetailsCacheKey(serviceId);
+  serviceCache.del(key);
 };
 
 const parseTimeToMinutes = (value) => {
@@ -137,6 +151,7 @@ export const createService = async (req, res) => {
     });
 
     clearServiceListCache();
+    clearServiceDetailsCache(service._id.toString());
 
     return successResponse(res, 201, "Service created successfully", {
       service,
@@ -178,7 +193,7 @@ export const getAllServices = async (req, res) => {
     const [services, totalItems] = await Promise.all([
       Service.find(query)
         .select(
-          "businessName serviceType category owner location hourlyRate rating reviewCount views bookings plan serviceMode createdAt photos",
+          "businessName serviceType category owner hourlyRate rating reviewCount verified serviceRadius location createdAt photos",
         )
         .slice("photos", 1)
         .populate("owner", "firstname lastname avatar")
@@ -217,14 +232,27 @@ export const getAllServices = async (req, res) => {
 //! Get single service
 export const getSingleService = async (req, res) => {
   try {
-    const service = await Service.findById(req.params.id)
-      .select("-__v")
-      .populate("owner", "firstname lastname avatar email")
+    const { id } = req.params;
+    const cachedService = getCachedServiceDetails(id);
+    if (cachedService) {
+      return successResponse(res, 200, "Service fetched successfully", {
+        service: cachedService,
+      });
+    }
+
+    const service = await Service.findById(id)
+      .select(
+        "businessName serviceType category yearsInBusiness description location serviceRadius phone email website certifications photos.url photos.public_id videos.url videos.public_id hourlyRate plan stripePriceId stripeProductId owner views bookings rating reviewCount status serviceMode availableSlots verified createdAt updatedAt",
+      )
+      .populate("owner", "firstname lastname avatar")
       .populate("category", "name icon")
       .lean();
     if (!service) {
       return errorResponse(res, 404, "No service found");
     }
+
+    setCachedServiceDetails(id, service);
+
     return successResponse(res, 200, "Service fetched successfully", {
       service,
     });
@@ -362,6 +390,7 @@ export const updateService = async (req, res) => {
     );
 
     clearServiceListCache();
+    clearServiceDetailsCache(id);
 
     return successResponse(res, 200, "Service updated successfully", {
       service: updatedService,
@@ -413,6 +442,7 @@ export const deleteService = async (req, res) => {
 
     await Service.findByIdAndDelete(id);
     clearServiceListCache();
+    clearServiceDetailsCache(id);
     return successResponse(res, 200, "Service deleted successfully", {
       service,
     });
@@ -457,6 +487,7 @@ export const deleteServicePhoto = async (req, res) => {
 
     await service.save();
     clearServiceListCache();
+    clearServiceDetailsCache(id);
 
     return successResponse(res, 200, "Photo deleted successfully", service);
   } catch (error) {
@@ -496,6 +527,7 @@ export const deleteServiceVideo = async (req, res) => {
 
     await service.save();
     clearServiceListCache();
+    clearServiceDetailsCache(id);
 
     return successResponse(res, 200, "Video deleted successfully", service);
   } catch (error) {

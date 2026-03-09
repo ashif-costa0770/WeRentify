@@ -176,6 +176,7 @@ const serviceSchema = new mongoose.Schema(
 );
 
 // Indexes for high-traffic read queries
+serviceSchema.index({ status: 1 });
 serviceSchema.index({ owner: 1 });
 serviceSchema.index({ category: 1 });
 serviceSchema.index({ status: 1, createdAt: -1 });

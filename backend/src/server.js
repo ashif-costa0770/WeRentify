@@ -24,6 +24,8 @@ import favoriteRoute from "./routes/favorite.route.js";
 import messageRoutes from "./routes/messages/message.route.js";
 import conversationRoutes from "./routes/messages/conversation.route.js";
 import Conversation from "./models/messages/conversation.model.js";
+import Message from "./models/messages/message.model.js";
+import Service from "./models/service/service.model.js";
 import paymentRoutes from "./routes/payment.route.js";
 import connectRoutes from "./routes/connect.route.js";
 import planRoutes from "./routes/plan.route.js";
@@ -184,7 +186,11 @@ if (missingParticipantsKey.length > 0) {
   }
 }
 
-await Conversation.syncIndexes();
+await Promise.all([
+  Conversation.syncIndexes(),
+  Message.syncIndexes(),
+  Service.syncIndexes(),
+]);
 
 
 /* ✅ HTTP SERVER (REQUIRED FOR SOCKET.IO) */

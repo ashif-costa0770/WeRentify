@@ -66,6 +66,7 @@ conversationSchema.index(
   { unique: true }
 );
 conversationSchema.index({ participants: 1, updatedAt: -1 });
+conversationSchema.index({ updatedAt: -1 });
 conversationSchema.index({ refModel: 1, refId: 1 });
 conversationSchema.index(
   { refId: 1, updatedAt: -1 },

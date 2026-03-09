@@ -100,21 +100,33 @@ export const getUserConversations = async (req, res) => {
 
     const [conversations, totalItems] = await Promise.all([
       Conversation.find(query)
-        .select("participants refModel refId lastMessage unreadCounts updatedAt")
+        .select(
+          "participants refModel refId lastMessage.text lastMessage.sender lastMessage.createdAt unreadCounts updatedAt",
+        )
         .sort({ updatedAt: -1 })
         .skip(skip)
         .limit(limit)
-        .populate("participants", "firstname lastname avatar email")
+        .populate("participants", "firstname lastname avatar")
         .lean(),
       Conversation.countDocuments(query),
     ]);
+
+    const optimizedConversations = conversations.map((item) => ({
+      ...item,
+      lastMessage: item.lastMessage
+        ? {
+            ...item.lastMessage,
+            text: item.lastMessage.text?.slice(0, 160) || "",
+          }
+        : null,
+    }));
 
     return successResponse(
       res,
       200,
       "Conversations fetched successfully",
       {
-        conversations,
+        conversations: optimizedConversations,
         pagination: {
           page,
           limit,
