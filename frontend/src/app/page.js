@@ -1,33 +1,36 @@
 "use client";
 
+// Force dynamic rendering so build doesn't try to statically export this page
+// (we rely on useSearchParams and client-side redirects).
+export const dynamic = "force-dynamic";
+
 import { useMemo, useState, useEffect } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
-import dynamic from "next/dynamic";
+import { useRouter } from "next/navigation";
+import nextDynamic from "next/dynamic";
 import NavbarWrapper from "@/app/_components/navbar/NavbarWrapper";
 import ItemCategoriesSection from "@/app/_components/CategoryGrid/ItemCategoriesSection";
 import ItemGrid from "@/app/_components/itemCards/ItemGrid";
 import { getListings } from "@/services/item.service";
 
-const FiltersSlicer = dynamic(
+const FiltersSlicer = nextDynamic(
   () => import("@/app/_components/modals/FiltersSlicer"),
   {
     ssr: false,
   },
 );
-const MessageSlider = dynamic(
+const MessageSlider = nextDynamic(
   () => import("@/app/_components/modals/MessageSlider"),
   {
     ssr: false,
   },
 );
-const OwnerProfileModal = dynamic(
+const OwnerProfileModal = nextDynamic(
   () => import("@/app/_components/modals/OwnerProfileModal"),
   { ssr: false },
 );
 
 export default function ListingPage() {
   const router = useRouter();
-  const searchParams = useSearchParams();
 
   /* ---------------- STATE: LISTINGS & FETCHING ---------------- */
   const [items, setItems] = useState([]);
@@ -140,11 +143,13 @@ export default function ListingPage() {
 
   // Redirect shared links (?item=id) to the listing page
   useEffect(() => {
-    const itemId = searchParams.get("item");
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    const itemId = params.get("item");
     if (itemId) {
       router.replace(`/listing/${itemId}`);
     }
-  }, [searchParams, router]);
+  }, [router]);
 
   // Handle Apply Filters from Slicer
   const handleApplyFilters = () => {
