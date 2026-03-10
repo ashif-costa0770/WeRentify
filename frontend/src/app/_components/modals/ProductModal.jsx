@@ -107,7 +107,7 @@ export default function ProductModal({
     const result = await shareOrCopyLink({
       title: selectedItem.itemName || selectedItem.name,
       text: `Check out this ${selectedItem.itemName || selectedItem.name} for rent on WeRentify!`,
-      url: itemId ? `/?item=${itemId}` : "/",
+      url: itemId ? `/listing/${itemId}` : "/",
     });
 
     if (result === "shared") toast.success("Listing shared!");

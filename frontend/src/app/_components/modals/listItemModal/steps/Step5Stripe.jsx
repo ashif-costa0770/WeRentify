@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { CreditCard, Check, Loader2 } from "lucide-react";
-import api from "@/lib/api";
+// import api from "@/lib/api";
 import { useUser } from "@/context/UserContext";
 import { toast } from "sonner";
 
@@ -14,23 +14,29 @@ export default function Step5Stripe({ formData, setFormData }) {
     formData.stripeConnected || Boolean(user?.stripeConnectAccountId);
 
   const handleConnectStripe = async () => {
-    try {
-      setIsLoading(true);
-      const res = await api.post("/connect/account-link");
-      const url = res.data?.url;
-      if (url) {
-        window.location.href = url;
-        return;
-      }
-      toast.error("Could not get Stripe link");
-    } catch (err) {
-      console.error("Connect Stripe error:", err);
-      const msg =
-        err?.response?.data?.error || "Failed to connect Stripe. Try again.";
-      toast.error(msg);
-    } finally {
-      setIsLoading(false);
-    }
+    // try {
+    //   setIsLoading(true);
+    //   const res = await api.post("/connect/account-link");
+    //   const url = res.data?.url;
+    //   if (url) {
+    //     window.location.href = url;
+    //     return;
+    //   }
+    //   toast.error("Could not get Stripe link");
+    // } catch (err) {
+    //   console.error("Connect Stripe error:", err);
+    //   const msg =
+    //     err?.response?.data?.error || "Failed to connect Stripe. Try again.";
+    //   toast.error(msg);
+    // } finally {
+    //   setIsLoading(false);
+    // }
+    setIsLoading(true);
+    // Skip real Stripe onboarding for now – simulate connected state
+    await new Promise((r) => setTimeout(r, 600));
+    setFormData((prev) => ({ ...prev, stripeConnected: true }));
+    toast.success("Stripe connected. You can now add your listing.");
+    setIsLoading(false);
   };
 
   const handleSignUpClick = () => {

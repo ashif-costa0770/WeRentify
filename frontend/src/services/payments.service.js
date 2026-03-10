@@ -19,3 +19,11 @@ export const createServiceBookingCheckoutSession = (payload) => {
 export const verifyServiceBookingSession = (sessionId) => {
   return api.get(`/payments/service-booking/verify-session/${sessionId}`);
 };
+
+export const createListingBookingCheckoutSession = (payload) => {
+  return api.post("/payments/listing-booking/create-checkout-session", payload);
+};
+
+export const verifyListingBookingSession = (sessionId) => {
+  return api.get(`/payments/listing-booking/verify-session/${sessionId}`);
+};

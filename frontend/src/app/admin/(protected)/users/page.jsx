@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { Search } from "lucide-react";
 import { toast } from "sonner";
 
 import UsersTable from "./components/users-table";
@@ -16,6 +17,7 @@ export default function UsersPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [page, setPage] = useState(1);
+  const [searchValue, setSearchValue] = useState("");
   const [actionLoadingId, setActionLoadingId] = useState(null);
   const [pagination, setPagination] = useState({
     total: 0,
@@ -158,9 +160,21 @@ export default function UsersPage() {
 
   return (
     <section className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold text-slate-800">Users</h1>
-        <p className="mt-1 text-sm text-slate-500">Manage platform users</p>
+      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+        <div>
+          <h1 className="text-2xl font-semibold text-slate-800">Users</h1>
+          <p className="mt-1 text-sm text-slate-500">Manage platform users</p>
+        </div>
+        <div className="relative w-full md:w-[280px]">
+          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
+          <input
+            type="text"
+            value={searchValue}
+            onChange={(e) => setSearchValue(e.target.value)}
+            placeholder="Search users..."
+            className="h-10 w-full rounded-xl border border-slate-300 bg-white pl-9 pr-3 text-sm text-slate-700 outline-none transition focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100"
+          />
+        </div>
       </div>
 
       {error ? (
@@ -173,6 +187,8 @@ export default function UsersPage() {
         columns={columns}
         data={users}
         loading={loading}
+        searchValue={searchValue}
+        onSearchChange={setSearchValue}
         currentPage={currentPage}
         totalPages={totalPages}
         canGoPrevious={canGoPrevious}

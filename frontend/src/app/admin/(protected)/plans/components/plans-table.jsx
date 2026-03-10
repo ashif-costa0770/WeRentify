@@ -1,10 +1,9 @@
 "use client";
 
 import { flexRender, getCoreRowModel, getSortedRowModel, useReactTable } from "@tanstack/react-table";
-import { ArrowUpDown, ChevronDown, ChevronUp } from "lucide-react";
+import { ArrowUpDown, ChevronDown, ChevronUp, Search } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import {
   Table,
   TableBody,
@@ -37,12 +36,16 @@ export default function PlansTable({
   return (
     <div className="space-y-4">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <Input
-          placeholder="Search plans..."
-          value={searchValue}
-          onChange={(event) => onSearchChange(event.target.value)}
-          className="w-full sm:max-w-sm border-slate-300 bg-white text-slate-800 placeholder:text-slate-500 shadow-sm focus-visible:border-indigo-400 focus-visible:ring-indigo-200"
-        />
+        <div className="relative w-full sm:max-w-sm">
+          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
+          <input
+            type="text"
+            value={searchValue}
+            onChange={(e) => onSearchChange(e.target.value)}
+            placeholder="Search plans..."
+            className="h-10 w-full rounded-xl border border-slate-300 bg-white pl-9 pr-3 text-sm text-slate-700 outline-none transition focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100"
+          />
+        </div>
       </div>
 
       <div className="rounded-xl border bg-white shadow-sm overflow-hidden">

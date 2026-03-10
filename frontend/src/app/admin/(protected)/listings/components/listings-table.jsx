@@ -4,7 +4,6 @@ import { flexRender, getCoreRowModel, getSortedRowModel, useReactTable } from "@
 import { ArrowUpDown, ChevronDown, ChevronUp } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import {
   Table,
   TableBody,
@@ -42,15 +41,6 @@ export default function ListingsTable({
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <Input
-          placeholder="Search listings..."
-          value={searchValue}
-          onChange={(event) => onSearchChange(event.target.value)}
-          className="w-full sm:max-w-sm border-slate-300 bg-white text-slate-800 placeholder:text-slate-500 shadow-sm focus-visible:border-indigo-400 focus-visible:ring-indigo-200"
-        />
-      </div>
-
       <div className="rounded-xl border bg-white shadow-sm overflow-hidden">
         <Table>
           <TableHeader>

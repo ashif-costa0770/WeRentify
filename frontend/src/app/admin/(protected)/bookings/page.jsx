@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { Search } from "lucide-react";
 
 import AdminGuard from "../AdminGuard";
 import { toast } from "sonner";
@@ -197,11 +198,23 @@ export default function AdminBookingsPage() {
   return (
     <AdminGuard>
       <section className="space-y-6">
-        <div>
-          <h1 className="text-2xl font-semibold text-slate-800">Bookings</h1>
-          <p className="mt-1 text-sm text-slate-500">
-            View all bookings for services and listings.
-          </p>
+        <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+          <div>
+            <h1 className="text-2xl font-semibold text-slate-800">Bookings</h1>
+            <p className="mt-1 text-sm text-slate-500">
+              View all bookings for services and listings.
+            </p>
+          </div>
+          <div className="relative w-full md:w-[280px]">
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
+            <input
+              type="text"
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
+              placeholder="Search bookings..."
+              className="h-10 w-full rounded-xl border border-slate-300 bg-white pl-9 pr-3 text-sm text-slate-700 outline-none transition focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100"
+            />
+          </div>
         </div>
 
         {error ? (

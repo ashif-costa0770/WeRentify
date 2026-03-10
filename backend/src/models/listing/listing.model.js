@@ -116,6 +116,17 @@ const listingSchema = new mongoose.Schema({
   },
 
   // Step 5: Payment (for future)
+
+  stripePriceId: {
+    type: String,
+    required: true,
+  },
+
+  stripeProductId: {
+    type: String,
+    required: true,
+  },
+  
   stripeConnected: {
     type: Boolean,
     default: false

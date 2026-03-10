@@ -1,3 +1,4 @@
+import mongoose from "mongoose";
 import Listing from "../../models/listing/listing.model.js";
 import { geocodeAddress } from "../../utils/geocode.js";
 import {
@@ -11,6 +12,7 @@ import {
   paginatedResponse,
 } from "../../utils/response.js";
 import User from "../../models/users/user.model.js";
+import stripe from "../../config/stripe.js";
 
 //! Create listing
 export const createListing = async (req, res) => {
@@ -33,6 +35,7 @@ export const createListing = async (req, res) => {
 
     // 🎥 Upload Videos (Optional)
     let uploadedVideos = [];
+    const listingId = new mongoose.Types.ObjectId();
 
     if (req.files?.videos) {
       // Limit max video
@@ -64,8 +67,28 @@ export const createListing = async (req, res) => {
       }
     }
 
+    // 1️⃣ Create Product in Stripe
+    const product = await stripe.products.create({
+      name: req.body.itemName,
+      images: [uploadedPhotos[0].url],
+      metadata: {
+        listingId: listingId.toString(),
+        ownerId: req.user._id.toString(),
+      },
+    });
+
+    // 2️⃣ Create Price in Stripe (amount in smallest unit)
+    const stripePrice = await stripe.prices.create({
+      product: product.id,
+      unit_amount: Math.round(Number(req.body.dailyRate) * 100),
+      currency: "usd",
+    });
+
     const listing = await Listing.create({
       ...req.body,
+      _id: listingId.toString(),
+      stripePriceId: stripePrice.id,
+      stripeProductId: product.id,
       coordinates, // ✅ THIS is for storing calculated coordinates
       photos: uploadedPhotos,
       videos: uploadedVideos, // optional
@@ -83,9 +106,10 @@ export const createListing = async (req, res) => {
 export const getAllListings = async (req, res) => {
   try {
     const listings = await Listing.find({ status: "active" })
-      .populate("owner")
-      .populate("category")
-      .sort({ createdAt: -1 });
+      .populate("owner","email firstname lastname avatar _id")
+      .populate("category","name")
+      .sort({ createdAt: -1 })
+      .lean();
 
     if (!listings) {
       return errorResponse(res, 404, "No listings found");
@@ -103,7 +127,10 @@ export const getListingById = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const listing = await Listing.findOne({ _id: id, status: "active" });
+    const listing = await Listing.findOne({ _id: id, status: "active" })
+      .populate("owner","email firstname lastname avatar _id")
+      .populate("category","name")
+      .lean();
 
     if (!listing) {
       return errorResponse(res, 404, "Listing not found");
@@ -129,11 +156,11 @@ export const getListingByUser = async (req, res) => {
     const userId = req.user._id;
 
     const user = await User.findById(userId);
-    
+
     const listings = await Listing.find({
       owner: userId,
       status: "active",
-    }).populate("owner", "email firstname lastname avatar _id");
+    }).populate("owner", "email firstname lastname avatar _id").lean();
 
     if (listings.length === 0) {
       return errorResponse(res, 404, "User has no listings");
@@ -226,6 +253,34 @@ export const updateListing = async (req, res) => {
       offerDelivery = offerDelivery === "true" || offerDelivery === true;
     }
 
+     //! if hourly rate is changing, create new stripe price
+     if (req.body.hourlyRate !== undefined && req.body.hourlyRate !== listing.hourlyRate){
+      const priceInSmallestUnit = Math.round(Number(req.body.hourlyRate)*100);
+      const stripePrice = await stripe.prices.create({
+        product: listing.stripeProductId,
+        unit_amount: priceInSmallestUnit,        
+        currency: "usd",
+      });
+      listing.stripePriceId = stripePrice.id;
+      listing.hourlyRate = req.body.hourlyRate;
+    }
+
+    
+    //! if item name is changing, update item name in stripe
+    if (req.body.itemName !== undefined && req.body.itemName !== listing.itemName){
+      await stripe.products.update(listing.stripeProductId, {
+        name: req.body.itemName,
+      });
+      listing.itemName = req.body.itemName;
+    }
+    //! if photos are changing, update photos in stripe
+    if (updatedPhotos.length > 0) {
+      await stripe.products.update(listing.stripeProductId, {
+        images: [updatedPhotos[0].url], // only one image sent to Stripe
+      });
+      listing.photos = updatedPhotos;
+    }
+
     const updated = await Listing.findByIdAndUpdate(
       id,
       {
@@ -261,6 +316,18 @@ export const deleteListing = async (req, res) => {
         listing.videos.map((v) => v.public_id),
         "video",
       );
+    }
+    //! deactivate stripe product
+    if(listing.stripeProductId){
+      await stripe.products.update(listing.stripeProductId, {
+        active: false
+      })
+    }
+    //! deactivate stripe price
+    if(listing.stripePriceId){
+      await stripe.prices.update(listing.stripePriceId, {
+        active: false
+      })
     }
     await Listing.findByIdAndDelete(req.params.id);
     return successResponse(res, 200, "Listing deleted successfully");

@@ -15,11 +15,11 @@ import {
   ChevronUp,
   Loader2,
   MoreHorizontal,
+  Search,
   X,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import {
   Table,
   TableBody,
@@ -479,21 +479,27 @@ export default function MyBookings() {
   return (
     <div className="space-y-4 min-w-0">
       <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-4 sm:p-6">
-        <h1 className="text-2xl font-semibold text-gray-900 mb-4">
-          My Bookings
-        </h1>
-        <p className="text-sm text-gray-500 mb-4">
-          View all your bookings for services and listings.
-        </p>
+        <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between mb-4">
+          <div>
+            <h1 className="text-2xl font-semibold text-gray-900">
+              My Bookings
+            </h1>
+            <p className="text-sm text-gray-500 mt-1">
+              View all your bookings for services and listings.
+            </p>
+          </div>
 
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-4">
-          <Input
-            id="booking-search"
-            placeholder="Search bookings by title, type, or provider..."
-            value={searchValue}
-            onChange={(e) => setSearchValue(e.target.value)}
-            className="w-full sm:max-w-md border-gray-300 bg-white text-gray-800 placeholder:text-gray-500 shadow-sm focus-visible:border-indigo-400 focus-visible:ring-indigo-200"
-          />
+          <div className="relative w-full md:w-[280px]">
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-500" />
+            <input
+              id="booking-search"
+              type="text"
+              value={searchValue}
+              onChange={(e) => setSearchValue(e.target.value)}
+              placeholder="Search by title, type, or provider"
+              className="h-10 w-full rounded-xl border border-gray-300 bg-white pl-9 pr-3 text-sm text-gray-700 outline-none transition focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100"
+            />
+          </div>
         </div>
 
         <div className="rounded-xl border bg-white shadow-sm overflow-hidden">

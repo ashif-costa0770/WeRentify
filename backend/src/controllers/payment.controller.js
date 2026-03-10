@@ -2,6 +2,7 @@ import stripe from "../config/stripe.js";
 import Booking from "../models/booking.model.js";
 import Plan from "../models/plan.model.js";
 import Service from "../models/service/service.model.js";
+import Listing from "../models/listing/listing.model.js";
 import User from "../models/users/user.model.js";
 import { errorResponse, successResponse } from "../utils/response.js";
 
@@ -170,6 +171,125 @@ export const createServiceBookingCheckoutSession = async (req, res) => {
   }
 };
 
+//! Create listing booking checkout session (card)
+export const createListingBookingCheckoutSession = async (req, res) => {
+  try {
+    const { listingId, startDate, endDate, address, notes } = req.body;
+
+    if (!listingId || !startDate || !endDate) {
+      return errorResponse(res, 400, "listingId, startDate and endDate are required");
+    }
+
+    const listing = await Listing.findById(listingId)
+      .select("_id owner itemName dailyRate hourlyRate weeklyRate stripePriceId stripeProductId status isAvailable photos")
+      .lean();
+    if (!listing) {
+      return errorResponse(res, 404, "Listing not found");
+    }
+    if (!listing.stripePriceId) {
+      return errorResponse(res, 400, "Listing is not configured for Stripe checkout");
+    }
+    if (String(listing.owner) === String(req.user._id)) {
+      return errorResponse(res, 400, "You cannot book your own listing");
+    }
+    if (String(listing.status || "active").toLowerCase() !== "active" || listing.isAvailable === false) {
+      return errorResponse(res, 400, "Listing is not available for booking");
+    }
+
+    const start = new Date(String(startDate));
+    const end = new Date(String(endDate));
+    if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) {
+      return errorResponse(res, 400, "Invalid startDate or endDate");
+    }
+    if (end <= start) {
+      return errorResponse(res, 400, "endDate must be greater than startDate");
+    }
+
+    const msPerDay = 1000 * 60 * 60 * 24;
+    const rawDays = Math.round((end.getTime() - start.getTime()) / msPerDay);
+    const rentalDays = Math.max(rawDays, 1);
+
+    const dailyRate = Math.max(toNumber(listing.dailyRate), 0);
+    const hourlyRate = Math.max(toNumber(listing.hourlyRate), 0);
+    const weeklyRate = Math.max(toNumber(listing.weeklyRate), 0);
+
+    const fallbackDayRate = dailyRate || (hourlyRate > 0 ? hourlyRate * 24 : 0);
+    let baseAmount = 0;
+    if (weeklyRate > 0 && rentalDays >= 7) {
+      const weeks = Math.floor(rentalDays / 7);
+      const extraDays = rentalDays - weeks * 7;
+      baseAmount = weeks * weeklyRate + extraDays * fallbackDayRate;
+    } else {
+      baseAmount = rentalDays * fallbackDayRate;
+    }
+
+    const customer = await User.findById(req.user._id)
+      .select("_id email plan")
+      .populate("plan", "platformFeePercent")
+      .lean();
+    if (!customer) {
+      return errorResponse(res, 404, "User not found");
+    }
+
+    const platformFeePercent = Math.max(toNumber(customer?.plan?.platformFeePercent), 0);
+    const platformFee = Math.max((baseAmount * platformFeePercent) / 100, 0);
+    const totalPrice = Math.max(baseAmount + platformFee, 0);
+
+    const frontUrl = process.env.FRONTEND_URL;
+    const listingName = String(listing.itemName || "Listing").trim();
+    const imageUrl = String(listing?.photos?.[0]?.url || "").trim();
+    const productData = { name: listingName };
+    if (imageUrl) {
+      productData.images = [imageUrl];
+    }
+
+    const lineItems = [
+      {
+        price_data: {
+          currency: "usd",
+          unit_amount: Math.max(Math.round(totalPrice * 100), 0),
+          product_data: productData,
+        },
+        quantity: 1,
+      },
+    ];
+
+    const session = await stripe.checkout.sessions.create({
+      mode: "payment",
+      payment_method_types: ["card"],
+      line_items: lineItems,
+      success_url: `${frontUrl}/booking/success?session_id={CHECKOUT_SESSION_ID}&type=listing`,
+      cancel_url: `${frontUrl}/booking/cancel?listingId=${listing._id.toString()}`,
+      customer_email: customer.email || undefined,
+      metadata: {
+        userId: String(customer._id),
+        listingId: String(listing._id),
+        listingName,
+        startDate: String(startDate),
+        endDate: String(endDate),
+        rentalDays: String(rentalDays),
+        address: String(address || "").trim().slice(0, 450),
+        notes: String(notes || "").trim().slice(0, 450),
+        stripePriceId: String(listing.stripePriceId || ""),
+        stripeProductId: String(listing.stripeProductId || ""),
+        baseAmount: String(baseAmount),
+        platformFee: String(platformFee),
+        totalPrice: String(totalPrice),
+        currency: "USD",
+        paymentMethod: "card",
+      },
+    });
+
+    return successResponse(res, 200, "Listing checkout session created", {
+      url: session.url,
+      sessionId: session.id,
+    });
+  } catch (error) {
+    console.error("Error in createListingBookingCheckoutSession:", error.message);
+    return errorResponse(res, 500, "Failed to create listing checkout session", error.message);
+  }
+};
+
 //! Verify session
 export const verifySession = async (req, res) => {
   try {
@@ -305,5 +425,115 @@ export const verifyServiceBookingSession = async (req, res) => {
   } catch (error) {
     console.error("Error in verifyServiceBookingSession:", error.message);
     return errorResponse(res, 500, "Failed to verify service booking session", error.message);
+  }
+};
+
+//! Verify listing booking payment and create booking
+export const verifyListingBookingSession = async (req, res) => {
+  try {
+    const { sessionId } = req.params;
+    const session = await stripe.checkout.sessions.retrieve(sessionId);
+
+    if (session.payment_status !== "paid") {
+      return errorResponse(res, 400, "Payment not completed");
+    }
+
+    const metadata = session.metadata || {};
+    const userId = String(metadata.userId || "");
+    const listingId = String(metadata.listingId || "");
+    const startDateRaw = String(metadata.startDate || "");
+    const endDateRaw = String(metadata.endDate || "");
+    const address = String(metadata.address || "").trim();
+    const notes = String(metadata.notes || "").trim();
+
+    if (!userId || !listingId || !startDateRaw || !endDateRaw) {
+      return errorResponse(res, 400, "Session metadata is incomplete");
+    }
+
+    if (String(req.user._id) !== userId && req.user.role !== "admin") {
+      return errorResponse(res, 403, "Not authorized to verify this payment session");
+    }
+
+    const alreadyExists = await Booking.findOne({ paymentId: session.id }).lean();
+    if (alreadyExists) {
+      return successResponse(res, 200, "Booking already verified", {
+        booking: alreadyExists,
+        alreadyExists: true,
+      });
+    }
+
+    const listing = await Listing.findById(listingId)
+      .select("_id owner status isAvailable dailyRate hourlyRate weeklyRate")
+      .lean();
+    if (!listing) {
+      return errorResponse(res, 404, "Listing not found");
+    }
+    if (String(listing.status || "active").toLowerCase() !== "active" || listing.isAvailable === false) {
+      return errorResponse(res, 400, "Listing is not available for booking");
+    }
+    if (String(listing.owner) === userId) {
+      return errorResponse(res, 400, "You cannot book your own listing");
+    }
+
+    const startDate = new Date(startDateRaw);
+    const endDate = new Date(endDateRaw);
+    if (Number.isNaN(startDate.getTime()) || Number.isNaN(endDate.getTime()) || endDate <= startDate) {
+      return errorResponse(res, 400, "Invalid date range in payment session");
+    }
+
+    const msPerDay = 1000 * 60 * 60 * 24;
+    const rawDays = Math.round((endDate.getTime() - startDate.getTime()) / msPerDay);
+    const rentalDays = Math.max(rawDays, 1);
+
+    const dailyRate = Math.max(toNumber(metadata.dailyRate, listing.dailyRate), 0);
+    const hourlyRate = Math.max(toNumber(metadata.hourlyRate, listing.hourlyRate), 0);
+    const weeklyRate = Math.max(toNumber(metadata.weeklyRate, listing.weeklyRate), 0);
+    const fallbackDayRate = dailyRate || (hourlyRate > 0 ? hourlyRate * 24 : 0);
+
+    let baseAmount = Math.max(toNumber(metadata.baseAmount), 0);
+    if (!baseAmount) {
+      if (weeklyRate > 0 && rentalDays >= 7) {
+        const weeks = Math.floor(rentalDays / 7);
+        const extraDays = rentalDays - weeks * 7;
+        baseAmount = weeks * weeklyRate + extraDays * fallbackDayRate;
+      } else {
+        baseAmount = rentalDays * fallbackDayRate;
+      }
+    }
+
+    const platformFee = Math.max(toNumber(metadata.platformFee), 0);
+    const totalPrice = Math.max(toNumber(metadata.totalPrice, session.amount_total / 100), 0);
+    const paymentCurrency = String(metadata.currency || session.currency || "usd").toUpperCase();
+
+    const booking = await Booking.create({
+      bookingType: "listing",
+      customer: userId,
+      provider: listing.owner,
+      resource: listing._id,
+      resourceModel: "Listing",
+      startDate,
+      endDate,
+      quantity: 1,
+      address: address || undefined,
+      notes: notes || undefined,
+      currency: paymentCurrency,
+      unitPrice: baseAmount, // per-rental total before fees
+      platformFee,
+      totalPrice,
+      status: "confirmed",
+      paymentMethod: "card",
+      paymentStatus: "paid",
+      paymentProvider: "stripe",
+      paymentId: session.id,
+      paidAt: new Date(),
+    });
+
+    return successResponse(res, 200, "Listing booking verified successfully", {
+      booking,
+      alreadyExists: false,
+    });
+  } catch (error) {
+    console.error("Error in verifyListingBookingSession:", error.message);
+    return errorResponse(res, 500, "Failed to verify listing booking session", error.message);
   }
 };

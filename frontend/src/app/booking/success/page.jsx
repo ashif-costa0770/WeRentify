@@ -3,12 +3,16 @@
 import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ArrowRight, CheckCircle2, Loader2 } from "lucide-react";
-import { verifyServiceBookingSession } from "@/services/payments.service";
+import {
+  verifyServiceBookingSession,
+  verifyListingBookingSession,
+} from "@/services/payments.service";
 
 function BookingSuccessContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const sessionId = searchParams.get("session_id");
+  const type = searchParams.get("type") || "service";
 
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
@@ -25,7 +29,10 @@ function BookingSuccessContent() {
       }
 
       try {
-        const res = await verifyServiceBookingSession(sessionId);
+        const isListing = type === "listing";
+        const res = isListing
+          ? await verifyListingBookingSession(sessionId)
+          : await verifyServiceBookingSession(sessionId);
         const booking = res?.data?.data?.booking;
         if (!cancelled) {
           setBookingId(booking?._id || "");
@@ -50,7 +57,7 @@ function BookingSuccessContent() {
     return () => {
       cancelled = true;
     };
-  }, [sessionId]);
+  }, [sessionId, type]);
 
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-6">
@@ -66,10 +73,12 @@ function BookingSuccessContent() {
             <h1 className="text-2xl font-bold text-red-600">Verification Failed</h1>
             <p className="mt-3 text-sm text-gray-600">{error}</p>
             <button
-              onClick={() => router.push("/services")}
+              onClick={() =>
+                router.push(type === "listing" ? "/" : "/services")
+              }
               className="mt-6 w-full cursor-pointer rounded-2xl border border-gray-300 px-6 py-3 font-medium text-gray-700 hover:bg-gray-50"
             >
-              Back to Services
+              {type === "listing" ? "Back to Listings" : "Back to Services"}
             </button>
           </div>
         ) : (
@@ -80,7 +89,11 @@ function BookingSuccessContent() {
               </div>
             </div>
             <h1 className="text-2xl font-bold text-gray-900">Payment Successful</h1>
-            <p className="mt-2 text-gray-500">Your service booking has been confirmed.</p>
+            <p className="mt-2 text-gray-500">
+              {type === "listing"
+                ? "Your listing booking has been confirmed."
+                : "Your service booking has been confirmed."}
+            </p>
             {bookingId ? (
               <p className="mt-3 text-xs text-gray-500">
                 Booking ID: <span className="font-semibold text-gray-700">{bookingId}</span>

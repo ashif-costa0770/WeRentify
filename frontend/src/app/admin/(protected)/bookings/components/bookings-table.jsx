@@ -9,7 +9,6 @@ import {
 import { ArrowUpDown, ChevronDown, ChevronUp } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import {
   Table,
   TableBody,
@@ -47,16 +46,6 @@ export default function BookingsTable({
 
   return (
     <div className="space-y-4">
-      {/* Search */}
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <Input
-          placeholder="Search bookings..."
-          value={searchValue}
-          onChange={(event) => onSearchChange(event.target.value)}
-          className="w-full sm:max-w-sm border-slate-300 bg-white text-slate-800 placeholder:text-slate-500 shadow-sm focus-visible:border-indigo-400 focus-visible:ring-indigo-200"
-        />
-      </div>
-
       {/* Table */}
       <div className="rounded-xl border bg-white shadow-sm overflow-hidden">
         <Table>

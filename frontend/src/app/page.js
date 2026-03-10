@@ -1,6 +1,7 @@
-﻿"use client";
+"use client";
 
 import { useMemo, useState, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import dynamic from "next/dynamic";
 import NavbarWrapper from "@/app/_components/navbar/NavbarWrapper";
 import ItemCategoriesSection from "@/app/_components/CategoryGrid/ItemCategoriesSection";
@@ -9,12 +10,6 @@ import { getListings } from "@/services/item.service";
 
 const FiltersSlicer = dynamic(
   () => import("@/app/_components/modals/FiltersSlicer"),
-  {
-    ssr: false,
-  },
-);
-const ProductModal = dynamic(
-  () => import("@/app/_components/modals/ProductModal"),
   {
     ssr: false,
   },
@@ -31,6 +26,9 @@ const OwnerProfileModal = dynamic(
 );
 
 export default function ListingPage() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
   /* ---------------- STATE: LISTINGS & FETCHING ---------------- */
   const [items, setItems] = useState([]);
   const [backendLoading, setBackendLoading] = useState(true);
@@ -47,7 +45,6 @@ export default function ListingPage() {
   /* ---------------- STATE: UI MODALS ---------------- */
   const [showMessages, setShowMessages] = useState(false);
   const [selectedConversation, setSelectedConversation] = useState(null);
-  const [selectedItem, setSelectedItem] = useState(null);
   const [showOwnerProfile, setShowOwnerProfile] = useState(false);
   const [selectedOwner, setSelectedOwner] = useState(null);
 
@@ -141,6 +138,14 @@ export default function ListingPage() {
     fetchItems();
   }, []);
 
+  // Redirect shared links (?item=id) to the listing page
+  useEffect(() => {
+    const itemId = searchParams.get("item");
+    if (itemId) {
+      router.replace(`/listing/${itemId}`);
+    }
+  }, [searchParams, router]);
+
   // Handle Apply Filters from Slicer
   const handleApplyFilters = () => {
     setShowFilters(false);
@@ -170,7 +175,7 @@ export default function ListingPage() {
         <ItemGrid
           items={visibleItems}
           onOpenFilters={() => setShowFilters(true)}
-          onSelect={(item) => setSelectedItem(item)}
+          onSelect={(item) => router.push(`/listing/${item._id || item.id}`)}
         />
       )}
 
@@ -189,21 +194,6 @@ export default function ListingPage() {
         onApply={handleApplyFilters} // Pass apply handler
       />
 
-      {/* Product Modal */}
-      {selectedItem && (
-        <ProductModal
-          selectedItem={selectedItem}
-          setSelectedItem={setSelectedItem}
-          items={items}
-          setShowMessages={setShowMessages}
-          setSelectedConversation={setSelectedConversation}
-          onViewOwner={(ownerData) => {
-            setSelectedOwner(ownerData);
-            setShowOwnerProfile(true);
-          }}
-        />
-      )}
-
       <MessageSlider
         showMessages={showMessages}
         setShowMessages={setShowMessages}
@@ -217,7 +207,7 @@ export default function ListingPage() {
         items={items}
         onSelectItem={(item) => {
           setShowOwnerProfile(false);
-          setSelectedItem(item);
+          router.push(`/listing/${item._id || item.id}`);
         }}
       />
     </main>

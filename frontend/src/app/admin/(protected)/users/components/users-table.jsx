@@ -8,10 +8,9 @@ import {
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table";
-import { ArrowUpDown, ChevronDown, ChevronUp } from "lucide-react";
+import { ArrowUpDown, ChevronDown, ChevronUp, Search } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import {
   Table,
   TableBody,
@@ -25,6 +24,8 @@ export default function UsersTable({
   columns,
   data,
   loading,
+  searchValue: searchValueProp,
+  onSearchChange,
   currentPage,
   totalPages,
   canGoPrevious,
@@ -32,7 +33,9 @@ export default function UsersTable({
   onPreviousPage,
   onNextPage,
 }) {
-  const [searchValue, setSearchValue] = useState("");
+  const [internalSearch, setInternalSearch] = useState("");
+  const searchValue = onSearchChange != null ? searchValueProp ?? "" : internalSearch;
+  const setSearchValue = onSearchChange ?? setInternalSearch;
   const [globalFilter, setGlobalFilter] = useState("");
   const [sorting, setSorting] = useState([]);
 
@@ -43,6 +46,8 @@ export default function UsersTable({
 
     return () => clearTimeout(timer);
   }, [searchValue]);
+
+  const showSearchInTable = onSearchChange == null;
 
   const table = useReactTable({
     data,
@@ -59,14 +64,20 @@ export default function UsersTable({
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <Input
-          placeholder="Search users..."
-          value={searchValue}
-          onChange={(event) => setSearchValue(event.target.value)}
-          className="w-full sm:max-w-sm border-slate-300 bg-white text-slate-800 placeholder:text-slate-500 shadow-sm focus-visible:border-indigo-400 focus-visible:ring-indigo-200"
-        />
-      </div>
+      {showSearchInTable ? (
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-end">
+          <div className="relative w-full sm:w-[280px]">
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
+            <input
+              type="text"
+              value={searchValue}
+              onChange={(e) => setSearchValue(e.target.value)}
+              placeholder="Search users..."
+              className="h-10 w-full rounded-xl border border-slate-300 bg-white pl-9 pr-3 text-sm text-slate-700 outline-none transition focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100"
+            />
+          </div>
+        </div>
+      ) : null}
 
       <div className="rounded-xl border bg-white shadow-sm overflow-hidden">
         <Table>
