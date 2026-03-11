@@ -5,6 +5,7 @@ import {
   deleteServicePhoto,
   deleteServiceVideo,
   getAllServices,
+  getAllFeaturedServices,
   getServicesByUser,
   getSingleService,
   updateService,
@@ -28,6 +29,7 @@ router.post(
 );
 
 router.get("/", getAllServices);
+router.get("/featured", getAllFeaturedServices);
 router.get("/user", protect, getServicesByUser);
 router.get("/:id", getSingleService);
 router.put(

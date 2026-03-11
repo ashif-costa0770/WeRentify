@@ -67,3 +67,13 @@ export const sendOtpEmail = async (email, otp) => {
 });
 
 };
+
+
+export const sendConfirmationEmail = async ({ to, subject, html }) => {
+  await transporter.sendMail({
+    from: process.env.EMAIL_USER,
+    to,
+    subject,
+    html
+  });
+};

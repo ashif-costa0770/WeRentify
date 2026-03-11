@@ -7,6 +7,7 @@ import GlobalServicesHeader from "./GlobalServicesHeader";
 
 export default function ServicesCardsWrapper({
   services,
+  featuredServices = [],
   selectedCategory,
   sortBy,
   onSortChange,
@@ -23,20 +24,20 @@ export default function ServicesCardsWrapper({
 
   // 🔹 Group services by category
   const groupedServices = useMemo(() => {
-  return services.reduce((acc, service) => {
-    const key = service.category; // categoryId
+    return services.reduce((acc, service) => {
+      const key = service.category; // categoryId
 
-    if (!acc[key]) {
-      acc[key] = {
-        name: service.categoryName || "Other", // ✅ use real name
-        items: [],
-      };
-    }
+      if (!acc[key]) {
+        acc[key] = {
+          name: service.categoryName || "Other", // ✅ use real name
+          items: [],
+        };
+      }
 
-    acc[key].items.push(service);
-    return acc;
-  }, {});
-}, [services]);
+      acc[key].items.push(service);
+      return acc;
+    }, {});
+  }, [services]);
 
   // 🔹 Decide which categories to render
   const visibleCategories = useMemo(() => {
@@ -76,12 +77,35 @@ export default function ServicesCardsWrapper({
 
   return (
     <div className="mx-auto max-w-7xl px-4 pb-16">
-      {/* ✅ GLOBAL HEADER (only once) */}
-      <GlobalServicesHeader
-        totalCount={totalServicesCount}
-        sortBy={sortBy}
-        onSortChange={onSortChange}
-      />
+      {/* ⭐ Featured Services section (filtered + sorted) */}
+      {Array.isArray(featuredServices) && featuredServices.length > 0 && (
+        <section className="mt-2 mb-10">
+          <div className="mb-4 flex items-center justify-between">
+            <h2 className="flex items-center gap-2 text-xl font-semibold text-gray-900">
+              <span>⭐</span>
+              
+              Featured Services ({featuredServices.length})
+            </h2>
+            {/* Sort control aligned to the right of Featured heading */}
+            <GlobalServicesHeader
+              totalCount={totalServicesCount}
+              sortBy={sortBy}
+              onSortChange={onSortChange}
+            />
+          </div>
+          {/* Reuse the same horizontal scroller & cards for consistency */}
+          <ServiceCategoryBlock
+            categoryLabel="Featured"
+            services={featuredServices}
+            onServiceClick={openServicePage}
+          />
+        </section>
+      )}
+
+      {/* ✅ Normal services heading */}
+      <h2 className="mb-4 mt-2 text-xl font-semibold text-gray-900">
+        All Services ({totalServicesCount})
+      </h2>
 
       {/* ✅ Category sections */}
       {visibleCategories.length === 0 ? (

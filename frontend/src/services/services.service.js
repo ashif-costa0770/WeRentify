@@ -8,6 +8,10 @@ export const createService = (data) =>
 export const getServices = () =>
   api.get("/services");
 
+// GET ALL FEATURED SERVICES
+export const getFeaturedServices = () =>
+  api.get("/services/featured");
+
 // GET SINGLE SERVICE
 export const getServiceById = (id) =>
   api.get(`/services/${id}`);

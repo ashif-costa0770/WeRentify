@@ -126,7 +126,7 @@ const listingSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
-  
+
   stripeConnected: {
     type: Boolean,
     default: false
@@ -170,6 +170,19 @@ const listingSchema = new mongoose.Schema({
     type: String,
     enum: ['active', 'inactive', 'rented', 'under_maintenance'],
     default: 'active'
+  },
+  // for featured listings
+  isFeatured: {
+    type: Boolean,
+    default: false
+  },
+  featuredUntil: {
+    type: Date,
+    default: null
+  },
+  verified: {     // for admin verification
+    type: Boolean,
+    default: true
   }
 
 }, {
@@ -178,6 +191,7 @@ const listingSchema = new mongoose.Schema({
 
 // Indexes for better query performance
 listingSchema.index({ dailyRate: 1 });
+listingSchema.index({ isFeatured: 1, featuredUntil: 1 });
 listingSchema.index({ createdAt: -1 });
 listingSchema.index({ itemName: 'text', description: 'text' }); // For text search
 

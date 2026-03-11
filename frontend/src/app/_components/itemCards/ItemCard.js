@@ -53,11 +53,11 @@ export default function ItemCard({ item, onSelect = () => {} }) {
     <div
       role="button"
       tabIndex={0}
-      onClick={() => onSelect(item)} // ✅ FIXED
+      onClick={() => onSelect(item)}
       onKeyDown={(e) => {
         if (e.key === "Enter") onSelect(item);
       }}
-      className="bg-white rounded-lg overflow-hidden hover:shadow-2xl
+      className="relative bg-white rounded-lg overflow-hidden hover:shadow-2xl
                  transition-all cursor-pointer border border-gray-100 group"
     >
       {/* Image */}
@@ -103,15 +103,17 @@ export default function ItemCard({ item, onSelect = () => {} }) {
           />
         </button>
 
-        {/* Verified badge */}
-        {item.verified && (
+        {/* Featured badge (stays on image) */}
+        {item.isFeatured && (
           <div
-            className="absolute top-1.5 left-1.5
-                       bg-linear-to-r from-emerald-500 to-teal-500
-                       text-white px-2 py-1 rounded text-[10px]
-                       font-bold flex items-center gap-1"
+            className="absolute top-2 left-2 flex items-center gap-1
+                       bg-white/90 backdrop-blur
+                       text-amber-600
+                       px-2 py-0.5 rounded-full
+                       text-[11px] font-semibold
+                       shadow-sm border border-amber-200"
           >
-            <CheckCircle size={12} /> Verified
+            <Star size={12} className="fill-amber-600" /> Featured
           </div>
         )}
       </div>
@@ -150,6 +152,17 @@ export default function ItemCard({ item, onSelect = () => {} }) {
           </div>
         </div>
       </div>
+
+      {/* Verified badge: card bottom-right (like service card) */}
+        {item.verified && (
+        <div
+          className="absolute bottom-2 right-2 flex items-center gap-1
+                      text-green-500 px-2 py-1 rounded-full
+                      text-[11px] font-bold "
+        >
+          <CheckCircle size={12}  /> Verified
+        </div>
+      )}
     </div>
   );
 }

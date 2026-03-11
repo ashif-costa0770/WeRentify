@@ -95,6 +95,54 @@ export default function ServicesPage() {
   const canGoPrevious = currentPage > 1;
   const canGoNext = currentPage < totalPages;
 
+  const handleToggleFeaturedService = async (serviceId, isCurrentlyFeatured) => {
+    const nextFeatured = !isCurrentlyFeatured;
+
+    setError("");
+    setActionLoadingId(serviceId);
+    // Optimistic update for instant UI feedback.
+    setServices((prev) =>
+      prev.map((service) =>
+        service?._id === serviceId ? { ...service, isFeatured: nextFeatured } : service
+      )
+    );
+
+    try {
+      const res = await fetch(
+        `${API_URL}/admin/services/${serviceId}/toggle-featured`,
+        {
+          method: "PATCH",
+          credentials: "include",
+          cache: "no-store",
+        }
+      );
+      const payload = await res.json().catch(() => null);
+
+      if (!res.ok || !payload?.success) {
+        throw new Error(payload?.message || "Failed to update featured status");
+      }
+
+      toast.success(
+        nextFeatured
+          ? "Service marked as featured."
+          : "Service removed from featured."
+      );
+    } catch (actionError) {
+      // Revert optimistic update on failure.
+      setServices((prev) =>
+        prev.map((service) =>
+          service?._id === serviceId
+            ? { ...service, isFeatured: isCurrentlyFeatured }
+            : service
+        )
+      );
+      setError(actionError.message || "Failed to update featured status");
+      toast.error(actionError.message || "Failed to update featured status");
+    } finally {
+      setActionLoadingId(null);
+    }
+  };
+
   const handleToggleServiceStatus = async (serviceId, isCurrentlyActive) => {
     const nextIsActive = !isCurrentlyActive;
 
@@ -178,6 +226,7 @@ export default function ServicesPage() {
     actionLoadingId,
     onDelete: handleDeleteService,
     onToggleStatus: handleToggleServiceStatus,
+    onToggleFeatured: handleToggleFeaturedService,
   });
 
   return (

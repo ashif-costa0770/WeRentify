@@ -81,6 +81,7 @@ export const createListingSchema = z.object({
   status: z
     .enum(["active", "inactive", "rented", "under_maintenance"])
     .optional(),
+  verified: z.boolean().optional(),
 });
 
 // More concise - creates optional version of all fields

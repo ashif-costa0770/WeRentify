@@ -7,6 +7,7 @@ import { toast } from "sonner";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Star } from "lucide-react";
 
 const API_URL = (process.env.NEXT_PUBLIC_API_URL || "/backend-api").replace(
   /\/+$/,
@@ -160,6 +161,7 @@ export default function ServiceDetailsPage() {
       setActionLoading(false);
     }
   };
+  
 
   if (loading) {
     return (
@@ -176,6 +178,7 @@ export default function ServiceDetailsPage() {
       </section>
     );
   }
+  
 
   return (
     <section className="space-y-6">
@@ -198,6 +201,12 @@ export default function ServiceDetailsPage() {
             <Badge className={service.verified ? "bg-emerald-100 text-emerald-700" : "bg-amber-100 text-amber-700"}>
               {service.verified ? "Verified" : "Unverified"}
             </Badge>
+            {service.isFeatured && (
+              <Badge className="flex items-center gap-1 bg-amber-100 text-amber-700 border border-amber-200">
+                <Star className="w-3 h-3 fill-amber-500 text-amber-500" />
+                Featured
+              </Badge>
+            )}
           </div>
         </div>
         <Button asChild variant="outline">

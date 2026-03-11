@@ -11,6 +11,7 @@ export default function ItemGrid({
   isMobile = false,
   onSelect = () => {},
   onOpenFilters = () => {},
+  showFilterButton = true,
 }) {
   const [listings, setListings] = useState(items ?? allItems ?? []);
   const [loading, setLoading] = useState(false);
@@ -66,6 +67,7 @@ export default function ItemGrid({
         isMobile={isMobile}
         totalItems={safeItems.length}
         onOpenFilters={onOpenFilters}
+        showFilterButton={showFilterButton}
       />
 
       {loading ? (

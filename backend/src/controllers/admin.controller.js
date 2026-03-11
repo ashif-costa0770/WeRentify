@@ -586,7 +586,7 @@ export const getAllListingsByAdmin = async (req, res) => {
     const [listings, total] = await Promise.all([
       Listing.find(searchQuery)
         .select(
-          "itemName dailyRate status isAvailable bookings createdAt owner category",
+          "itemName dailyRate status isAvailable isFeatured bookings createdAt owner category",
         )
         .populate("owner", "email firstname lastname _id")
         .populate("category", "name")
@@ -597,13 +597,23 @@ export const getAllListingsByAdmin = async (req, res) => {
       Listing.countDocuments(searchQuery),
     ]);
 
+    const listingIds = listings.map((l) => l._id);
+    const listingBookingCounts = await Booking.aggregate([
+      { $match: { resourceModel: "Listing", resource: { $in: listingIds } } },
+      { $group: { _id: "$resource", count: { $sum: 1 } } },
+    ]);
+    const bookingsByListingId = Object.fromEntries(
+      listingBookingCounts.map((b) => [String(b._id), b.count]),
+    );
+
     const data = listings.map((listing) => ({
       _id: listing._id,
       itemName: listing.itemName,
       dailyRate: listing.dailyRate,
-      bookings: listing.bookings ?? 0,
+      bookings: bookingsByListingId[String(listing._id)] ?? 0,
       status: listing.status,
       isAvailable: listing.isAvailable,
+      isFeatured: Boolean(listing.isFeatured),
       createdAt: listing.createdAt,
       category: listing?.category?.name || "-",
       owner: {
@@ -645,6 +655,11 @@ export const getListingDetailsByAdmin = async (req, res) => {
       return errorResponse(res, 404, "Listing not found");
     }
 
+    const listingBookingCount = await Booking.countDocuments({
+      resourceModel: "Listing",
+      resource: listingId,
+    });
+
     const normalized = {
       _id: listing._id,
       itemName: listing.itemName,
@@ -653,6 +668,8 @@ export const getListingDetailsByAdmin = async (req, res) => {
       pickupLocation: listing.pickupLocation || "-",
       status: listing.status || "inactive",
       isAvailable: Boolean(listing.isAvailable),
+      isFeatured: Boolean(listing.isFeatured),
+      featuredUntil: listing.featuredUntil ?? null,
       offerDelivery: Boolean(listing.offerDelivery),
       deliveryFee: listing.deliveryFee,
       cancellationPolicy: listing.cancellationPolicy || "-",
@@ -664,7 +681,7 @@ export const getListingDetailsByAdmin = async (req, res) => {
       hourlyRate: listing.hourlyRate,
       weeklyRate: listing.weeklyRate,
       views: listing.views ?? 0,
-      bookings: listing.bookings ?? 0,
+      bookings: listingBookingCount,
       rating: listing.rating ?? 0,
       reviewCount: listing.reviewCount ?? 0,
       photos: Array.isArray(listing.photos) ? listing.photos : [],
@@ -734,7 +751,7 @@ export const getAllServicesByAdmin = async (req, res) => {
     const [services, total] = await Promise.all([
       Service.find(searchQuery)
         .select(
-          "businessName serviceType hourlyRate status verified bookings createdAt owner category photos videos",
+          "businessName serviceType hourlyRate status verified isFeatured bookings createdAt owner category photos videos",
         )
         .populate("owner", "email firstname lastname _id")
         .populate("category", "name")
@@ -745,6 +762,15 @@ export const getAllServicesByAdmin = async (req, res) => {
       Service.countDocuments(searchQuery),
     ]);
 
+    const serviceIds = services.map((s) => s._id);
+    const serviceBookingCounts = await Booking.aggregate([
+      { $match: { resourceModel: "Service", resource: { $in: serviceIds } } },
+      { $group: { _id: "$resource", count: { $sum: 1 } } },
+    ]);
+    const bookingsByServiceId = Object.fromEntries(
+      serviceBookingCounts.map((b) => [String(b._id), b.count]),
+    );
+
     const data = services.map((service) => ({
       _id: service._id,
       businessName: service.businessName,
@@ -752,7 +778,8 @@ export const getAllServicesByAdmin = async (req, res) => {
       hourlyRate: service.hourlyRate,
       status: service.status,
       verified: Boolean(service.verified),
-      bookings: service.bookings ?? 0,
+      isFeatured: Boolean(service.isFeatured),
+      bookings: bookingsByServiceId[String(service._id)] ?? 0,
       createdAt: service.createdAt,
       category: service?.category?.name || "-",
       owner: {
@@ -794,6 +821,11 @@ export const getServiceDetailsByAdmin = async (req, res) => {
       return errorResponse(res, 404, "Service not found");
     }
 
+    const serviceBookingCount = await Booking.countDocuments({
+      resourceModel: "Service",
+      resource: serviceId,
+    });
+
     const normalized = {
       _id: service._id,
       businessName: service.businessName,
@@ -810,11 +842,13 @@ export const getServiceDetailsByAdmin = async (req, res) => {
       hourlyRate: service.hourlyRate || "-",
       plan: service.plan || "basic",
       views: service.views ?? 0,
-      bookings: service.bookings ?? 0,
+      bookings: serviceBookingCount,
       rating: service.rating ?? 0,
       reviewCount: service.reviewCount ?? 0,
       status: service.status || "inactive",
       verified: Boolean(service.verified),
+      isFeatured: Boolean(service.isFeatured),
+      featuredUntil: service.featuredUntil ?? null,
       photos: Array.isArray(service.photos) ? service.photos : [],
       videos: Array.isArray(service.videos) ? service.videos : [],
       createdAt: service.createdAt,
@@ -1342,3 +1376,47 @@ export const getBookingDetailsByAdmin = async (req, res) => {
     return errorResponse(res, 500, "Failed to fetch booking", error.message);
   }
 };
+
+//! Toggle featured listing by admin
+export const toggleFeaturedListingByAdmin = async (req, res) => {
+  try {
+    const {listingId} = req.params;
+
+    const listing = await Listing.findById(listingId);
+    if(!listing){
+      return errorResponse(res, 404, "Listing not found");
+    }
+    
+    listing.isFeatured = !listing.isFeatured;
+    listing.featuredUntil = listing.isFeatured ? new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) : null;
+
+    await listing.save();
+    return successResponse(res, 200, "Featured listing updated", listing)
+    
+  } catch (error) {
+    return errorResponse(res, 500, "Failed to toggle featured listing", error.message);
+
+    
+  }
+}
+
+//! Toggle featured service by admin
+export const toggleFeaturedServiceByAdmin = async (req, res) => {
+  try {
+    const {serviceId} = req.params;
+
+    const service = await Service.findById(serviceId);
+    if(!service){
+      return errorResponse(res, 404, "Service not found");
+    }
+    
+    service.isFeatured = !service.isFeatured;
+    service.featuredUntil = service.isFeatured ? new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) : null;
+
+    await service.save();
+    return successResponse(res, 200, "Featured service updated", service )
+    
+  } catch (error) {
+    return errorResponse(res, 500, "Failed to toggle featured service", error.message);    
+  }
+}

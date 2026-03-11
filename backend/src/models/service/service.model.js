@@ -115,7 +115,6 @@ const serviceSchema = new mongoose.Schema(
       default: "basic",
     },
 
-    
     stripePriceId: {
       type: String,
       required: true,
@@ -167,7 +166,17 @@ const serviceSchema = new mongoose.Schema(
         slots: [String],
       },
     ],
+    // for featured services
+    isFeatured: {
+      type: Boolean,
+      default: false,
+    },
+    featuredUntil: {
+      type: Date,
+      default: null,
+    },
     verified: {
+      // for admin verification
       type: Boolean,
       default: true,
     },

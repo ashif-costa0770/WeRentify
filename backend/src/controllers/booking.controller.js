@@ -1,7 +1,10 @@
 import Booking from "../models/booking.model.js";
 import Listing from "../models/listing/listing.model.js";
 import Service from "../models/service/service.model.js";
+import User from "../models/users/user.model.js";
 import { errorResponse, successResponse } from "../utils/response.js";
+import { sendConfirmationEmail } from "../utils/mailer.js";
+import { formatDate, formatDateTime } from "../utils/formatDateTime.js";
 
 const ACTIVE_SLOT_STATUSES = ["pending", "accepted", "confirmed"];
 
@@ -24,13 +27,16 @@ const canAccessBooking = (user, booking) => {
 const resolveResource = async (resourceModel, resourceId) => {
   if (resourceModel === "Listing") {
     const listing = await Listing.findById(resourceId)
-      .select("_id owner dailyRate isAvailable status")
+      .select("_id owner dailyRate isAvailable status itemName")
+      .populate("owner", "email firstname lastname")
       .lean();
     if (!listing) return null;
 
     return {
       model: "Listing",
+      providerId: listing.owner?._id || listing.owner,
       provider: listing.owner,
+      resourceName: listing.itemName,
       unitPrice: Number(listing.dailyRate) || 0,
       isBookable: listing.isAvailable !== false && String(listing.status || "active") === "active",
     };
@@ -38,13 +44,16 @@ const resolveResource = async (resourceModel, resourceId) => {
 
   if (resourceModel === "Service") {
     const service = await Service.findById(resourceId)
-      .select("_id owner hourlyRate status")
+      .select("_id owner hourlyRate status businessName")
+      .populate("owner", "email firstname lastname")
       .lean();
     if (!service) return null;
 
     return {
       model: "Service",
+      providerId: service.owner?._id || service.owner,
       provider: service.owner,
+      resourceName: service.businessName,
       unitPrice: Number(service.hourlyRate) || 0,
       isBookable: String(service.status || "active") === "active",
     };
@@ -58,7 +67,10 @@ export const createBooking = async (req, res) => {
   try {
     const payload = req.body;
 
-    const resourceInfo = await resolveResource(payload.resourceModel, payload.resource);
+    const resourceInfo = await resolveResource(
+      payload.resourceModel,
+      payload.resource,
+    );
     if (!resourceInfo) {
       return errorResponse(res, 404, `${payload.resourceModel} not found`);
     }
@@ -103,10 +115,284 @@ export const createBooking = async (req, res) => {
     const booking = await Booking.create({
       ...payload,
       customer: req.user._id,
-      provider: resourceInfo.provider,
+      provider: resourceInfo.providerId,
       unitPrice,
       totalPrice: payload.totalPrice ?? computedTotal,
     });
+
+    // Send emails in a best-effort way; failures shouldn't break booking creation
+    try {
+      // Ensure we have fresh provider info with email in case resolveResource had only an id
+      const provider =
+        resourceInfo.provider && resourceInfo.provider.email
+          ? resourceInfo.provider
+          : await User.findById(resourceInfo.providerId)
+              .select("email firstname lastname")
+              .lean();
+
+      if (provider?.email) {
+        await sendConfirmationEmail({
+          to: provider.email,
+          subject: "New Booking Confirmation",
+          html: `
+          <div style="font-family: Arial, sans-serif; background:#f6f6f6; padding:20px;">
+            <table width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;margin:auto;background:#ffffff;border-radius:8px;overflow:hidden;">
+              
+              <tr>
+                <td style="background:#0d6efd;color:#ffffff;padding:16px 24px;font-size:20px;font-weight:bold;">
+                  New Booking Received
+                </td>
+              </tr>
+        
+              <tr>
+                <td style="padding:24px;color:#333;">
+                  <p style="margin-top:0;">
+                    Hello <strong>${provider.firstname || ""} ${provider.lastname || ""}</strong>,
+                  </p>
+        
+                  <p>You received a new booking for 
+                    <strong>${resourceInfo.resourceName || "your listing"}</strong>.
+                  </p>
+        
+                  <h3 style="margin-top:24px;border-bottom:1px solid #eee;padding-bottom:6px;">
+                    Booking Details
+                  </h3>
+        
+                  <table width="100%" style="font-size:14px;color:#444;">
+                    ${
+                      booking.startDate || booking.bookingDate
+                        ? `<tr>
+                            <td style="padding:6px 0;"><strong>Date</strong></td>
+                            <td>${formatDate(booking.startDate || booking.bookingDate)}</td>
+                          </tr>`
+                        : ""
+                    }
+        
+                    ${
+                      booking.timeSlot
+                        ? `<tr>
+                            <td style="padding:6px 0;"><strong>Time</strong></td>
+                            <td>${booking.timeSlot}</td>
+                          </tr>`
+                        : ""
+                    }
+        
+                    ${
+                      booking.endDate
+                        ? `<tr>
+                            <td style="padding:6px 0;"><strong>End Date</strong></td>
+                            <td>${formatDate(booking.endDate)}</td>
+                          </tr>`
+                        : ""
+                    }
+        
+                    ${
+                      booking.totalPrice
+                        ? `<tr>
+                            <td style="padding:6px 0;"><strong>Total Price</strong></td>
+                            <td>$${booking.totalPrice}</td>
+                          </tr>`
+                        : ""
+                    }
+                  </table>
+        
+                  <h3 style="margin-top:24px;border-bottom:1px solid #eee;padding-bottom:6px;">
+                    Payment Details
+                  </h3>
+        
+                  <table width="100%" style="font-size:14px;color:#444;">
+                    ${
+                      booking.paymentMethod
+                        ? `<tr>
+                            <td style="padding:6px 0;"><strong>Payment Method</strong></td>
+                            <td>${booking.paymentMethod}</td>
+                          </tr>`
+                        : ""
+                    }
+        
+                    ${
+                      booking.paymentStatus
+                        ? `<tr>
+                            <td style="padding:6px 0;"><strong>Status</strong></td>
+                            <td>${booking.paymentStatus}</td>
+                          </tr>`
+                        : ""
+                    }
+        
+                    ${
+                      booking.paymentProvider
+                        ? `<tr>
+                            <td style="padding:6px 0;"><strong>Provider</strong></td>
+                            <td>${booking.paymentProvider}</td>
+                          </tr>`
+                        : ""
+                    }
+        
+                    ${
+                      booking.paymentId
+                        ? `<tr>
+                            <td style="padding:6px 0;"><strong>Payment ID</strong></td>
+                            <td>${booking.paymentId}</td>
+                          </tr>`
+                        : ""
+                    }
+                  </table>
+        
+                  <p style="margin-top:24px;">
+                    Please log in to your dashboard to manage this booking.
+                  </p>
+        
+                </td>
+              </tr>
+        
+              <tr>
+                <td style="background:#f1f1f1;padding:12px;text-align:center;font-size:12px;color:#777;">
+                  © ${new Date().getFullYear()} WeRentify. All rights reserved.
+                </td>
+              </tr>
+        
+            </table>
+          </div>
+          `,
+        });
+      }
+
+      if (req.user?.email) {
+        await sendConfirmationEmail({
+          to: req.user.email,
+          subject: "Booking Confirmation",
+          html: `
+          <div style="font-family: Arial, sans-serif; background:#f6f6f6; padding:20px;">
+            <table width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;margin:auto;background:#ffffff;border-radius:8px;overflow:hidden;">
+              
+              <tr>
+                <td style="background:#198754;color:#ffffff;padding:16px 24px;font-size:20px;font-weight:bold;">
+                  Booking Confirmed
+                </td>
+              </tr>
+        
+              <tr>
+                <td style="padding:24px;color:#333;">
+                  
+                  <p style="margin-top:0;">
+                    Hello <strong>${req.user.firstname || ""} ${req.user.lastname || ""}</strong>,
+                  </p>
+        
+                  <p>
+                    Your booking for 
+                    <strong>${resourceInfo.resourceName || "the selected resource"}</strong> 
+                    has been successfully confirmed.
+                  </p>
+        
+                  <h3 style="margin-top:24px;border-bottom:1px solid #eee;padding-bottom:6px;">
+                    Booking Details
+                  </h3>
+        
+                  <table width="100%" style="font-size:14px;color:#444;">
+                    
+                    ${
+                      booking.startDate || booking.bookingDate
+                        ? `<tr>
+                            <td style="padding:6px 0;"><strong>Date</strong></td>
+                            <td>${formatDate(booking.startDate || booking.bookingDate)}</td>
+                          </tr>`
+                        : ""
+                    }
+        
+                    ${
+                      booking.timeSlot
+                        ? `<tr>
+                            <td style="padding:6px 0;"><strong>Time</strong></td>
+                            <td>${booking.timeSlot}</td>
+                          </tr>`
+                        : ""
+                    }
+        
+                    ${
+                      booking.endDate
+                        ? `<tr>
+                            <td style="padding:6px 0;"><strong>End Date</strong></td>
+                            <td>${formatDate(booking.endDate)}</td>
+                          </tr>`
+                        : ""
+                    }
+        
+                    ${
+                      booking.totalPrice
+                        ? `<tr>
+                            <td style="padding:6px 0;"><strong>Total Price</strong></td>
+                            <td>$${booking.totalPrice}</td>
+                          </tr>`
+                        : ""
+                    }
+        
+                  </table>
+        
+                  <h3 style="margin-top:24px;border-bottom:1px solid #eee;padding-bottom:6px;">
+                    Payment Details
+                  </h3>
+        
+                  <table width="100%" style="font-size:14px;color:#444;">
+        
+                    ${
+                      booking.paymentMethod
+                        ? `<tr>
+                            <td style="padding:6px 0;"><strong>Payment Method</strong></td>
+                            <td>${booking.paymentMethod}</td>
+                          </tr>`
+                        : ""
+                    }
+        
+                    ${
+                      booking.paymentStatus
+                        ? `<tr>
+                            <td style="padding:6px 0;"><strong>Status</strong></td>
+                            <td>${booking.paymentStatus}</td>
+                          </tr>`
+                        : ""
+                    }
+        
+                    ${
+                      booking.paymentProvider
+                        ? `<tr>
+                            <td style="padding:6px 0;"><strong>Provider</strong></td>
+                            <td>${booking.paymentProvider}</td>
+                          </tr>`
+                        : ""
+                    }
+        
+                    ${
+                      booking.paymentId
+                        ? `<tr>
+                            <td style="padding:6px 0;"><strong>Payment ID</strong></td>
+                            <td>${booking.paymentId}</td>
+                          </tr>`
+                        : ""
+                    }
+        
+                  </table>
+        
+                  <p style="margin-top:24px;">
+                    Thank you for booking with us. We look forward to serving you!
+                  </p>
+        
+                </td>
+              </tr>
+        
+              <tr>
+                <td style="background:#f1f1f1;padding:12px;text-align:center;font-size:12px;color:#777;">
+                  © ${new Date().getFullYear()} WeRentify. All rights reserved.
+                </td>
+              </tr>
+        
+            </table>
+          </div>
+          `,
+        });
+      }
+    } catch (emailError) {
+      console.error("Failed to send booking confirmation emails:", emailError);
+    }
 
     return successResponse(res, 201, "Booking created successfully", booking);
   } catch (error) {

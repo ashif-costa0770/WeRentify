@@ -31,6 +31,8 @@ import {
   getAdminBookings,
   updateBookingStatusByAdmin,
   getBookingDetailsByAdmin,
+  toggleFeaturedListingByAdmin,
+  toggleFeaturedServiceByAdmin,
 } from "../controllers/admin.controller.js";
 import validate from "../middlewares/validate.js";
 import { adminLoginSchema } from "../validations/admin.validation.js";
@@ -99,5 +101,11 @@ router.patch("/listings/:listingId/toggle-status", verifyAdmin, toggleListingSta
 
 //toggle service status
 router.patch("/services/:serviceId/toggle-status", verifyAdmin, toggleServiceStatusByAdmin);
+
+//toggle featured listing
+router.patch("/listings/:listingId/toggle-featured", verifyAdmin, toggleFeaturedListingByAdmin);
+
+//toggle featured service
+router.patch("/services/:serviceId/toggle-featured", verifyAdmin, toggleFeaturedServiceByAdmin);
 
 export default router;

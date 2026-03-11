@@ -7,10 +7,11 @@ import { toast } from "sonner";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Star } from "lucide-react";
 
 const API_URL = (process.env.NEXT_PUBLIC_API_URL || "/backend-api").replace(
   /\/+$/,
-  ""
+  "",
 );
 
 function formatDate(dateValue) {
@@ -119,10 +120,13 @@ export default function ListingDetailsPage() {
     () => [
       { label: "Views", value: listing?.views ?? 0 },
       { label: "Bookings", value: listing?.bookings ?? 0 },
-      { label: "Rating", value: `${Number(listing?.rating ?? 0).toFixed(1)} / 5` },
+      {
+        label: "Rating",
+        value: `${Number(listing?.rating ?? 0).toFixed(1)} / 5`,
+      },
       { label: "Reviews", value: listing?.reviewCount ?? 0 },
     ],
-    [listing]
+    [listing],
   );
 
   const normalizedDescription = sanitizeHtmlText(listing?.description);
@@ -131,7 +135,7 @@ export default function ListingDetailsPage() {
   const handleDeleteListing = async () => {
     if (!listingId) return;
     const confirmed = window.confirm(
-      "Are you sure you want to delete this listing? This action cannot be undone."
+      "Are you sure you want to delete this listing? This action cannot be undone.",
     );
     if (!confirmed) return;
 
@@ -185,15 +189,31 @@ export default function ListingDetailsPage() {
 
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-slate-800">{listing.itemName || "Listing"}</h1>
-          <p className="mt-1 text-sm text-slate-500">Listing ID: {listing._id}</p>
+          <h1 className="text-2xl font-bold text-slate-800">
+            {listing.itemName || "Listing"}
+          </h1>
+          <p className="mt-1 text-sm text-slate-500">
+            Listing ID: {listing._id}
+          </p>
           <div className="mt-3 flex flex-wrap items-center gap-2">
             <Badge className={getStatusClass(listing.status)}>
               {formatStatusLabel(listing.status)}
             </Badge>
-            <Badge className={listing.isAvailable ? "bg-emerald-100 text-emerald-700" : "bg-red-100 text-red-700"}>
+            <Badge
+              className={
+                listing.isAvailable
+                  ? "bg-emerald-100 text-emerald-700"
+                  : "bg-red-100 text-red-700"
+              }
+            >
               {listing.isAvailable ? "Available" : "Unavailable"}
             </Badge>
+            {listing.isFeatured && (
+              <Badge className="flex items-center gap-1 bg-amber-100 text-amber-700 border border-amber-200">
+                <Star className="w-3 h-3 fill-amber-500 text-amber-500" />
+                Featured
+              </Badge>
+            )}
           </div>
         </div>
         <Button asChild variant="outline">
@@ -202,29 +222,41 @@ export default function ListingDetailsPage() {
       </div>
 
       <div className="bg-white rounded-xl shadow-md p-6">
-        <h2 className="text-lg font-semibold text-slate-800 mb-4">Basic Information</h2>
+        <h2 className="text-lg font-semibold text-slate-800 mb-4">
+          Basic Information
+        </h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-sm">
           <div>
             <p className="text-slate-500">Category</p>
-            <p className="mt-1 text-xs font-semibold text-slate-700">{listing.category || "-"}</p>
+            <p className="mt-1 text-xs font-semibold text-slate-700">
+              {listing.category || "-"}
+            </p>
           </div>
           <div>
             <p className="text-slate-500">Pickup Location</p>
-            <p className="mt-1 font-medium text-slate-800">{listing.pickupLocation || "-"}</p>
+            <p className="mt-1 font-medium text-slate-800">
+              {listing.pickupLocation || "-"}
+            </p>
           </div>
           <div>
             <p className="text-slate-500">Created</p>
-            <p className="mt-1 font-medium text-slate-800">{formatDate(listing.createdAt)}</p>
+            <p className="mt-1 font-medium text-slate-800">
+              {formatDate(listing.createdAt)}
+            </p>
           </div>
           <div>
             <p className="text-slate-500">Updated</p>
-            <p className="mt-1 font-medium text-slate-800">{formatDate(listing.updatedAt)}</p>
+            <p className="mt-1 font-medium text-slate-800">
+              {formatDate(listing.updatedAt)}
+            </p>
           </div>
         </div>
       </div>
 
       <div className="bg-white rounded-xl shadow-md p-6">
-        <h2 className="text-lg font-semibold text-slate-800 mb-4">Owner Information</h2>
+        <h2 className="text-lg font-semibold text-slate-800 mb-4">
+          Owner Information
+        </h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-sm">
           <div>
             <p className="text-slate-500">Owner Name</p>
@@ -237,7 +269,9 @@ export default function ListingDetailsPage() {
           </div>
           <div>
             <p className="text-slate-500">Email</p>
-            <p className="mt-1 font-medium text-slate-800">{listing?.owner?.email || "-"}</p>
+            <p className="mt-1 font-medium text-slate-800">
+              {listing?.owner?.email || "-"}
+            </p>
           </div>
           <div>
             <p className="text-slate-500">Account Status</p>
@@ -247,30 +281,40 @@ export default function ListingDetailsPage() {
           </div>
           <div>
             <p className="text-slate-500">Joined</p>
-            <p className="mt-1 font-medium text-slate-800">{formatDate(listing?.owner?.joinedAt)}</p>
+            <p className="mt-1 font-medium text-slate-800">
+              {formatDate(listing?.owner?.joinedAt)}
+            </p>
           </div>
         </div>
       </div>
 
       <div className="bg-white rounded-xl shadow-md p-6">
-        <h2 className="text-lg font-semibold text-slate-800 mb-4">Pricing & Delivery</h2>
+        <h2 className="text-lg font-semibold text-slate-800 mb-4">
+          Pricing & Delivery
+        </h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-sm">
           <div>
             <p className="text-slate-500">Hourly Price</p>
             <p className="mt-1 font-medium text-slate-800">
-              {listing.hourlyRate == null ? "-" : `${formatUsd(listing.hourlyRate)}/hour`}
+              {listing.hourlyRate == null
+                ? "-"
+                : `${formatUsd(listing.hourlyRate)}/hour`}
             </p>
           </div>
           <div>
             <p className="text-slate-500">Daily Price</p>
             <p className="mt-1 font-medium text-slate-800">
-              {listing.dailyRate == null ? "-" : `${formatUsd(listing.dailyRate)}/day`}
+              {listing.dailyRate == null
+                ? "-"
+                : `${formatUsd(listing.dailyRate)}/day`}
             </p>
           </div>
           <div>
             <p className="text-slate-500">Weekly Price</p>
             <p className="mt-1 font-medium text-slate-800">
-              {listing.weeklyRate == null ? "-" : `${formatUsd(listing.weeklyRate)}/week`}
+              {listing.weeklyRate == null
+                ? "-"
+                : `${formatUsd(listing.weeklyRate)}/week`}
             </p>
           </div>
           <div>
@@ -289,14 +333,20 @@ export default function ListingDetailsPage() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         {summaryCards.map((card) => (
           <div key={card.label} className="bg-white rounded-xl shadow-md p-6">
-            <p className="text-xs uppercase tracking-wide text-slate-500 font-medium">{card.label}</p>
-            <p className="text-3xl font-bold text-slate-900 mt-2">{card.value}</p>
+            <p className="text-xs uppercase tracking-wide text-slate-500 font-medium">
+              {card.label}
+            </p>
+            <p className="text-3xl font-bold text-slate-900 mt-2">
+              {card.value}
+            </p>
           </div>
         ))}
       </div>
 
       <div className="bg-white rounded-xl shadow-md p-6">
-        <h2 className="text-lg font-semibold text-slate-800 mb-3">Description</h2>
+        <h2 className="text-lg font-semibold text-slate-800 mb-3">
+          Description
+        </h2>
         <p className="text-sm leading-6 text-slate-700 whitespace-pre-wrap">
           {normalizedDescription || "No description available."}
         </p>
@@ -304,7 +354,9 @@ export default function ListingDetailsPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="bg-white rounded-xl shadow-md p-6">
-          <h2 className="text-lg font-semibold text-slate-800 mb-3">Features</h2>
+          <h2 className="text-lg font-semibold text-slate-800 mb-3">
+            Features
+          </h2>
           {Array.isArray(listing.features) && listing.features.length > 0 ? (
             <ul className="list-disc pl-5 space-y-1 text-sm text-slate-700">
               {listing.features.map((feature, idx) => (
@@ -317,8 +369,11 @@ export default function ListingDetailsPage() {
         </div>
 
         <div className="bg-white rounded-xl shadow-md p-6">
-          <h2 className="text-lg font-semibold text-slate-800 mb-3">Rental Rules</h2>
-          {Array.isArray(listing.rentalRules) && listing.rentalRules.length > 0 ? (
+          <h2 className="text-lg font-semibold text-slate-800 mb-3">
+            Rental Rules
+          </h2>
+          {Array.isArray(listing.rentalRules) &&
+          listing.rentalRules.length > 0 ? (
             <ul className="list-disc pl-5 space-y-1 text-sm text-slate-700">
               {listing.rentalRules.map((rule, idx) => (
                 <li key={`${rule}-${idx}`}>{rule}</li>
@@ -331,18 +386,26 @@ export default function ListingDetailsPage() {
       </div>
 
       <div className="bg-white rounded-xl shadow-md p-6">
-        <h2 className="text-lg font-semibold text-slate-800 mb-4">Policy & Media</h2>
+        <h2 className="text-lg font-semibold text-slate-800 mb-4">
+          Policy & Media
+        </h2>
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 text-sm">
           <div className="lg:col-span-2">
             <p className="text-slate-500">Cancellation Policy</p>
             <p className="mt-1 text-slate-800">
-              {normalizedPolicy && normalizedPolicy !== "-" ? normalizedPolicy : "Not specified"}
+              {normalizedPolicy && normalizedPolicy !== "-"
+                ? normalizedPolicy
+                : "Not specified"}
             </p>
           </div>
           <div>
             <p className="text-slate-500">Media Summary</p>
-            <p className="mt-1 text-slate-800">Photos: {listing.photos?.length || 0}</p>
-            <p className="text-slate-800">Videos: {listing.videos?.length || 0}</p>
+            <p className="mt-1 text-slate-800">
+              Photos: {listing.photos?.length || 0}
+            </p>
+            <p className="text-slate-800">
+              Videos: {listing.videos?.length || 0}
+            </p>
           </div>
         </div>
       </div>
@@ -352,7 +415,10 @@ export default function ListingDetailsPage() {
         {Array.isArray(listing.photos) && listing.photos.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {listing.photos.map((photo, idx) => (
-              <div key={photo?.public_id || `photo-${idx}`} className="rounded-lg border border-slate-200 overflow-hidden">
+              <div
+                key={photo?.public_id || `photo-${idx}`}
+                className="rounded-lg border border-slate-200 overflow-hidden"
+              >
                 <img
                   src={photo?.url}
                   alt={`Listing photo ${idx + 1}`}
@@ -377,7 +443,10 @@ export default function ListingDetailsPage() {
         {Array.isArray(listing.videos) && listing.videos.length > 0 ? (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             {listing.videos.map((video, idx) => (
-              <div key={video?.public_id || `video-${idx}`} className="rounded-lg border border-slate-200 overflow-hidden">
+              <div
+                key={video?.public_id || `video-${idx}`}
+                className="rounded-lg border border-slate-200 overflow-hidden"
+              >
                 <video controls className="w-full bg-black">
                   <source src={video?.url} />
                 </video>
@@ -386,7 +455,10 @@ export default function ListingDetailsPage() {
                   <p>
                     Size: {video?.width || "-"} x {video?.height || "-"}
                   </p>
-                  <p>Duration: {video?.duration ? `${Math.round(video.duration)}s` : "-"}</p>
+                  <p>
+                    Duration:{" "}
+                    {video?.duration ? `${Math.round(video.duration)}s` : "-"}
+                  </p>
                 </div>
               </div>
             ))}
@@ -399,7 +471,8 @@ export default function ListingDetailsPage() {
       <div className="rounded-2xl border border-red-200 bg-red-50 p-6 shadow-sm">
         <h2 className="text-lg font-semibold text-red-700">Danger Zone</h2>
         <p className="mt-1 text-sm text-red-700/80">
-          Deleting a listing will remove all associated media and cannot be undone.
+          Deleting a listing will remove all associated media and cannot be
+          undone.
         </p>
         <Button
           type="button"

@@ -3,6 +3,7 @@ import React from "react";
 import { useUser } from "@/context/UserContext";
 import { Star, Heart } from "lucide-react";
 import Image from "next/image";
+import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { shareOrCopyLink } from "@/utils/shareLink";
 
@@ -11,18 +12,16 @@ export default function ServiceCard({ service, onClick }) {
     useUser();
 
   // Handles both populated favorites (productId object) and raw ObjectId string.
-  const existingFavorite = favorites.find(
-    (fav) => {
-      const favoriteProductId =
-        typeof fav.productId === "string"
-          ? fav.productId
-          : fav.productId?._id || fav.productId?.id;
-      return (
-        String(favoriteProductId) === String(service._id) &&
-        fav.productType === "Service"
-      );
-    },
-  );
+  const existingFavorite = favorites.find((fav) => {
+    const favoriteProductId =
+      typeof fav.productId === "string"
+        ? fav.productId
+        : fav.productId?._id || fav.productId?.id;
+    return (
+      String(favoriteProductId) === String(service._id) &&
+      fav.productType === "Service"
+    );
+  });
 
   const isFavorite = !!existingFavorite;
 
@@ -36,13 +35,13 @@ export default function ServiceCard({ service, onClick }) {
     try {
       if (isFavorite) {
         await removeFavorite(existingFavorite._id);
-        toast.success("Remove from favorites")
+        toast.success("Remove from favorites");
       } else {
         await addFavorite({
           productId: service._id,
           productType: "Service",
         });
-        toast.success("Added to favorites")
+        toast.success("Added to favorites");
       }
     } catch (error) {
       console.log(error);
@@ -103,13 +102,25 @@ export default function ServiceCard({ service, onClick }) {
             <Heart
               size={16}
               className={
-                isFavorite
-                  ? "fill-rose-500 text-rose-500"
-                  : "text-gray-700"
+                isFavorite ? "fill-rose-500 text-rose-500" : "text-gray-700"
               }
             />
           </button>
         </div>
+
+        {/* ⭐ Featured badge */}
+        {service.isFeatured && (
+          <Badge
+          className="absolute left-2 top-2 flex items-center gap-1
+                     bg-amber-50/95 text-amber-700
+                     border border-amber-200
+                     px-2 py-0.5 text-[11px] font-semibold
+                     shadow-sm backdrop-blur"
+        >
+          <Star size={12} className="fill-amber-500 text-amber-500" />
+          Featured
+        </Badge>
+        )}
       </div>
 
       <div className="p-4">

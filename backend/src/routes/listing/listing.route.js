@@ -10,6 +10,7 @@ import {
   deleteListingPhoto,
   deleteListingVideo,
   getListingByUser,
+  getAllFeaturedListings,
 } from "../../controllers/listing/listing.controller.js";
 import {
   uploadListingMedia,
@@ -32,6 +33,7 @@ router.post(
   createListing,
 );
 router.get("/", getAllListings);
+router.get("/featured", getAllFeaturedListings);
 router.get("/user", protect, getListingByUser);
 router.get("/:id", getListingById);
 router.put(

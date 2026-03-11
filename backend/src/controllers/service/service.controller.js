@@ -1,7 +1,6 @@
 import Service from "../../models/service/service.model.js";
 import stripe from "../../config/stripe.js";
 import mongoose from "mongoose";
-import NodeCache from "node-cache";
 import { successResponse, errorResponse } from "../../utils/response.js";
 import {
   uploadBufferToCloudinary,
@@ -9,50 +8,10 @@ import {
   deleteMultipleFromCloudinary,
 } from "../../config/cloudinary.js";
 
-const SERVICE_LIST_CACHE_TTL_SECONDS = 60;
-const SERVICE_DETAILS_CACHE_TTL_SECONDS = 60;
-const serviceCache = new NodeCache({
-  stdTTL: SERVICE_LIST_CACHE_TTL_SECONDS,
-  checkperiod: 120,
-  useClones: false,
-});
-
-const buildServiceListCacheKey = ({ page, limit, category }) =>
-  `${page}:${limit}:${category || "all"}`;
-const buildServiceDetailsCacheKey = (serviceId) => `service:${serviceId}`;
-
-const getCachedServiceList = (key) => {
-  return serviceCache.get(key) || null;
-};
-
-const setCachedServiceList = (key, data) => {
-  serviceCache.set(key, data, SERVICE_LIST_CACHE_TTL_SECONDS);
-};
-
-const clearServiceListCache = () => {
-  const keys = serviceCache.keys().filter((key) => !key.startsWith("service:"));
-  if (keys.length) {
-    serviceCache.del(keys);
-  }
-};
-
-const getCachedServiceDetails = (serviceId) => {
-  const key = buildServiceDetailsCacheKey(serviceId);
-  return serviceCache.get(key) || null;
-};
-
-const setCachedServiceDetails = (serviceId, data) => {
-  const key = buildServiceDetailsCacheKey(serviceId);
-  serviceCache.set(key, data, SERVICE_DETAILS_CACHE_TTL_SECONDS);
-};
-
-const clearServiceDetailsCache = (serviceId) => {
-  const key = buildServiceDetailsCacheKey(serviceId);
-  serviceCache.del(key);
-};
-
 const parseTimeToMinutes = (value) => {
-  const [hours, minutes] = String(value || "").split(":").map(Number);
+  const [hours, minutes] = String(value || "")
+    .split(":")
+    .map(Number);
   if (!Number.isFinite(hours) || !Number.isFinite(minutes)) return null;
   return hours * 60 + minutes;
 };
@@ -96,7 +55,7 @@ export const createService = async (req, res) => {
 
     // 🎥 Upload Videos (Optional)
     let uploadedVideos = [];
-    const serviceId = new mongoose.Types.ObjectId()
+    const serviceId = new mongoose.Types.ObjectId();
 
     if (req.files?.videos) {
       // Limit max video
@@ -150,9 +109,6 @@ export const createService = async (req, res) => {
       owner: req.user._id,
     });
 
-    clearServiceListCache();
-    clearServiceDetailsCache(service._id.toString());
-
     return successResponse(res, 201, "Service created successfully", {
       service,
     });
@@ -180,21 +136,8 @@ export const getAllServices = async (req, res) => {
       query.category = req.query.category;
     }
 
-    const cacheKey = buildServiceListCacheKey({
-      page,
-      limit,
-      category: query.category,
-    });
-    const cached = getCachedServiceList(cacheKey);
-    if (cached) {
-      return successResponse(res, 200, "All Services fetched successfully", cached);
-    }
-
     const [services, totalItems] = await Promise.all([
-      Service.find(query)
-        .select(
-          "businessName serviceType category owner hourlyRate rating reviewCount verified serviceRadius location createdAt photos",
-        )
+      Service.find({ isFeatured: { $ne: true }, ...query })
         .slice("photos", 1)
         .populate("owner", "firstname lastname avatar")
         .populate("category", "name icon")
@@ -202,7 +145,7 @@ export const getAllServices = async (req, res) => {
         .skip(skip)
         .limit(limit)
         .lean(),
-      Service.countDocuments(query),
+      Service.countDocuments({ isFeatured: { $ne: true }, ...query }),
     ]);
 
     if (!services.length) {
@@ -219,39 +162,62 @@ export const getAllServices = async (req, res) => {
       },
     };
 
-    setCachedServiceList(cacheKey, payload);
-
-    return successResponse(res, 200, "All Services fetched successfully", payload);
+    return successResponse(
+      res,
+      200,
+      "All Services fetched successfully",
+      payload,
+    );
   } catch (error) {
     console.log("Error in fetching all servies", error.message);
     return errorResponse(res, 500, "Failed to fetch services", error.message);
   }
 };
 
+//! Get all featured services
+export const getAllFeaturedServices = async (req, res) => {
+  try {
+    const services = await Service.find({
+      isFeatured: true,
+      featuredUntil: { $gt: new Date() },
+      status: "active",
+    })
+      .populate("owner", "email firstname lastname avatar _id")
+      .populate("category", "name")
+      .sort({ featuredUntil: -1 })
+      .lean();
+    if (!services) {
+      return errorResponse(res, 404, "No featured services found");
+    }
+    return successResponse(
+      res,
+      200,
+      "Featured services fetched successfully",
+      services,
+    );
+  } catch (error) {
+    console.log("Error in fetching featured services", error.message);
+    return errorResponse(
+      res,
+      500,
+      "Failed to fetch featured services",
+      error.message,
+    );
+  }
+};
 
 //! Get single service
 export const getSingleService = async (req, res) => {
   try {
     const { id } = req.params;
-    const cachedService = getCachedServiceDetails(id);
-    if (cachedService) {
-      return successResponse(res, 200, "Service fetched successfully", {
-        service: cachedService,
-      });
-    }
 
     const service = await Service.findById(id)
-      .select(
-        "businessName serviceType category yearsInBusiness description location serviceRadius phone email website certifications photos.url photos.public_id videos.url videos.public_id hourlyRate plan stripePriceId stripeProductId owner views bookings rating reviewCount status serviceMode availableSlots verified createdAt updatedAt",
-      )
       .populate("owner", "firstname lastname avatar")
       .populate("category", "name icon")
       .lean();
     if (!service) {
       return errorResponse(res, 404, "No service found");
     }
-
-    setCachedServiceDetails(id, service);
 
     return successResponse(res, 200, "Service fetched successfully", {
       service,
@@ -266,7 +232,7 @@ export const getSingleService = async (req, res) => {
 export const getServicesByUser = async (req, res) => {
   try {
     const userId = req.user._id;
-    
+
     const services = await Service.find({
       owner: userId,
       status: "active",
@@ -275,7 +241,7 @@ export const getServicesByUser = async (req, res) => {
         "businessName serviceType category owner location hourlyRate rating reviewCount views bookings plan serviceMode createdAt photos",
       )
       .slice("photos", 1)
-      .populate("owner" , "email firstname lastname avatar _id")
+      .populate("owner", "email firstname lastname avatar _id")
       .lean();
 
     if (services.length === 0) {
@@ -289,7 +255,12 @@ export const getServicesByUser = async (req, res) => {
       services,
     );
   } catch (error) {
-    return errorResponse(res, 500, "Failed to retrieve user services", error.message);
+    return errorResponse(
+      res,
+      500,
+      "Failed to retrieve user services",
+      error.message,
+    );
   }
 };
 
@@ -347,20 +318,25 @@ export const updateService = async (req, res) => {
       updatedVideos = [...updatedVideos, ...newVideos];
     }
     //! if hourly rate is changing, create new stripe price
-    if (req.body.hourlyRate !== undefined && req.body.hourlyRate !== service.hourlyRate){
-      const priceInSmallestUnit = Math.round(Number(req.body.hourlyRate)*100);
+    if (
+      req.body.hourlyRate !== undefined &&
+      req.body.hourlyRate !== service.hourlyRate
+    ) {
+      const priceInSmallestUnit = Math.round(Number(req.body.hourlyRate) * 100);
       const stripePrice = await stripe.prices.create({
         product: service.stripeProductId,
-        unit_amount: priceInSmallestUnit,        
+        unit_amount: priceInSmallestUnit,
         currency: "usd",
       });
       service.stripePriceId = stripePrice.id;
       service.hourlyRate = req.body.hourlyRate;
     }
 
-    
     //! if service name is changing, update service name in stripe
-    if (req.body.businessName !== undefined && req.body.businessName !== service.businessName){
+    if (
+      req.body.businessName !== undefined &&
+      req.body.businessName !== service.businessName
+    ) {
       await stripe.products.update(service.stripeProductId, {
         name: req.body.businessName,
       });
@@ -378,7 +354,6 @@ export const updateService = async (req, res) => {
     // 📝 UPDATE SERVICE DATA
     // ===============================
 
-
     const updatedService = await Service.findByIdAndUpdate(
       id,
       {
@@ -388,9 +363,6 @@ export const updateService = async (req, res) => {
       },
       { new: true, runValidators: true },
     );
-
-    clearServiceListCache();
-    clearServiceDetailsCache(id);
 
     return successResponse(res, 200, "Service updated successfully", {
       service: updatedService,
@@ -428,21 +400,19 @@ export const deleteService = async (req, res) => {
     }
     // we can't delete the stripe product if it has used
     //! deactivate stripe product
-    if(service.stripeProductId){
+    if (service.stripeProductId) {
       await stripe.products.update(service.stripeProductId, {
-        active: false
-      })
+        active: false,
+      });
     }
     //! deactivate stripe price
-    if(service.stripePriceId){
+    if (service.stripePriceId) {
       await stripe.prices.update(service.stripePriceId, {
-        active: false
-      })
+        active: false,
+      });
     }
 
     await Service.findByIdAndDelete(id);
-    clearServiceListCache();
-    clearServiceDetailsCache(id);
     return successResponse(res, 200, "Service deleted successfully", {
       service,
     });
@@ -486,8 +456,6 @@ export const deleteServicePhoto = async (req, res) => {
     service.photos = service.photos.filter((p) => p.public_id !== publicId);
 
     await service.save();
-    clearServiceListCache();
-    clearServiceDetailsCache(id);
 
     return successResponse(res, 200, "Photo deleted successfully", service);
   } catch (error) {
@@ -526,8 +494,6 @@ export const deleteServiceVideo = async (req, res) => {
     service.videos = service.videos.filter((v) => v.public_id !== publicId);
 
     await service.save();
-    clearServiceListCache();
-    clearServiceDetailsCache(id);
 
     return successResponse(res, 200, "Video deleted successfully", service);
   } catch (error) {

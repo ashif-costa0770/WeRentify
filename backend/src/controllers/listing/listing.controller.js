@@ -105,7 +105,7 @@ export const createListing = async (req, res) => {
 //! Get all listings with filters
 export const getAllListings = async (req, res) => {
   try {
-    const listings = await Listing.find({ status: "active" })
+    const listings = await Listing.find({  isFeatured: { $ne: true }, status: "active" })
       .populate("owner","email firstname lastname avatar _id")
       .populate("category","name")
       .sort({ createdAt: -1 })
@@ -119,6 +119,29 @@ export const getAllListings = async (req, res) => {
     });
   } catch (error) {
     return errorResponse(res, 500, "Failed to fetch listings", error.message);
+  }
+};
+
+//! Get all featured listings
+export const getAllFeaturedListings = async (req, res) => {
+  try {
+    const listings = await Listing.find({
+      isFeatured: true,
+      featuredUntil: { $gt: new Date() },
+      status: "active",
+    })
+      .populate("owner","email firstname lastname avatar _id")
+      .populate("category","name")
+      .sort({ createdAt: -1 })
+      .lean();
+
+    if (!listings) {
+      return errorResponse(res, 404, "No featured listings found");
+    }
+
+    return successResponse(res, 200, "Featured listings fetched successfully", listings);
+  } catch (error) {
+    return errorResponse(res, 500, "Failed to fetch featured listings", error.message);
   }
 };
 

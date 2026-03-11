@@ -31,7 +31,12 @@ function formatDailyPriceUsd(amount) {
   }).format(numeric);
 }
 
-export function getListingsColumns({ actionLoadingId, onDelete, onToggleStatus }) {
+export function getListingsColumns({
+  actionLoadingId,
+  onDelete,
+  onToggleStatus,
+  onToggleFeatured,
+}) {
   return [
     {
       id: "itemName",
@@ -86,7 +91,13 @@ export function getListingsColumns({ actionLoadingId, onDelete, onToggleStatus }
       cell: ({ row }) => {
         const isAvailable = Boolean(row.original?.isAvailable);
         return (
-          <Badge className={isAvailable ? "bg-emerald-100 text-emerald-700" : "bg-red-100 text-red-700"}>
+          <Badge
+            className={
+              isAvailable
+                ? "bg-emerald-100 text-emerald-700"
+                : "bg-red-100 text-red-700"
+            }
+          >
             {isAvailable ? "Available" : "Unavailable"}
           </Badge>
         );
@@ -103,12 +114,56 @@ export function getListingsColumns({ actionLoadingId, onDelete, onToggleStatus }
       ),
     },
     {
+      id: "featured",
+      header: () => <div className="text-center">Featured</div>,
+      accessorKey: "isFeatured",
+      cell: ({ row }) => {
+        const listingId = row.original?._id;
+        const isFeatured = Boolean(row.original?.isFeatured);
+        const isLoading = actionLoadingId === listingId;
+        return (
+          <div className="flex items-center justify-center">
+            <button
+              type="button"
+              role="switch"
+              aria-checked={isFeatured}
+              aria-label={
+                isFeatured ? "Remove from featured" : "Mark as featured"
+              }
+              disabled={isLoading}
+              onClick={() => onToggleFeatured(listingId, isFeatured)}
+              className={`relative inline-flex h-4 w-8 flex-shrink-0 cursor-pointer rounded-full border-0
+  transition-all duration-300 ease-in-out
+  focus:outline-none focus:ring-2 focus:ring-offset-2
+  disabled:cursor-not-allowed disabled:opacity-50
+  ${
+    isFeatured
+      ? "bg-emerald-500 hover:bg-emerald-600 focus:ring-emerald-400 shadow-[0_0_4px_rgba(16,185,129,0.6)]"
+      : "bg-slate-300 hover:bg-slate-400 focus:ring-slate-300 shadow-[0_0_4px_rgba(107,114,128,0.6)]"
+  }`}
+            >
+              <span
+                className={`pointer-events-none absolute top-[2px] left-[2px]
+    inline-block h-3 w-3 rounded-full bg-white
+    shadow transition-transform duration-300 ease-in-out
+    ${isFeatured ? "translate-x-[16px]" : "translate-x-0"}`}
+              />
+            </button>
+          </div>
+        );
+      },
+    },
+    {
       id: "status",
       header: "Status",
       accessorKey: "status",
       cell: ({ row }) => {
         const status = row.original?.status || "inactive";
-        return <Badge className={getStatusClass(status)}>{formatStatusLabel(status)}</Badge>;
+        return (
+          <Badge className={getStatusClass(status)}>
+            {formatStatusLabel(status)}
+          </Badge>
+        );
       },
     },
     {

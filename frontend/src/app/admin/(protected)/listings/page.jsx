@@ -96,6 +96,54 @@ export default function ListingsPage() {
   const canGoPrevious = currentPage > 1;
   const canGoNext = currentPage < totalPages;
 
+  const handleToggleFeatured = async (listingId, isCurrentlyFeatured) => {
+    const nextFeatured = !isCurrentlyFeatured;
+    setError("");
+    setActionLoadingId(listingId);
+    setListings((prev) =>
+      prev.map((item) =>
+        item?._id === listingId ? { ...item, isFeatured: nextFeatured } : item
+      )
+    );
+
+    try {
+      const res = await fetch(
+        `${API_URL}/admin/listings/${listingId}/toggle-featured`,
+        {
+          method: "PATCH",
+          credentials: "include",
+          cache: "no-store",
+        }
+      );
+      const payload = await res.json().catch(() => null);
+
+      if (!res.ok || !payload?.success) {
+        throw new Error(payload?.message || "Failed to update featured status");
+      }
+      toast.success(
+        nextFeatured
+          ? "Listing marked as featured."
+          : "Listing removed from featured."
+      );
+    } catch (actionError) {
+      setListings((prev) =>
+        prev.map((item) =>
+          item?._id === listingId
+            ? { ...item, isFeatured: isCurrentlyFeatured }
+            : item
+        )
+      );
+      setError(
+        actionError.message || "Failed to update featured status"
+      );
+      toast.error(
+        actionError.message || "Failed to update featured status"
+      );
+    } finally {
+      setActionLoadingId(null);
+    }
+  };
+
   const handleToggleListingStatus = async (listingId, isCurrentlyActive) => {
     const nextIsActive = !isCurrentlyActive;
     setError("");
@@ -174,9 +222,10 @@ export default function ListingsPage() {
   };
 
   const columns = getListingsColumns({
-    actionLoadingId: actionLoadingId,
+    actionLoadingId,
     onDelete: handleDeleteListing,
     onToggleStatus: handleToggleListingStatus,
+    onToggleFeatured: handleToggleFeatured,
   });
 
   return (
