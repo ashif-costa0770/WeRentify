@@ -58,6 +58,7 @@ export const createBookingSchema = z
     paymentProvider: z.string().trim().optional(),
 
     notes: z.string().trim().max(1000).optional(),
+    reminderSent: z.coerce.boolean().optional().default(false),
   })
   .superRefine((data, ctx) => {
     const expectedBookingType =

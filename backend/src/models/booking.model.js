@@ -51,6 +51,11 @@ const bookingSchema = new mongoose.Schema(
       trim: true,
     },
 
+    reminderSent: {
+      type: Boolean,
+      default: false
+    },
+
     // Quantity for items/services
     quantity: {
       type: Number,
@@ -163,7 +168,8 @@ const bookingSchema = new mongoose.Schema(
 
 bookingSchema.index({ customer: 1, createdAt: -1 });
 bookingSchema.index({ provider: 1, status: 1, createdAt: -1 });
-bookingSchema.index({ serviceType: 1 });
 bookingSchema.index({ resourceModel: 1, resource: 1, status: 1, createdAt: -1 });
+bookingSchema.index({ bookingDate: 1, reminderSent: 1, status: 1 });
+bookingSchema.index({ reminderSent: 1, status: 1, bookingDate: 1 });
 
 export default mongoose.model("Booking", bookingSchema);

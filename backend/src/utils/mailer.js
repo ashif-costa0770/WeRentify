@@ -77,3 +77,12 @@ export const sendConfirmationEmail = async ({ to, subject, html }) => {
     html
   });
 };
+
+export const sendBookingReminderEmail = async ({ to, subject, html }) => {
+  await transporter.sendMail({
+    from: process.env.EMAIL_USER,
+    to,
+    subject,
+    html
+  });
+};

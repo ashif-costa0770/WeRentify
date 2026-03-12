@@ -117,6 +117,7 @@ export const createBooking = async (req, res) => {
       customer: req.user._id,
       provider: resourceInfo.providerId,
       unitPrice,
+      status: "confirmed",
       totalPrice: payload.totalPrice ?? computedTotal,
     });
 
@@ -130,6 +131,7 @@ export const createBooking = async (req, res) => {
               .select("email firstname lastname")
               .lean();
 
+      // Send confirmation email to provider
       if (provider?.email) {
         await sendConfirmationEmail({
           to: provider.email,
@@ -257,6 +259,7 @@ export const createBooking = async (req, res) => {
         });
       }
 
+      // Send confirmation email to customer
       if (req.user?.email) {
         await sendConfirmationEmail({
           to: req.user.email,

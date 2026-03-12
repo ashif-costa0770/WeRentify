@@ -31,6 +31,7 @@ import connectRoutes from "./routes/connect.route.js";
 import planRoutes from "./routes/plan.route.js";
 import adminRoutes from "./routes/admin.route.js";
 import bookingRoutes from "./routes/booking.route.js";
+import "./jobs/bookingReminderCron.js";
 
 const app = express();
 const PORT = process.env.PORT || 5000;
