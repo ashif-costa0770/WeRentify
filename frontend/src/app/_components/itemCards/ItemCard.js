@@ -126,10 +126,15 @@ export default function ItemCard({ item, onSelect = () => {} }) {
           </h3>
 
           <div className="flex items-center gap-1">
+            {item.rating > 0 && (
+              <>
+                <span className="text-gray-600"></span>
             <Star size={12} className="fill-yellow-400 text-yellow-400" />
-            <span className="text-[12px] font-bold text-gray-700">
-              {item.rating || "4.5"}
-            </span>
+              <span className="text-[12px] font-bold text-gray-700">
+                  {item.rating } {item.reviewCount > 0 && `(${item.reviewCount})`}
+                </span>
+              </>
+            )}
           </div>
         </div>
 

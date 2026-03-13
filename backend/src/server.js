@@ -32,6 +32,7 @@ import planRoutes from "./routes/plan.route.js";
 import adminRoutes from "./routes/admin.route.js";
 import bookingRoutes from "./routes/booking.route.js";
 import "./jobs/bookingReminderCron.js";
+import reviewRoutes from "./routes/review.route.js";
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -101,6 +102,7 @@ app.use("/api/payments", paymentRoutes);
 app.use("/api/connect", connectRoutes);
 app.use("/api/plans", planRoutes);
 app.use("/api/bookings", bookingRoutes);
+app.use("/api/reviews", reviewRoutes);
 
 /* HEALTH */
 /* -------------------------------------------------- */

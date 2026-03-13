@@ -10,8 +10,18 @@ import DOMPurify from "dompurify";
 import { toast } from "sonner";
 import { shareOrCopyLink } from "@/utils/shareLink";
 import { getListingById, getListings } from "@/services/item.service";
+import {
+  getAllReviews,
+  createReview as createReviewApi,
+  updateReview as updateReviewApi,
+  deleteReview as deleteReviewApi,
+} from "@/services/review.service";
+import { getMyBookings } from "@/services/booking.service";
+import { timeAgo } from "@/utils/timeAgo";
 import NavbarWrapper from "@/app/_components/navbar/NavbarWrapper";
 import ListingBookingModal from "./components/listing-booking-modal";
+import ReviewSummary from "@/app/_components/reviews/ReviewSummary";
+import ReviewModal from "@/app/_components/reviews/ReviewModal";
 import {
   ArrowLeft,
   Star,
@@ -23,6 +33,8 @@ import {
   Shield,
   Loader2,
   X,
+  Edit3,
+  Trash2,
 } from "lucide-react";
 
 const MessageSlider = dynamic(
@@ -48,6 +60,18 @@ export default function ListingPage() {
   const [showOwnerProfile, setShowOwnerProfile] = useState(false);
   const [selectedOwner, setSelectedOwner] = useState(null);
   const [showBookingModal, setShowBookingModal] = useState(false);
+  const [reviews, setReviews] = useState([]);
+  const [totalReviews, setTotalReviews] = useState(0);
+  const [reviewsLoading, setReviewsLoading] = useState(false);
+  const [reviewsError, setReviewsError] = useState("");
+  const [showReviewModal, setShowReviewModal] = useState(false);
+  const [hasCompletedBooking, setHasCompletedBooking] = useState(false);
+  const [reviewBookingId, setReviewBookingId] = useState(null);
+  const [hasUserReview, setHasUserReview] = useState(false);
+  const [submittingReview, setSubmittingReview] = useState(false);
+  const [editingReview, setEditingReview] = useState(null);
+  const [deleteReviewTarget, setDeleteReviewTarget] = useState(null);
+  const [deletingReview, setDeletingReview] = useState(false);
 
   const {
     favorites,
@@ -71,16 +95,117 @@ export default function ListingPage() {
     } catch (err) {
       const status = err?.response?.status;
       if (status === 404) setNotFound(true);
-      else toast.error(err?.response?.data?.message || "Failed to load listing");
+      else
+        toast.error(err?.response?.data?.message || "Failed to load listing");
       setListing(null);
     } finally {
       setLoading(false);
     }
   }, [id]);
 
+  const fetchReviews = useCallback(
+    async (targetId) => {
+      if (!targetId) return;
+      setReviewsLoading(true);
+      setReviewsError("");
+      try {
+        const res = await getAllReviews(targetId, "Listing");
+        const payload = res?.data?.data || {};
+        const list = Array.isArray(payload.reviews) ? payload.reviews : [];
+        const total = Number(payload.totalReviews ?? list.length) || 0;
+        setReviews(list);
+        setTotalReviews(total);
+
+        if (user?._id) {
+          const userId = String(user._id);
+          const hasReview = list.some((review) => {
+            const author = review.author;
+            const authorId =
+              typeof author === "string"
+                ? author
+                : author?._id || author?.id || null;
+            return authorId && String(authorId) === userId;
+          });
+          setHasUserReview(hasReview);
+        } else {
+          setHasUserReview(false);
+        }
+      } catch (err) {
+        const msg =
+          err?.response?.data?.message ||
+          "Failed to load reviews for this listing";
+        setReviewsError(msg);
+        setReviews([]);
+        setTotalReviews(0);
+      } finally {
+        setReviewsLoading(false);
+      }
+    },
+    [user?._id],
+  );
+
+  const evaluateBookingEligibility = useCallback(
+    async (targetId) => {
+      if (!targetId || !isLogin) {
+        setHasCompletedBooking(false);
+        setReviewBookingId(null);
+        return;
+      }
+
+      try {
+        const res = await getMyBookings();
+        const data = res?.data?.data;
+        const bookingsArray = Array.isArray(data) ? data : [];
+
+        const normalizeId = (value) => {
+          if (!value) return null;
+          if (typeof value === "string") return value;
+          return value._id || value.id || null;
+        };
+
+        const targetIdStr = String(targetId);
+
+        const eligibleBookings = bookingsArray.filter((booking) => {
+          const status = String(booking?.status || "").toLowerCase();
+          if (status !== "completed") return false;
+
+          const model = String(booking?.resourceModel || "").toLowerCase();
+          const type = String(booking?.bookingType || "").toLowerCase();
+          const isListingBooking = model === "listing" || type === "listing";
+
+          if (!isListingBooking) return false;
+
+          const resourceId = normalizeId(booking.resource);
+          if (!resourceId) return false;
+
+          return String(resourceId) === targetIdStr;
+        });
+
+        if (eligibleBookings.length > 0) {
+          setHasCompletedBooking(true);
+          setReviewBookingId(eligibleBookings[0]._id);
+        } else {
+          setHasCompletedBooking(false);
+          setReviewBookingId(null);
+        }
+      } catch {
+        setHasCompletedBooking(false);
+        setReviewBookingId(null);
+      }
+    },
+    [isLogin],
+  );
+
   useEffect(() => {
     fetchListing();
   }, [fetchListing]);
+
+  useEffect(() => {
+    if (!listing) return;
+    const targetId = listing._id || listing.id;
+    fetchReviews(targetId);
+    evaluateBookingEligibility(targetId);
+  }, [listing, fetchReviews, evaluateBookingEligibility]);
 
   // Fetch similar listings (same category) for the "Similar items" section
   useEffect(() => {
@@ -97,7 +222,8 @@ export default function ListingPage() {
           res?.data?.data?.listings ??
           res?.data?.listings ??
           res?.data?.data ??
-          res?.data ?? [];
+          res?.data ??
+          [];
         const arr = Array.isArray(list) ? list : [];
         const similar = arr
           .filter(
@@ -105,7 +231,7 @@ export default function ListingPage() {
               (item._id || item.id) !== (listing._id || listing.id) &&
               (typeof item.category === "object"
                 ? item.category?._id
-                : item.category) === categoryId
+                : item.category) === categoryId,
           )
           .slice(0, 4);
         setSimilarListings(similar);
@@ -165,7 +291,9 @@ export default function ListingPage() {
       : listing.category;
   const selectedItemId = listing._id || listing.id;
   const selectedOwnerId =
-    (typeof listing.owner === "object" ? listing.owner?._id : listing.ownerId) || null;
+    (typeof listing.owner === "object"
+      ? listing.owner?._id
+      : listing.ownerId) || null;
   const isOwnListing =
     Boolean(user?._id && selectedOwnerId) &&
     String(user._id) === String(selectedOwnerId);
@@ -175,8 +303,8 @@ export default function ListingPage() {
       String(
         typeof fav.productId === "string"
           ? fav.productId
-          : fav.productId?._id ?? fav.productId?.id
-      ) === String(selectedItemId) && fav.productType === "Listing"
+          : (fav.productId?._id ?? fav.productId?.id),
+      ) === String(selectedItemId) && fav.productType === "Listing",
   );
   const isFavorite = !!existingFavorite;
 
@@ -206,7 +334,10 @@ export default function ListingPage() {
     const result = await shareOrCopyLink({
       title: listing.itemName || listing.name,
       text: `Check out this ${listing.itemName || listing.name} for rent on WeRentify!`,
-      url: typeof window !== "undefined" ? `${window.location.origin}/listing/${selectedItemId}` : `/listing/${selectedItemId}`,
+      url:
+        typeof window !== "undefined"
+          ? `${window.location.origin}/listing/${selectedItemId}`
+          : `/listing/${selectedItemId}`,
     });
     if (result === "shared") toast.success("Listing shared!");
     else if (result === "copied") toast.success("Link copied to clipboard!");
@@ -247,6 +378,77 @@ export default function ListingPage() {
   const handleViewOwner = (ownerData) => {
     setSelectedOwner(ownerData);
     setShowOwnerProfile(true);
+  };
+
+  const canAddReview =
+    isLogin && !isOwnListing && hasCompletedBooking && !hasUserReview;
+
+  const handleOpenNewReview = () => {
+    setEditingReview(null);
+    setShowReviewModal(true);
+  };
+
+  const handleOpenEditReview = (review) => {
+    setEditingReview(review);
+    setShowReviewModal(true);
+  };
+
+  const handleSubmitReview = async ({ rating, comment }) => {
+    setSubmittingReview(true);
+    try {
+      if (editingReview && editingReview._id) {
+        await updateReviewApi(editingReview._id, { rating, comment });
+        toast.success("Review updated successfully");
+      } else {
+        if (!reviewBookingId) {
+          toast.error("No eligible booking found for this listing.");
+          return;
+        }
+        await createReviewApi({
+          bookingId: reviewBookingId,
+          rating,
+          comment,
+        });
+        toast.success("Review submitted successfully");
+        setHasUserReview(true);
+      }
+
+      setShowReviewModal(false);
+      setEditingReview(null);
+      await Promise.all([
+        fetchListing(),
+        fetchReviews(listing._id || listing.id),
+      ]);
+    } catch (err) {
+      const msg =
+        err?.response?.data?.message ||
+        "Failed to save review. Please try again.";
+      toast.error(msg);
+    } finally {
+      setSubmittingReview(false);
+    }
+  };
+
+  const handleConfirmDeleteReview = async () => {
+    if (!deleteReviewTarget?._id) return;
+    setDeletingReview(true);
+    try {
+      await deleteReviewApi(deleteReviewTarget._id);
+      toast.success("Review deleted successfully");
+      setDeleteReviewTarget(null);
+      setHasUserReview(false);
+      await Promise.all([
+        fetchListing(),
+        fetchReviews(listing._id || listing.id),
+      ]);
+    } catch (err) {
+      const msg =
+        err?.response?.data?.message ||
+        "Failed to delete review. Please try again.";
+      toast.error(msg);
+    } finally {
+      setDeletingReview(false);
+    }
   };
 
   return (
@@ -292,339 +494,561 @@ export default function ListingPage() {
         <div className="grid md:grid-cols-3 gap-8">
           {/* Left column */}
           <div className="md:col-span-2">
-                <div className="flex items-start justify-between mb-6">
-                  <div>
-                    <h1 className="text-4xl font-black text-gray-900 mb-3">
-                      {listing.itemName || listing.name}
-                    </h1>
-                     
-                    <div className="flex items-center gap-4 text-gray-600">
-                      <div className="flex items-center gap-1">
-                        <Star size={18} className="fill-yellow-400 text-yellow-400" />
-                        <span className="font-bold text-gray-900">
-                          {listing.rating ?? "4.5"}
-                        </span>
-                        <span className="text-gray-600">
-                          ({listing.reviews ?? "0"} reviews)
-                        </span>
-                      </div>
-                      <span>•</span>
-                      <div className="flex items-center gap-1">
-                        <MapPin size={16} />
-                        <span>{listing.distance ?? "—"} mi away</span>
-                      </div>
-                      <span>•</span>
-                      <span>{listing.totalRentals ?? 0} rentals</span>
-                    </div>
-                    <div className="flex gap-3 mt-4">
-                      <button
-                        onClick={handleShareClick}
-                        className="flex items-center gap-2 px-4 py-2 rounded-xl cursor-pointer font-semibold text-gray-700 hover:bg-gray-50 transition-all shadow-sm"
-                      >
-                        <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                          <path d="M4 12v1a3 3 0 0 0 3 3h2a3 3 0 0 0 3-3v-1" />
-                          <polyline points="8 2 8 8" />
-                          <polyline points="5 5 8 2 11 5" />
-                        </svg>
-                        Share
-                      </button>
-                      <button
-                        onClick={handleFavoriteToggle}
-                        className="px-4 py-2 rounded-xl font-semibold flex items-center gap-2 text-gray-700 shadow-sm hover:bg-gray-50 transition-all cursor-pointer"
-                      >
-                        <Heart size={16} className={isFavorite ? "fill-rose-500 text-rose-500" : "text-gray-600"} />
-                        {isFavorite ? "Saved" : "Save"}
-                      </button>
-                    </div>
-                
-                  </div>                  
-                    <div className="bg-linear-to-r from-emerald-500 to-teal-500 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-2">
-                      <CheckCircle size={16} /> Verified Owner
-                    </div>                  
+            <div className="flex items-start justify-between mb-6">
+              <div>
+                <h1 className="text-4xl font-black text-gray-900 mb-3">
+                  {listing.itemName || listing.name}
+                </h1>
+
+                <div className="flex items-center gap-4 text-gray-600">
+                  <div className="flex items-center gap-1">
+                    <Star
+                      size={18}
+                      className="fill-yellow-400 text-yellow-400"
+                    />
+                    <span className="font-bold text-gray-900">
+                      {listing.rating || 0}
+                    </span>
+                    <span className="text-gray-600">
+                      ({listing.reviewCount || 0} reviews)
+                    </span>
+                  </div>
+                  <span>•</span>
+                  <div className="flex items-center gap-1">
+                    <MapPin size={16} />
+                    <span>{listing.distance ?? "—"} mi away</span>
+                  </div>
+                  <span>•</span>
+                  <span>{listing.totalRentals ?? 0} rentals</span>
                 </div>
-
-                <section className="mb-6">
-                  <h2 className="text-xl font-bold text-gray-900 mb-3">Description</h2>
-                  <div className="text-gray-700 leading-relaxed prose prose-sm max-w-none">
-                    {listing.description ? (
-                      <div
-                        dangerouslySetInnerHTML={{
-                          __html: DOMPurify.sanitize(listing.description, {
-                            ALLOWED_TAGS: ["b", "i", "em", "strong", "p", "br", "ul", "ol", "li", "a", "span"],
-                            ALLOWED_ATTR: ["href", "target", "rel", "class"],
-                          }),
-                        }}
-                      />
-                    ) : (
-                      <p>No description available</p>
-                    )}
-                  </div>
-                </section>
-
-                {listing.features?.length > 0 && (
-                  <section className="mb-6">
-                    <h2 className="text-xl font-bold text-gray-900 mb-3">Features & Details</h2>
-                    <div className="grid grid-cols-2 gap-3">
-                      {listing.features.map((feature, idx) => (
-                        <div key={idx} className="flex items-center gap-2 bg-gray-50 p-3 rounded-xl">
-                          <Check size={18} className="text-green-600" />
-                          <span className="text-sm font-medium text-gray-700">{feature}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </section>
-                )}
-
-                {listing.rentalRules?.length > 0 && (
-                  <section className="mb-6">
-                    <h2 className="text-xl font-bold text-gray-900 mb-3">Rental Rules</h2>
-                    <ul className="space-y-2">
-                      {listing.rentalRules.map((rule, idx) => (
-                        <li key={idx} className="flex gap-2 text-gray-700">
-                          <span className="text-indigo-600 font-bold">•</span>
-                          <span>{rule}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </section>
-                )}
-
-                <div className="bg-yellow-50 border-2 border-yellow-200 p-4 rounded-xl mb-6">
-                  <h3 className="font-bold text-gray-900 mb-1">🔄 Cancellation Policy</h3>
-                  <div className="text-sm text-gray-700 prose prose-sm max-w-none">
-                    {listing.cancellationPolicy ? (
-                      <div
-                        dangerouslySetInnerHTML={{
-                          __html: DOMPurify.sanitize(listing.cancellationPolicy, {
-                            ALLOWED_TAGS: ["b", "i", "em", "strong", "p", "br", "ul", "ol", "li", "a", "span"],
-                            ALLOWED_ATTR: ["href", "target", "rel", "class"],
-                          }),
-                        }}
-                      />
-                    ) : (
-                      <p>No cancellation policy provided.</p>
-                    )}
-                  </div>
+                <div className="flex gap-3 mt-4">
+                  <button
+                    onClick={handleShareClick}
+                    className="flex items-center gap-2 px-4 py-2 rounded-xl cursor-pointer font-semibold text-gray-700 hover:bg-gray-50 transition-all shadow-sm"
+                  >
+                    <svg
+                      width="16"
+                      height="16"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <path d="M4 12v1a3 3 0 0 0 3 3h2a3 3 0 0 0 3-3v-1" />
+                      <polyline points="8 2 8 8" />
+                      <polyline points="5 5 8 2 11 5" />
+                    </svg>
+                    Share
+                  </button>
+                  <button
+                    onClick={handleFavoriteToggle}
+                    className="px-4 py-2 rounded-xl font-semibold flex items-center gap-2 text-gray-700 shadow-sm hover:bg-gray-50 transition-all cursor-pointer"
+                  >
+                    <Heart
+                      size={16}
+                      className={
+                        isFavorite
+                          ? "fill-rose-500 text-rose-500"
+                          : "text-gray-600"
+                      }
+                    />
+                    {isFavorite ? "Saved" : "Save"}
+                  </button>
                 </div>
+              </div>
+              <div className="bg-linear-to-r from-emerald-500 to-teal-500 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-2">
+                <CheckCircle size={16} /> Verified Owner
+              </div>
+            </div>
 
-                <section className="mb-8">
-                  <h2 className="text-lg text-gray-900 font-bold mb-2 flex items-center gap-2">
-                    <MapPin size={18} /> General Location
-                  </h2>
-                  <p className="text-sm text-gray-600 mb-3">
-                    Exact address provided after booking confirmation
-                  </p>
-                  <div className="rounded-xl overflow-hidden shadow-sm">
-                    {listing.coordinates?.coordinates ? (
-                      <iframe
-                        width="100%"
-                        height="240"
-                        loading="lazy"
-                        style={{ border: 0 }}
-                        src={`https://www.google.com/maps?q=${listing.coordinates.coordinates[1]},${listing.coordinates.coordinates[0]}&output=embed`}
-                      />
-                    ) : listing.pickupLocation ? (
-                      <iframe
-                        width="100%"
-                        height="240"
-                        loading="lazy"
-                        style={{ border: 0 }}
-                        src={`https://www.google.com/maps?q=${encodeURIComponent(listing.pickupLocation)}&output=embed`}
-                      />
-                    ) : (
-                      <div className="w-full h-60 bg-gray-100 flex items-center justify-center text-gray-500">
-                        <MapPin size={32} className="text-gray-400" />
-                        <p className="ml-2">Location not available</p>
-                      </div>
-                    )}
-                  </div>
-                  {listing.coordinates?.formattedAddress && (
-                    <p className="text-sm text-gray-600 mt-2">
-                      📍 {listing.coordinates.formattedAddress}
-                    </p>
-                  )}
-                </section>
-
-                {similarListings.length > 0 && (
-                  <section>
-                    <h2 className="text-2xl font-bold text-gray-900 mb-4">
-                      ✨ Similar items in your area
-                    </h2>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                      {similarListings.map((item) => {
-                        const itemId = item._id || item.id;
-                        const imageUrl = item.photos?.[0]?.url || item.imageUrl;
-                        return (
-                          <Link
-                            key={itemId}
-                            href={`/listing/${itemId}`}
-                            className="rounded-xl overflow-hidden border border-gray-100 hover:border-gray-200 transition-colors"
-                          >
-                            <div className="aspect-square bg-gray-200 flex items-center justify-center">
-                              {imageUrl ? (
-                                <Image
-                                  src={imageUrl}
-                                  alt={item.itemName || item.name || "Item"}
-                                  width={300}
-                                  height={300}
-                                  className="w-full h-full object-cover"
-                                />
-                              ) : (
-                                <span className="text-gray-400 text-sm">No image</span>
-                              )}
-                            </div>
-                            <div className="p-3">
-                              <h3 className="font-bold text-sm text-gray-900 line-clamp-1">
-                                {item.itemName || item.name}
-                              </h3>
-                              <p className="text-sm font-bold text-indigo-600">
-                                ${item.dailyRate ?? item.hourlyRate ?? "0"}/day
-                              </p>
-                            </div>
-                          </Link>
-                        );
-                      })}
-                    </div>
-                  </section>
+            <section className="mb-6">
+              <h2 className="text-xl font-bold text-gray-900 mb-3">
+                Description
+              </h2>
+              <div className="text-gray-700 leading-relaxed prose prose-sm max-w-none">
+                {listing.description ? (
+                  <div
+                    dangerouslySetInnerHTML={{
+                      __html: DOMPurify.sanitize(listing.description, {
+                        ALLOWED_TAGS: [
+                          "b",
+                          "i",
+                          "em",
+                          "strong",
+                          "p",
+                          "br",
+                          "ul",
+                          "ol",
+                          "li",
+                          "a",
+                          "span",
+                        ],
+                        ALLOWED_ATTR: ["href", "target", "rel", "class"],
+                      }),
+                    }}
+                  />
+                ) : (
+                  <p>No description available</p>
                 )}
               </div>
+            </section>
 
-              {/* Right column - booking card */}
-              <div className="md:col-span-1">
-                <div className="sticky top-4 bg-white border border-gray-100 rounded-2xl p-6">
-                  <div className="mb-6">
-                    <h3 className="font-bold text-gray-900 mb-3 text-lg">Pricing</h3>
-                    <div className="space-y-2">
-                      <div className="flex justify-between items-center">
-                        <span className="text-gray-700">Hourly</span>
-                        <span className="text-xl text-gray-700 font-bold">
-                          ${listing.hourlyRate ?? "0"}/hr
-                        </span>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-gray-700">Daily</span>
-                        <span className="text-xl font-bold text-indigo-600">
-                          ${listing.dailyRate ?? "0"}/day
-                        </span>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-gray-700">Weekly</span>
-                        <span className="text-xl text-gray-700 font-bold">
-                          ${((listing.dailyRate ?? 0) * 7 * 0.85).toFixed(0)}/wk
-                        </span>
-                      </div>
-                      <p className="text-xs text-green-600 font-semibold mt-2">
-                        ✨ Save 15% on weekly rentals
+            {listing.features?.length > 0 && (
+              <section className="mb-6">
+                <h2 className="text-xl font-bold text-gray-900 mb-3">
+                  Features & Details
+                </h2>
+                <div className="grid grid-cols-2 gap-3">
+                  {listing.features.map((feature, idx) => (
+                    <div
+                      key={idx}
+                      className="flex items-center gap-2 bg-gray-50 p-3 rounded-xl"
+                    >
+                      <Check size={18} className="text-green-600" />
+                      <span className="text-sm font-medium text-gray-700">
+                        {feature}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </section>
+            )}
+
+            {listing.rentalRules?.length > 0 && (
+              <section className="mb-6">
+                <h2 className="text-xl font-bold text-gray-900 mb-3">
+                  Rental Rules
+                </h2>
+                <ul className="space-y-2">
+                  {listing.rentalRules.map((rule, idx) => (
+                    <li key={idx} className="flex gap-2 text-gray-700">
+                      <span className="text-indigo-600 font-bold">•</span>
+                      <span>{rule}</span>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            )}
+
+            <div className="bg-yellow-50 border-2 border-yellow-200 p-4 rounded-xl mb-6">
+              <h3 className="font-bold text-gray-900 mb-1">
+                🔄 Cancellation Policy
+              </h3>
+              <div className="text-sm text-gray-700 prose prose-sm max-w-none">
+                {listing.cancellationPolicy ? (
+                  <div
+                    dangerouslySetInnerHTML={{
+                      __html: DOMPurify.sanitize(listing.cancellationPolicy, {
+                        ALLOWED_TAGS: [
+                          "b",
+                          "i",
+                          "em",
+                          "strong",
+                          "p",
+                          "br",
+                          "ul",
+                          "ol",
+                          "li",
+                          "a",
+                          "span",
+                        ],
+                        ALLOWED_ATTR: ["href", "target", "rel", "class"],
+                      }),
+                    }}
+                  />
+                ) : (
+                  <p>No cancellation policy provided.</p>
+                )}
+              </div>
+            </div>
+
+            <section className="mt-8 border-t border-gray-200 pt-6 mb-15">
+              <div className="mb-4">
+                <h2 className="text-xl font-bold text-gray-900 mb-2">
+                  Reviews Summary
+                </h2>
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <ReviewSummary
+                    rating={listing.rating ?? 0}
+                    count={listing.reviewCount ?? totalReviews}
+                  />
+
+                  {canAddReview && (
+                    <button
+                      type="button"
+                      onClick={handleOpenNewReview}
+                      className=" cursor-pointer inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-yellow-400 to-yellow-200 px-5 py-2 text-sm font-bold text-gray-900 shadow-lg hover:from-yellow-500 hover:to-yellow-300 transition-all duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-yellow-500"
+                    >
+                      <Star
+                        size={16}
+                        className="fill-yellow-400 text-yellow-600"
+                      />
+                      Add Review
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {reviewsLoading ? (
+                <div className="flex items-center gap-2 text-sm text-gray-600">
+                  <Loader2 className="size-4 animate-spin text-indigo-600" />
+                  <span>Loading reviews...</span>
+                </div>
+              ) : reviewsError ? (
+                <p className="text-sm text-red-600">{reviewsError}</p>
+              ) : reviews.length === 0 ? (
+                <p className="text-sm text-gray-600">
+                  No reviews yet.{" "}
+                  {canAddReview
+                    ? "Be the first to share your experience."
+                    : "Bookings must be completed before leaving a review."}
+                </p>
+              ) : (
+                <div className="space-y-4">
+                  {reviews.map((review) => {
+                    const author = review.author || {};
+                    const fullName =
+                      `${author.firstname || ""} ${author.lastname || ""}`.trim() ||
+                      author.email ||
+                      "Guest";
+                    const initial = fullName.charAt(0).toUpperCase();
+                    const isOwnReview =
+                      user?._id &&
+                      review.author &&
+                      String(
+                        typeof review.author === "string"
+                          ? review.author
+                          : review.author._id || review.author.id,
+                      ) === String(user._id);
+
+                    return (
+                      <article
+                        key={review._id}
+                        className="rounded-2xl border border-gray-100 bg-white px-5 py-3 shadow-sm"
+                      >
+                        <div className="flex items-start gap-3">
+                          <div className="flex-1">
+                            <div className="flex flex-wrap items-center justify-between gap-2">
+                              <div className="flex flex-wrap items-center justify gap-3">
+                                <div className="flex h-9 w-9 items-center justify-center rounded-full bg-indigo-600 text-sm font-semibold text-white">
+                                  {initial || "U"}
+                                </div>
+                                <div>
+                                  <p className="text-sm font-semibold text-gray-800">
+                                    {fullName}
+                                  </p>
+                                  {review.createdAt && (
+                                    <p className="text-[12px] text-gray-600 font-medium">
+                                      {timeAgo(review.createdAt)}
+                                    </p>
+                                  )}
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-1">
+                                {Array.from({ length: 5 }).map((_, index) => {
+                                  const value = index + 1;
+                                  const isActive =
+                                    Number(review.rating || 0) >= value;
+                                  return (
+                                    <Star
+                                      key={value}
+                                      size={16}
+                                      className={
+                                        isActive
+                                          ? "fill-yellow-400 text-yellow-400"
+                                          : "text-gray-200"
+                                      }
+                                    />
+                                  );
+                                })}
+                                <span className="ml-1 text-sm font-medium text-gray-700">
+                                  {Number(review.rating || 0).toFixed(1)}
+                                </span>
+                              </div>
+                            </div>
+
+                            {review.comment && (
+                              <p className="mt-2 text-[14px] text-gray-700  rounded-xl px-2 py-1.5 font-medium leading-6">
+                                {review.comment}
+                              </p>
+                            )}
+
+                            {isOwnReview && (
+                              <div className="mt-3 flex justify-end gap-2">
+                                <button
+                                  type="button"
+                                  onClick={() => handleOpenEditReview(review)}
+                                  className="cursor-pointer inline-flex items-center gap-1 rounded-full border border-indigo-100 bg-indigo-50 px-3 py-1 text-[11px] font-semibold text-indigo-700 hover:bg-indigo-100 hover:border-indigo-200"
+                                  title="Edit review"
+                                >
+                                  <Edit3 size={13} />
+                                  <span>Edit</span>
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => setDeleteReviewTarget(review)}
+                                  className="cursor-pointer inline-flex items-center gap-1 rounded-full border border-rose-100 bg-rose-50 px-3 py-1 text-[11px] font-semibold text-rose-700 hover:bg-rose-100 hover:border-rose-200"
+                                  title="Delete review"
+                                >
+                                  <Trash2 size={13} />
+                                  <span>Delete</span>
+                                </button>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </article>
+                    );
+                  })}
+                </div>
+              )}
+            </section>
+
+            <section className="mb-8">
+              <h2 className="text-lg text-gray-900 font-bold mb-2 flex items-center gap-2">
+                <MapPin size={18} /> General Location
+              </h2>
+              <p className="text-sm text-gray-600 mb-3">
+                Exact address provided after booking confirmation
+              </p>
+              <div className="rounded-xl overflow-hidden shadow-sm">
+                {listing.coordinates?.coordinates ? (
+                  <iframe
+                    width="100%"
+                    height="240"
+                    loading="lazy"
+                    style={{ border: 0 }}
+                    src={`https://www.google.com/maps?q=${listing.coordinates.coordinates[1]},${listing.coordinates.coordinates[0]}&output=embed`}
+                  />
+                ) : listing.pickupLocation ? (
+                  <iframe
+                    width="100%"
+                    height="240"
+                    loading="lazy"
+                    style={{ border: 0 }}
+                    src={`https://www.google.com/maps?q=${encodeURIComponent(listing.pickupLocation)}&output=embed`}
+                  />
+                ) : (
+                  <div className="w-full h-60 bg-gray-100 flex items-center justify-center text-gray-500">
+                    <MapPin size={32} className="text-gray-400" />
+                    <p className="ml-2">Location not available</p>
+                  </div>
+                )}
+              </div>
+              {listing.coordinates?.formattedAddress && (
+                <p className="text-sm text-gray-600 mt-2">
+                  📍 {listing.coordinates.formattedAddress}
+                </p>
+              )}
+            </section>
+
+            {similarListings.length > 0 && (
+              <section>
+                <h2 className="text-2xl font-bold text-gray-900 mb-4">
+                  ✨ Similar items in your area
+                </h2>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  {similarListings.map((item) => {
+                    const itemId = item._id || item.id;
+                    const imageUrl = item.photos?.[0]?.url || item.imageUrl;
+                    return (
+                      <Link
+                        key={itemId}
+                        href={`/listing/${itemId}`}
+                        className="rounded-xl overflow-hidden border border-gray-100 hover:border-gray-200 transition-colors"
+                      >
+                        <div className="aspect-square bg-gray-200 flex items-center justify-center">
+                          {imageUrl ? (
+                            <Image
+                              src={imageUrl}
+                              alt={item.itemName || item.name || "Item"}
+                              width={300}
+                              height={300}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <span className="text-gray-400 text-sm">
+                              No image
+                            </span>
+                          )}
+                        </div>
+                        <div className="p-3">
+                          <h3 className="font-bold text-sm text-gray-900 line-clamp-1">
+                            {item.itemName || item.name}
+                          </h3>
+                          <p className="text-sm font-bold text-indigo-600">
+                            ${item.dailyRate ?? item.hourlyRate ?? "0"}/day
+                          </p>
+                        </div>
+                      </Link>
+                    );
+                  })}
+                </div>
+              </section>
+            )}
+          </div>
+
+          {/* Right column - booking card */}
+          <div className="md:col-span-1">
+            <div className="sticky top-4 bg-white border border-gray-100 rounded-2xl p-6">
+              <div className="mb-6">
+                <h3 className="font-bold text-gray-900 mb-3 text-lg">
+                  Pricing
+                </h3>
+                <div className="space-y-2">
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-700">Hourly</span>
+                    <span className="text-xl text-gray-700 font-bold">
+                      ${listing.hourlyRate ?? "0"}/hr
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-700">Daily</span>
+                    <span className="text-xl font-bold text-indigo-600">
+                      ${listing.dailyRate ?? "0"}/day
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-700">Weekly</span>
+                    <span className="text-xl text-gray-700 font-bold">
+                      ${((listing.dailyRate ?? 0) * 7 * 0.85).toFixed(0)}/wk
+                    </span>
+                  </div>
+                  <p className="text-xs text-green-600 font-semibold mt-2">
+                    ✨ Save 15% on weekly rentals
+                  </p>
+                </div>
+              </div>
+
+              <div className="mb-6 pb-6 border-b border-gray-300">
+                <h3 className="font-bold mb-3 text-gray-800 text-lg flex items-center gap-2">
+                  🚚 Delivery
+                </h3>
+                {listing.offerDelivery ? (
+                  <div className="space-y-2 bg-green-50 p-3 rounded-xl">
+                    <div className="flex items-center gap-2 text-green-800">
+                      <Check size={16} className="text-green-600" />
+                      <span className="font-semibold text-sm">Available</span>
+                    </div>
+                    <p className="text-sm text-gray-700">
+                      Fee:{" "}
+                      <span className="font-bold">
+                        ${listing.deliveryFee ?? "0"}
+                      </span>
+                    </p>
+                  </div>
+                ) : (
+                  <div className="bg-gray-50 p-3 rounded-xl flex items-center gap-2 text-gray-600 text-sm">
+                    <X size={16} />
+                    <span className="font-semibold">Pickup only</span>
+                  </div>
+                )}
+                <p className="text-xs text-gray-600 mt-2">
+                  📍 {listing.pickupLocation || "Location"}
+                </p>
+              </div>
+
+              <div className="mb-6 pb-6 border-b border-gray-300">
+                <button
+                  type="button"
+                  onClick={() =>
+                    handleViewOwner({
+                      name: ownerName,
+                      ownerId,
+                      rating: listing.rating ?? 4.5,
+                      totalRentals: listing.totalRentals ?? 0,
+                      responseTime: listing.responseTime ?? "1 hour",
+                    })
+                  }
+                  className="w-full text-left hover:bg-gray-50 p-3 rounded-xl transition-all cursor-pointer"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-14 h-14 bg-linear-to-br from-indigo-500 to-purple-500 rounded-full flex items-center justify-center text-white font-bold text-lg">
+                      {ownerInitial}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-bold text-gray-800 text-base truncate">
+                        Owned by {ownerName}
+                      </p>
+                      <p className="text-sm text-gray-600">Member since 2023</p>
+                      <p className="text-sm text-indigo-600 font-semibold mt-1">
+                        View all listings →
                       </p>
                     </div>
                   </div>
-
-                  <div className="mb-6 pb-6 border-b border-gray-300">
-                    <h3 className="font-bold mb-3 text-gray-800 text-lg flex items-center gap-2">🚚 Delivery</h3>
-                    {listing.offerDelivery ? (
-                      <div className="space-y-2 bg-green-50 p-3 rounded-xl">
-                        <div className="flex items-center gap-2 text-green-800">
-                          <Check size={16} className="text-green-600" />
-                          <span className="font-semibold text-sm">Available</span>
-                        </div>
-                        <p className="text-sm text-gray-700">
-                          Fee: <span className="font-bold">${listing.deliveryFee ?? "0"}</span>
-                        </p>
-                      </div>
-                    ) : (
-                      <div className="bg-gray-50 p-3 rounded-xl flex items-center gap-2 text-gray-600 text-sm">
-                        <X size={16} />
-                        <span className="font-semibold">Pickup only</span>
-                      </div>
-                    )}
-                    <p className="text-xs text-gray-600 mt-2">
-                      📍 {listing.pickupLocation || "Location"}
+                </button>
+                <div className="grid grid-cols-2 gap-3 mt-4">
+                  <div className="bg-gray-50 p-2 rounded-lg text-center">
+                    <p className="text-xs text-gray-600">Response time</p>
+                    <p className="font-bold text-gray-600 text-sm">
+                      {listing.responseTime ?? "—"}
                     </p>
                   </div>
-
-                  <div className="mb-6 pb-6 border-b border-gray-300">
-                    <button
-                      type="button"
-                      onClick={() =>
-                        handleViewOwner({
-                          name: ownerName,
-                          ownerId,
-                          rating: listing.rating ?? 4.5,
-                          totalRentals: listing.totalRentals ?? 0,
-                          responseTime: listing.responseTime ?? "1 hour",
-                        })
-                      }
-                      className="w-full text-left hover:bg-gray-50 p-3 rounded-xl transition-all cursor-pointer"
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className="w-14 h-14 bg-linear-to-br from-indigo-500 to-purple-500 rounded-full flex items-center justify-center text-white font-bold text-lg">
-                          {ownerInitial}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="font-bold text-gray-800 text-base truncate">
-                            Owned by {ownerName}
-                          </p>
-                          <p className="text-sm text-gray-600">Member since 2023</p>
-                          <p className="text-sm text-indigo-600 font-semibold mt-1">View all listings →</p>
-                        </div>
-                      </div>
-                    </button>
-                    <div className="grid grid-cols-2 gap-3 mt-4">
-                      <div className="bg-gray-50 p-2 rounded-lg text-center">
-                        <p className="text-xs text-gray-600">Response time</p>
-                        <p className="font-bold text-gray-600 text-sm">{listing.responseTime ?? "—"}</p>
-                      </div>
-                      <div className="bg-gray-50 p-2 rounded-lg text-center">
-                        <p className="text-xs text-gray-600">Total rentals</p>
-                        <p className="font-bold text-gray-600 text-sm">{listing.totalRentals ?? "0"}</p>
-                      </div>
-                    </div>
+                  <div className="bg-gray-50 p-2 rounded-lg text-center">
+                    <p className="text-xs text-gray-600">Total rentals</p>
+                    <p className="font-bold text-gray-600 text-sm">
+                      {listing.totalRentals ?? "0"}
+                    </p>
                   </div>
-
-                  <div className="space-y-3">
-                    <button
-                      type="button"
-                      onClick={handleBookNow}
-                      disabled={!listing.isAvailable || isOwnListing}
-                      className={`w-full py-4 rounded-xl font-bold text-lg cursor-pointer ${
-                        !listing.isAvailable || isOwnListing
-                          ? "bg-gray-300 text-gray-600 cursor-not-allowed"
-                          : "bg-linear-to-r from-indigo-600 to-purple-600 text-white hover:shadow-xl"
-                      }`}
-                    >
-                      {!listing.isAvailable ? "Not Available" : isOwnListing ? "Your Listing" : "Book Now"}
-                    </button>
-                    <div className="grid grid-cols-2 gap-3">
-                      <button
-                        type="button"
-                        onClick={handleFavoriteToggle}
-                        className={`py-3 rounded-xl text-gray-700 font-semibold border-2 cursor-pointer ${
-                          isFavorite ? "border-rose-500 bg-rose-50 text-rose-600" : "border-gray-400 hover:bg-gray-50"
-                        }`}
-                      >
-                        <Heart size={18} className={`inline mr-2 ${isFavorite ? "fill-rose-500" : ""}`} />
-                        Save
-                      </button>
-                      <button
-                        type="button"
-                        onClick={handleMessageOwner}
-                        disabled={isOwnListing}
-                        className={`rounded-xl py-3 font-semibold cursor-pointer ${
-                          isOwnListing ? "cursor-not-allowed bg-gray-300 text-gray-600" : "bg-gray-900 text-white"
-                        }`}
-                      >
-                        <MessageCircle size={18} className="inline mr-2" />
-                        Message
-                      </button>
-                    </div>
-                  </div>
-                  <p className="text-xs text-gray-500 text-center mt-4">
-                    <Shield size={12} className="inline mr-1" />
-                    Protected by WeRentify guarantee
-                  </p>
                 </div>
               </div>
+
+              <div className="space-y-3">
+                <button
+                  type="button"
+                  onClick={handleBookNow}
+                  disabled={!listing.isAvailable || isOwnListing}
+                  className={`w-full py-4 rounded-xl font-bold text-lg cursor-pointer ${
+                    !listing.isAvailable || isOwnListing
+                      ? "bg-gray-300 text-gray-600 cursor-not-allowed"
+                      : "bg-linear-to-r from-indigo-600 to-purple-600 text-white hover:shadow-xl"
+                  }`}
+                >
+                  {!listing.isAvailable
+                    ? "Not Available"
+                    : isOwnListing
+                      ? "Your Listing"
+                      : "Book Now"}
+                </button>
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    type="button"
+                    onClick={handleFavoriteToggle}
+                    className={`py-3 rounded-xl text-gray-700 font-semibold border-2 cursor-pointer ${
+                      isFavorite
+                        ? "border-rose-500 bg-rose-50 text-rose-600"
+                        : "border-gray-400 hover:bg-gray-50"
+                    }`}
+                  >
+                    <Heart
+                      size={18}
+                      className={`inline mr-2 ${isFavorite ? "fill-rose-500" : ""}`}
+                    />
+                    Save
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleMessageOwner}
+                    disabled={isOwnListing}
+                    className={`rounded-xl py-3 font-semibold cursor-pointer ${
+                      isOwnListing
+                        ? "cursor-not-allowed bg-gray-300 text-gray-600"
+                        : "bg-gray-900 text-white"
+                    }`}
+                  >
+                    <MessageCircle size={18} className="inline mr-2" />
+                    Message
+                  </button>
+                </div>
+              </div>
+              <p className="text-xs text-gray-500 text-center mt-4">
+                <Shield size={12} className="inline mr-1" />
+                Protected by WeRentify guarantee
+              </p>
             </div>
+          </div>
+        </div>
       </div>
 
       <MessageSlider
@@ -647,6 +1071,54 @@ export default function ListingPage() {
         open={showBookingModal}
         onClose={() => setShowBookingModal(false)}
       />
+      <ReviewModal
+        open={showReviewModal}
+        onClose={() => {
+          setShowReviewModal(false);
+          setEditingReview(null);
+        }}
+        onSubmit={handleSubmitReview}
+        submitting={submittingReview}
+        initialRating={
+          editingReview && typeof editingReview.rating === "number"
+            ? editingReview.rating
+            : 0
+        }
+        initialComment={editingReview?.comment || ""}
+        title={editingReview ? "Edit your review" : "Write a Review"}
+        submitLabel={editingReview ? "Save changes" : "Submit review"}
+      />
+      {deleteReviewTarget && (
+        <div className="fixed inset-0 z-[65] flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
+          <div className="w-full max-w-sm rounded-2xl bg-white p-5 shadow-2xl border border-gray-100">
+            <h3 className="text-base font-semibold text-gray-900 mb-2">
+              Delete review?
+            </h3>
+            <p className="text-sm text-gray-600 mb-4">
+              This action cannot be undone. Are you sure you want to delete your
+              review?
+            </p>
+            <div className="flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setDeleteReviewTarget(null)}
+                disabled={deletingReview}
+                className="cursor-pointer rounded-xl border border-gray-300 px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmDeleteReview}
+                disabled={deletingReview}
+                className="cursor-pointer rounded-xl bg-rose-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-rose-700 disabled:cursor-not-allowed disabled:bg-rose-300"
+              >
+                {deletingReview ? "Deleting..." : "Delete"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   );
 }

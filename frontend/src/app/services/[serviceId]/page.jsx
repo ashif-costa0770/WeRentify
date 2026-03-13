@@ -12,11 +12,23 @@ import {
   Calendar,
   XCircle,
   MessageCircle,
+  Loader2,
+  Edit3,
+  Trash2,
 } from "lucide-react";
 import Navbar from "@/app/_components/navbar/Navbar";
 import { useUser } from "@/context/UserContext";
-
 import { getServiceById } from "@/services/services.service";
+import {
+  getAllReviews,
+  createReview as createReviewApi,
+  updateReview as updateReviewApi,
+  deleteReview as deleteReviewApi,
+} from "@/services/review.service";
+import { getMyBookings } from "@/services/booking.service";
+import ReviewSummary from "@/app/_components/reviews/ReviewSummary";
+import ReviewModal from "@/app/_components/reviews/ReviewModal";
+import { timeAgo } from "@/utils/timeAgo";
 import { mapBackendService } from "../_lib/mapBackendService";
 import ServiceBookingModal from "./components/service-booking-modal";
 
@@ -29,10 +41,130 @@ export default function ServiceDetailsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [showBookingModal, setShowBookingModal] = useState(false);
+  const [reviews, setReviews] = useState([]);
+  const [totalReviews, setTotalReviews] = useState(0);
+  const [reviewsLoading, setReviewsLoading] = useState(false);
+  const [reviewsError, setReviewsError] = useState("");
+  const [showReviewModal, setShowReviewModal] = useState(false);
+  const [hasCompletedBooking, setHasCompletedBooking] = useState(false);
+  const [reviewBookingId, setReviewBookingId] = useState(null);
+  const [hasUserReview, setHasUserReview] = useState(false);
+  const [submittingReview, setSubmittingReview] = useState(false);
+  const [editingReview, setEditingReview] = useState(null);
+  const [deleteReviewTarget, setDeleteReviewTarget] = useState(null);
+  const [deletingReview, setDeletingReview] = useState(false);
 
   const ownerId =
     (typeof service?.owner === "object" ? service.owner?._id : service?.owner) || service?.ownerId || null;
   const isOwnService = Boolean(user?._id && ownerId) && String(user._id) === String(ownerId);
+
+  const canAddReview =
+    isLogin && !isOwnService && hasCompletedBooking && !hasUserReview;
+
+  useEffect(() => {
+    if (!service) return;
+    const targetId = service.id || service._id || serviceId;
+
+    async function fetchReviewsForService(id) {
+      setReviewsLoading(true);
+      setReviewsError("");
+      try {
+        const res = await getAllReviews(id, "Service");
+        const payload = res?.data?.data || {};
+        const list = Array.isArray(payload.reviews) ? payload.reviews : [];
+        const total = Number(payload.totalReviews ?? list.length) || 0;
+        setReviews(list);
+        setTotalReviews(total);
+
+        if (user?._id) {
+          const userId = String(user._id);
+          const hasReview = list.some((review) => {
+            const author = review.author;
+            const authorId =
+              typeof author === "string"
+                ? author
+                : author?._id || author?.id || null;
+            return authorId && String(authorId) === userId;
+          });
+          setHasUserReview(hasReview);
+        } else {
+          setHasUserReview(false);
+        }
+      } catch (err) {
+        const msg =
+          err?.response?.data?.message ||
+          "Failed to load reviews for this service";
+        setReviewsError(msg);
+        setReviews([]);
+        setTotalReviews(0);
+      } finally {
+        setReviewsLoading(false);
+      }
+    }
+
+    async function evaluateBookingEligibility(id) {
+      if (!id || !isLogin) {
+        setHasCompletedBooking(false);
+        setReviewBookingId(null);
+        return;
+      }
+
+      try {
+        const res = await getMyBookings();
+        const data = res?.data?.data;
+        const bookingsArray = Array.isArray(data) ? data : [];
+
+        const normalizeId = (value) => {
+          if (!value) return null;
+          if (typeof value === "string") return value;
+          return value._id || value.id || null;
+        };
+
+        const targetIdStr = String(id);
+
+        const eligibleBookings = bookingsArray.filter((booking) => {
+          const status = String(booking?.status || "").toLowerCase();
+          if (status !== "completed") return false;
+
+          const model = String(booking?.resourceModel || "").toLowerCase();
+          const type = String(booking?.bookingType || "").toLowerCase();
+          const isServiceBooking =
+            model === "service" || type === "service";
+
+          if (!isServiceBooking) return false;
+
+          const resourceId = normalizeId(booking.resource);
+          if (!resourceId) return false;
+
+          return String(resourceId) === targetIdStr;
+        });
+
+        if (eligibleBookings.length > 0) {
+          setHasCompletedBooking(true);
+          setReviewBookingId(eligibleBookings[0]._id);
+        } else {
+          setHasCompletedBooking(false);
+          setReviewBookingId(null);
+        }
+      } catch {
+        setHasCompletedBooking(false);
+        setReviewBookingId(null);
+      }
+    }
+
+    fetchReviewsForService(targetId);
+    evaluateBookingEligibility(targetId);
+  }, [service, serviceId, isLogin, user?._id]);
+
+  const handleOpenNewReview = () => {
+    setEditingReview(null);
+    setShowReviewModal(true);
+  };
+
+  const handleOpenEditReview = (review) => {
+    setEditingReview(review);
+    setShowReviewModal(true);
+  };
 
   const handleOpenBooking = () => {
     if (isOwnService) {
@@ -63,6 +195,84 @@ export default function ServiceDetailsPage() {
       refModel: "Service",
     });
     setShowMessages(true);
+  };
+
+  const handleSubmitReview = async ({ rating, comment }) => {
+    const targetId = serviceId;
+    setSubmittingReview(true);
+    try {
+      if (editingReview && editingReview._id) {
+        await updateReviewApi(editingReview._id, { rating, comment });
+        toast.success("Review updated successfully");
+      } else {
+        if (!reviewBookingId) {
+          toast.error("No eligible booking found for this service.");
+          return;
+        }
+        await createReviewApi({
+          bookingId: reviewBookingId,
+          rating,
+          comment,
+        });
+        toast.success("Review submitted successfully");
+        setHasUserReview(true);
+      }
+
+      setShowReviewModal(false);
+      setEditingReview(null);
+
+      if (targetId) {
+        try {
+          const res = await getAllReviews(targetId, "Service");
+          const payload = res?.data?.data || {};
+          const list = Array.isArray(payload.reviews) ? payload.reviews : [];
+          const total = Number(payload.totalReviews ?? list.length) || 0;
+          setReviews(list);
+          setTotalReviews(total);
+        } catch {
+          // ignore secondary refresh error
+        }
+      }
+    } catch (err) {
+      const msg =
+        err?.response?.data?.message ||
+        "Failed to save review. Please try again.";
+      toast.error(msg);
+    } finally {
+      setSubmittingReview(false);
+    }
+  };
+
+  const handleConfirmDeleteReview = async () => {
+    const targetId = serviceId;
+    if (!deleteReviewTarget?._id) return;
+    setDeletingReview(true);
+    try {
+      await deleteReviewApi(deleteReviewTarget._id);
+      toast.success("Review deleted successfully");
+      setDeleteReviewTarget(null);
+      setHasUserReview(false);
+
+      if (targetId) {
+        try {
+          const res = await getAllReviews(targetId, "Service");
+          const payload = res?.data?.data || {};
+          const list = Array.isArray(payload.reviews) ? payload.reviews : [];
+          const total = Number(payload.totalReviews ?? list.length) || 0;
+          setReviews(list);
+          setTotalReviews(total);
+        } catch {
+          // ignore secondary refresh error
+        }
+      }
+    } catch (err) {
+      const msg =
+        err?.response?.data?.message ||
+        "Failed to delete review. Please try again.";
+      toast.error(msg);
+    } finally {
+      setDeletingReview(false);
+    }
   };
 
   useEffect(() => {
@@ -130,8 +340,8 @@ export default function ServiceDetailsPage() {
         </Suspense>
       </div>
 
-      <div className="mx-auto w-full max-w-4xl px-4 py-10 mb-10">
-        <div className="rounded-3xl bg-white p-6 shadow-xl">
+      <div className="mx-auto w-full max-w-5xl px-4 py-10 mb-10">
+        <div className="rounded-3xl">
           <div className="flex-col items-start gap-4">
             <div className="mb-8 flex h-25 w-25 items-center justify-center overflow-hidden rounded-xl">
               {service.image ? (
@@ -157,7 +367,7 @@ export default function ServiceDetailsPage() {
                 <div className="flex items-center gap-1">
                   <Star size={16} className="fill-yellow-400 text-yellow-400" />
                   <span className="font-semibold text-gray-900">{service.rating}</span>
-                  <span>({service.reviews} reviews)</span>
+                  <span>({service.reviewCount} reviews)</span>
                 </div>
 
                 <div className="flex items-center gap-1">
@@ -181,7 +391,9 @@ export default function ServiceDetailsPage() {
           </div>
 
           <div className="mt-6 rounded-2xl bg-orange-50 p-5">
-            <p className="text-3xl font-extrabold text-orange-600">${service.hourlyRate}/hour</p>
+            <p className="text-3xl font-extrabold text-orange-600">
+              ${service.hourlyRate}/hour
+            </p>
             <div
               className="mt-1 text-sm text-gray-700"
               dangerouslySetInnerHTML={{ __html: service.description }}
@@ -217,6 +429,146 @@ export default function ServiceDetailsPage() {
               Contact Provider
             </button>
           </div>
+
+          <section className="mt-8 border-b border-gray-200 pt-6 mb-10">
+            <div className="mb-4">
+              <h2 className="text-xl font-bold text-gray-900 mb-2">
+                Reviews Summary
+              </h2>
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <ReviewSummary
+                  rating={service.rating ?? 0}
+                  count={service.reviewCount ?? totalReviews}
+                />
+
+                {canAddReview && (
+                  <button
+                    type="button"
+                    onClick={handleOpenNewReview}
+                    className="cursor-pointer inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-yellow-400 to-yellow-200 px-5 py-2 text-sm font-bold text-gray-900 shadow-lg hover:from-yellow-500 hover:to-yellow-300 transition-all duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-yellow-500"
+                  >
+                    <Star
+                      size={16}
+                      className="fill-yellow-400 text-yellow-600"
+                    />
+                    Add Review
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {reviewsLoading ? (
+              <div className="flex items-center gap-2 text-sm text-gray-600">
+                <Loader2 className="size-4 animate-spin text-indigo-600" />
+                <span>Loading reviews...</span>
+              </div>
+            ) : reviewsError ? (
+              <p className="text-sm text-red-600">{reviewsError}</p>
+            ) : reviews.length === 0 ? (
+              <p className="text-sm text-gray-600">
+                No reviews yet.{" "}
+                {canAddReview
+                  ? "Be the first to share your experience."
+                  : "Bookings must be completed before leaving a review."}
+              </p>
+            ) : (
+              <div className="space-y-4">
+                {reviews.map((review) => {
+                  const author = review.author || {};
+                  const fullName =
+                    `${author.firstname || ""} ${author.lastname || ""}`.trim() ||
+                    author.email ||
+                    "Guest";
+                  const initial = fullName.charAt(0).toUpperCase();
+                  const isOwnReview =
+                    user?._id &&
+                    review.author &&
+                    String(
+                      typeof review.author === "string"
+                        ? review.author
+                        : review.author._id || review.author.id,
+                    ) === String(user._id);
+
+                  return (
+                    <article
+                      key={review._id}
+                      className="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm"
+                    >
+                      <div className="flex items-start gap-3">
+                        <div className="flex h-9 w-9 items-center justify-center rounded-full bg-indigo-600 text-sm font-semibold text-white">
+                          {initial || "U"}
+                        </div>
+                        <div className="flex-1">
+                          <div className="flex flex-wrap items-center justify-between gap-2">
+                            <div>
+                              <p className="text-sm font-semibold text-gray-900">
+                                {fullName}
+                              </p>
+                              {review.createdAt && (
+                                <p className="text-xs text-gray-500">
+                                  {timeAgo(review.createdAt)}
+                                </p>
+                              )}
+                            </div>
+                            <div className="flex items-center gap-1">
+                              {Array.from({ length: 5 }).map((_, index) => {
+                                const value = index + 1;
+                                const isActive =
+                                  Number(review.rating || 0) >= value;
+                                return (
+                                  <Star
+                                    key={value}
+                                    size={16}
+                                    className={
+                                      isActive
+                                        ? "fill-yellow-400 text-yellow-400"
+                                        : "text-gray-200"
+                                    }
+                                  />
+                                );
+                              })}
+                              <span className="ml-1 text-sm font-medium text-gray-700">
+                                {Number(review.rating || 0).toFixed(1)}
+                              </span>
+                            </div>
+                          </div>
+
+                          {review.comment && (
+                            <p className="mt-2 text-sm text-gray-700">
+                              {review.comment}
+                            </p>
+                          )}
+
+                          {isOwnReview && (
+                            <div className="mt-3 flex justify-end gap-2">
+                              <button
+                                type="button"
+                                onClick={() => handleOpenEditReview(review)}
+                                className="cursor-pointer inline-flex items-center gap-1 rounded-full border border-indigo-100 bg-indigo-50 px-3 py-1 text-[11px] font-semibold text-indigo-700 hover:bg-indigo-100 hover:border-indigo-200"
+                                title="Edit review"
+                              >
+                                <Edit3 size={13} />
+                                <span>Edit</span>
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => setDeleteReviewTarget(review)}
+                                className="cursor-pointer inline-flex items-center gap-1 rounded-full border border-rose-100 bg-rose-50 px-3 py-1 text-[11px] font-semibold text-rose-700 hover:bg-rose-100 hover:border-rose-200"
+                                title="Delete review"
+                              >
+                                <Trash2 size={13} />
+                                <span>Delete</span>
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </article>
+                  );
+                })}
+              </div>
+            )}
+          </section>
         </div>
       </div>
 
@@ -225,6 +577,54 @@ export default function ServiceDetailsPage() {
         open={showBookingModal}
         onClose={() => setShowBookingModal(false)}
       />
+      <ReviewModal
+        open={showReviewModal}
+        onClose={() => {
+          setShowReviewModal(false);
+          setEditingReview(null);
+        }}
+        onSubmit={handleSubmitReview}
+        submitting={submittingReview}
+        initialRating={
+          editingReview && typeof editingReview.rating === "number"
+            ? editingReview.rating
+            : 0
+        }
+        initialComment={editingReview?.comment || ""}
+        title={editingReview ? "Edit your review" : "Write a Review"}
+        submitLabel={editingReview ? "Save changes" : "Submit review"}
+      />
+      {deleteReviewTarget && (
+        <div className="fixed inset-0 z-[65] flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
+          <div className="w-full max-w-sm rounded-2xl bg-white p-5 shadow-2xl border border-gray-100">
+            <h3 className="text-base font-semibold text-gray-900 mb-2">
+              Delete review?
+            </h3>
+            <p className="text-sm text-gray-600 mb-4">
+              This action cannot be undone. Are you sure you want to delete your
+              review?
+            </p>
+            <div className="flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setDeleteReviewTarget(null)}
+                disabled={deletingReview}
+                className="cursor-pointer rounded-xl border border-gray-300 px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmDeleteReview}
+                disabled={deletingReview}
+                className="cursor-pointer rounded-xl bg-rose-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-rose-700 disabled:cursor-not-allowed disabled:bg-rose-300"
+              >
+                {deletingReview ? "Deleting..." : "Delete"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
