@@ -5,7 +5,7 @@
 export const dynamic = "force-dynamic";
 
 import { useMemo, useState, useEffect } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import nextDynamic from "next/dynamic";
 import NavbarWrapper from "@/app/_components/navbar/NavbarWrapper";
 import ItemCategoriesSection from "@/app/_components/CategoryGrid/ItemCategoriesSection";
@@ -33,8 +33,7 @@ const OwnerProfileModal = nextDynamic(
 
 export default function ListingPage() {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const searchLocation = searchParams.get("location")?.trim() ?? null;
+  const [searchLocation, setSearchLocation] = useState(null);
 
   /* ---------------- STATE: LISTINGS & FETCHING ---------------- */
   const [items, setItems] = useState([]);
@@ -218,6 +217,36 @@ export default function ListingPage() {
     fetchItems();
     fetchFeaturedItems();
   }, [searchLocation]);
+
+  // Keep `searchLocation` in sync without useSearchParams()
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const readFromUrl = () => {
+      const params = new URLSearchParams(window.location.search);
+      const loc = params.get("location");
+      return loc && loc.trim() ? loc.trim() : null;
+    };
+
+    // Initial load
+    setSearchLocation(readFromUrl());
+
+    // Back/forward navigation
+    const onPopState = () => setSearchLocation(readFromUrl());
+    window.addEventListener("popstate", onPopState);
+
+    // Searches triggered from HeroSearch (router.push won't fire popstate)
+    const onHeroSearch = (e) => {
+      const nextLoc = e?.detail?.location;
+      setSearchLocation(nextLoc && String(nextLoc).trim() ? String(nextLoc).trim() : null);
+    };
+    window.addEventListener("werentify:location-search", onHeroSearch);
+
+    return () => {
+      window.removeEventListener("popstate", onPopState);
+      window.removeEventListener("werentify:location-search", onHeroSearch);
+    };
+  }, []);
 
   // Redirect shared links (?item=id) to the listing page
   useEffect(() => {

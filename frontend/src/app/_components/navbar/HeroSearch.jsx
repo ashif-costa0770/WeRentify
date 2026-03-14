@@ -1,25 +1,42 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { Search, MapPin } from "lucide-react";
 
 export default function HeroSearch() {
   const router = useRouter();
-  const searchParams = useSearchParams();
   const [location, setLocation] = useState("");
 
-  // Sync input with URL (e.g. back/forward or shared link)
+  const readLocationFromUrl = () => {
+    if (typeof window === "undefined") return "";
+    const params = new URLSearchParams(window.location.search);
+    return params.get("location") ?? "";
+  };
+
+  // Sync input with URL (initial + back/forward)
   useEffect(() => {
-    const loc = searchParams.get("location") ?? "";
-    setLocation(loc);
-  }, [searchParams]);
+    setLocation(readLocationFromUrl());
+
+    const onPopState = () => setLocation(readLocationFromUrl());
+    window.addEventListener("popstate", onPopState);
+    return () => window.removeEventListener("popstate", onPopState);
+  }, []);
 
   const handleSearch = (e) => {
     e?.preventDefault?.();
     const trimmed = location?.trim() ?? "";
     const path = trimmed ? `/?location=${encodeURIComponent(trimmed)}` : "/";
     router.push(path);
+
+    // App Router query changes don't fire popstate; notify pages to refetch.
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(
+        new CustomEvent("werentify:location-search", {
+          detail: { location: trimmed },
+        }),
+      );
+    }
   };
 
   return (
