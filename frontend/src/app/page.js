@@ -5,7 +5,7 @@
 export const dynamic = "force-dynamic";
 
 import { useMemo, useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import nextDynamic from "next/dynamic";
 import NavbarWrapper from "@/app/_components/navbar/NavbarWrapper";
 import ItemCategoriesSection from "@/app/_components/CategoryGrid/ItemCategoriesSection";
@@ -33,6 +33,8 @@ const OwnerProfileModal = nextDynamic(
 
 export default function ListingPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const searchLocation = searchParams.get("location")?.trim() ?? null;
 
   /* ---------------- STATE: LISTINGS & FETCHING ---------------- */
   const [items, setItems] = useState([]);
@@ -54,13 +56,14 @@ export default function ListingPage() {
   const [selectedOwner, setSelectedOwner] = useState(null);
   const [featuredItems, setFeaturedItems] = useState([]);
 
-  /* ---------------- FETCH ITEMS FROM BACKEND (Simple) ---------------- */
-  const fetchItems = async () => {
+  /* ---------------- FETCH ITEMS FROM BACKEND (with optional location) ---------------- */
+  const fetchItems = async (locationParam = null) => {
     setBackendLoading(true);
     setBackendError(null);
+    const loc = locationParam ?? searchLocation;
 
     try {
-      const res = await getListings();
+      const res = await getListings(loc ? { location: loc } : {});
       const list =
         res?.data?.data?.listings ||
         res?.data?.listings ||
@@ -77,9 +80,10 @@ export default function ListingPage() {
     }
   };
 
-  const fetchFeaturedItems = async () => {
+  const fetchFeaturedItems = async (locationParam = null) => {
+    const loc = locationParam ?? searchLocation;
     try {
-      const res = await getFeaturedListings();
+      const res = await getFeaturedListings(loc ? { location: loc } : {});
       const data =
         res?.data?.data ??
         res?.data ??
@@ -209,11 +213,11 @@ export default function ListingPage() {
     sortBy,
   ]);
 
-  /* ---------------- EFFECTS ---------------- */
+  /* ---------------- EFFECTS: fetch when URL location changes ---------------- */
   useEffect(() => {
     fetchItems();
     fetchFeaturedItems();
-  }, []);
+  }, [searchLocation]);
 
   // Redirect shared links (?item=id) to the listing page
   useEffect(() => {
@@ -291,6 +295,7 @@ export default function ListingPage() {
           onOpenFilters={featuredItems.length > 0 ? undefined : () => setShowFilters(true)}
           showFilterButton={featuredItems.length === 0}
           onSelect={(item) => router.push(`/listing/${item._id || item.id}`)}
+          searchLocation={searchLocation}
         />
       )}
 

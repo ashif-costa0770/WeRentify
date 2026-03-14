@@ -1,125 +1,77 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import DatePickerModal from "../modals/DatePicker";
-import { Search } from "lucide-react";
-
-const ITEM_SUGGESTIONS = ["Drill", "Camera", "Ladder", "Party speaker"];
-const LOCATION_SUGGESTIONS = [
-  "New York",
-  "San Francisco",
-  "Chicago",
-  "Los Angeles",
-];
+import { useState, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Search, MapPin } from "lucide-react";
 
 export default function HeroSearch() {
-  const [item, setItem] = useState("");
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const [location, setLocation] = useState("");
-  const [showDatePicker, setShowDatePicker] = useState(false);
+
+  // Sync input with URL (e.g. back/forward or shared link)
+  useEffect(() => {
+    const loc = searchParams.get("location") ?? "";
+    setLocation(loc);
+  }, [searchParams]);
+
+  const handleSearch = (e) => {
+    e?.preventDefault?.();
+    const trimmed = location?.trim() ?? "";
+    const path = trimmed ? `/?location=${encodeURIComponent(trimmed)}` : "/";
+    router.push(path);
+  };
 
   return (
-    <>
-      <section className="max-w-7xl mx-auto px-2 ">
-        <div className="relative rounded-2xl overflow-hidden shadow-xl ">
-          <div className="absolute inset-0 bg-linear-to-r from-[#6366f1] via-[#d946ef] to-[#ec4899]" />
-
-          <div className="relative px-4 sm:px-6 md:px-8 py-2 md:py-2">
-            {/* Hero Text */}
-            <div className="text-center mb-6 md:mb-4">
-              <h1 className="text-xl sm:text-lg md:text-lg lg:text-xl font-extrabold text-white">
-                Borrow what you need. Lend what you don&apos;t.
-              </h1>
-              <p className="text-white/90 text-sm sm:text-base md:text-sm">
-                Join your local community and start sharing today
-              </p>
-            </div>
-
-            {/* Search Bar - Desktop/Tablet (md and up) */}
-            <div className="hidden md:flex max-w-3xl mx-auto bg-white rounded-full shadow-lg items-center px-2">
-              {/* Item */}
-              <div className="flex-1 px-4 lg:px-5 py-3 border-r border-gray-200">
-                <p className="text-xs font-bold text-gray-700">Item</p>
-                <input
-                  value={item}
-                  onChange={(e) => setItem(e.target.value)}
-                  placeholder="Search for rent"
-                  className="w-full text-sm text-gray-700 placeholder-gray-400 outline-none"
-                />
-              </div>
-
-              {/* Location */}
-              <div className="flex-1 px-4 lg:px-5 py-3 border-r border-gray-200">
-                <p className="text-xs font-bold text-gray-700">Location</p>
-                <input
-                  value={location}
-                  onChange={(e) => setLocation(e.target.value)}
-                  placeholder="City, State or Zip"
-                  className="w-full text-sm text-gray-700 placeholder-gray-400 outline-none"
-                />
-              </div>
-
-              {/* When */}
-              <div
-                onClick={() => setShowDatePicker(true)}
-                className="flex-1 px-4 lg:px-5 py-3 cursor-pointer hover:bg-gray-50 rounded-r-full transition-colors"
-              >
-                <p className="text-xs font-bold text-gray-700">When</p>
-                <p className="text-sm text-gray-400">Add dates</p>
-              </div>
-
-              {/* Search Button */}
-              <button className="bg-[#a855f7] hover:bg-[#9333ea] text-white p-4 rounded-full transition-transform hover:scale-105 flex-shrink-0">
-            <Search size={24} />
-          </button>
-            </div>
-
-            {/* Search Bar - Mobile (below md) */}
-            <div className="md:hidden space-y-2">
-              {/* Item Input */}
-              <div className="bg-white rounded-2xl shadow-lg px-3 py-2">
-                <p className="text-xs font-bold text-gray-700">Item</p>
-                <input
-                  value={item}
-                  onChange={(e) => setItem(e.target.value)}
-                  placeholder="Search for rent"
-                  className="w-full text-sm text-gray-700 placeholder-gray-400 outline-none"
-                />
-              </div>
-
-              {/* Location Input */}
-              <div className="bg-white rounded-2xl shadow-lg px-3 py-2">
-                <p className="text-xs font-bold text-gray-700 ">Location</p>
-                <input
-                  value={location}
-                  onChange={(e) => setLocation(e.target.value)}
-                  placeholder="City, State or Zip"
-                  className="w-full text-sm text-gray-700 placeholder-gray-400 outline-none"
-                />
-              </div>
-
-              {/* When Input */}
-              <div
-                onClick={() => setShowDatePicker(true)}
-                className="bg-white rounded-2xl shadow-lg px-3 py-2 cursor-pointer active:scale-95 transition-transform"
-              >
-                <p className="text-xs font-bold text-gray-700">When</p>
-                <p className="text-sm text-gray-400">Add dates</p>
-              </div>
-
-              {/* Search Button - Full Width on Mobile */}
-              <button className="w-full bg-linear-to-r from-[#5B4FE9] to-[#E95FC8] text-white cursor-pointer rounded-2xl py-2 px-4 flex items-center justify-center gap-2 shadow-lg font-semibold text-base active:scale-95 transition-transform">
-                <span className="text-xl">🔍</span>
-                <span>Search</span>
-              </button>
-            </div>
+    <section className="max-w-7xl mx-auto px-4 sm:px-6">
+      <div className="relative pb-2">
+        {/* Desktop / Tablet */}
+        <form
+          onSubmit={handleSearch}
+          className="hidden md:block max-w-sm mx-auto"
+        >
+          <div className="group flex items-center gap-3 bg-white rounded-2xl shadow-sm border border-gray-100 hover:shadow-md hover:border-gray-200 focus-within:shadow-lg focus-within:border-[#a855f7]/40 focus-within:ring-2 focus-within:ring-[#a855f7]/20 transition-all duration-200 px-4 py-2">
+            <MapPin className="flex-shrink-0 w-5 h-5 text-gray-400 group-focus-within:text-[#a855f7] transition-colors" strokeWidth={2} />
+            <input
+              value={location}
+              onChange={(e) => setLocation(e.target.value)}
+              placeholder="Find items by location"
+              className="flex-1 min-w-0 text-sm text-gray-800 placeholder-gray-400 outline-none bg-transparent"
+              aria-label="Search by location"
+            />
+            <button
+              type="submit"
+              className="cursor-pointer flex-shrink-0 w-10 h-10 rounded-xl bg-gradient-to-r from-[#a855f7] to-[#9333ea] text-white flex items-center justify-center shadow-md hover:shadow-lg hover:scale-[1.02] active:scale-[0.98] transition-all duration-200"
+              aria-label="Search"
+            >
+              <Search className="w-5 h-5" strokeWidth={2.5} />
+            </button>
           </div>
-        </div>
-      </section>
+        </form>
 
-      <DatePickerModal
-        open={showDatePicker}
-        onClose={() => setShowDatePicker(false)}
-      />
-    </>
+        {/* Mobile */}
+        <div className="md:hidden max-w-[280px] mx-auto space-y-3">
+          <form onSubmit={handleSearch} className="space-y-3">
+            <div className="flex items-center gap-3 bg-white rounded-2xl shadow-sm border border-gray-100 px-4 py-3">
+              <MapPin className="flex-shrink-0 w-5 h-5 text-gray-400" strokeWidth={2} />
+              <input
+                value={location}
+                onChange={(e) => setLocation(e.target.value)}
+                placeholder="Search for items to rent nearby"
+                className="flex-1 min-w-0 text-sm text-gray-800 placeholder-gray-400 outline-none bg-transparent"
+                aria-label="Search by location"
+              />
+            </div>
+            <button
+              type="submit"
+              className="w-full py-3 rounded-2xl bg-gradient-to-r from-[#a855f7] to-[#9333ea] text-white font-medium text-sm flex items-center justify-center gap-2 shadow-md active:scale-[0.98] transition-transform"
+            >
+              <Search className="w-5 h-5" strokeWidth={2.5} />
+              Search
+            </button>
+          </form>
+        </div>
+      </div>
+    </section>
   );
 }

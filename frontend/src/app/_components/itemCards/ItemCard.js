@@ -138,24 +138,24 @@ export default function ItemCard({ item, onSelect = () => {} }) {
           </div>
         </div>
 
-        <p className="text-[12px] text-gray-500 mb-1">
-          {item.distance || "0"} mi away
-        </p>
+        
 
-        <div className="space-y-0.5">
-          <div className="flex items-baseline gap-1">
-            <span className="text-[18px] font-bold text-gray-900">
-              ${item.hourlyRate || "0"}
-            </span>
-            <span className="text-[13px] text-gray-500">/hr</span>
-          </div>
-
-          <div className="flex items-center gap-1 text-[11px] text-gray-600">
-            <span>${item.dailyRate || "0"}/day</span>
-            <span className="text-gray-400">•</span>
-            <span>${((item.dailyRate || 0) * 7 * 0.85).toFixed(0)}/wk</span>
+        <div className="my-1">
+          <div className="flex items-center gap-2">
+            <div className="flex items-end gap-1">
+              <span className="text-base font-bold text-indigo-700">${item.hourlyRate || "0"}</span>
+              <span className="text-xs font-medium text-gray-500 mb-0.5">/hr</span>
+            </div>
+            <span className="text-gray-500 text-base font-bold">·</span>
+            <div className="flex items-end gap-1">
+              <span className="text-base font-semibold text-slate-700">${item.dailyRate || "0"}</span>
+              <span className="text-xs font-medium text-gray-400 mb-0.5">/day</span>
+            </div>
           </div>
         </div>
+        <p className="text-[12px] text-gray-500 mb-1">
+          {item.pickupLocation}
+        </p>
       </div>
 
       {/* Verified badge: card bottom-right (like service card) */}

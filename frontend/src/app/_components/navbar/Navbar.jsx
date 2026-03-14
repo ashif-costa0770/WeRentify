@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 import Link from "next/link";
 import Logo from "@/app/_components/navbar/Logo";
 import PackageIcon from "@/app/_components/icons/PackageIcon";
@@ -58,69 +58,73 @@ export default function Navbar() {
   return (
     <header>
       {" "}
-      <div className="max-w-7xl mx-auto px-4 pb-2">
-        {/* Desktop & Tablet Layout */}
-        <div className="flex items-center justify-between">
-          {/* Logo */}
-          <Logo />
-
-          {/* Center Navigation Tabs - Hidden on mobile */}
-          <div className="hidden md:flex items-center gap-3 lg:gap-6">
-            {/* Listings */}
-            <Link href="/">
-              <button className="rounded-2xl shadow-sm hover:shadow-2xl px-3 lg:px-6 py-3 flex flex-col cursor-pointer items-center gap-1">
-                <div className="w-10 lg:w-11 h-10 lg:h-11 bg-gradient-to-br from-violet-500 via-fuchsia-500 to-pink-500 rounded-xl flex items-center justify-center shadow-lg">
-                  <PackageIcon
-                    size={20}
-                    className="text-white lg:w-[22px] lg:h-[22px]"
-                  />
-                </div>
-                <span className="text-xs lg:text-sm font-bold text-gray-900">
-                  Listings
-                </span>
-              </button>
-            </Link>
-
-            {/* Community */}
-            <Link href="/community">
-              <button className="rounded-2xl shadow-sm hover:shadow-2xl px-3 lg:px-6 py-3 flex flex-col items-center cursor-pointer gap-1">
-                <div className="w-10 lg:w-11 h-10 lg:h-11 bg-gradient-to-br from-emerald-400 via-teal-500 to-cyan-500 rounded-xl flex items-center justify-center shadow-lg">
-                  <HomeIcon
-                    size={20}
-                    className="text-white lg:w-[22px] lg:h-[22px]"
-                  />
-                </div>
-                <span className="text-xs lg:text-sm font-bold text-gray-900">
-                  Community
-                </span>
-              </button>
-            </Link>
-
-            {/* Services */}
-            <Link href="/services">
-              <button className="rounded-2xl shadow-sm hover:shadow-2xl px-3 lg:px-6 py-3 flex flex-col items-center cursor-pointer gap-1">
-                <div className="w-10 lg:w-11 h-10 lg:h-11 bg-gradient-to-br from-orange-400 via-amber-500 to-yellow-400 rounded-xl flex items-center justify-center shadow-lg">
-                  <UsersIcon
-                    size={20}
-                    className="text-white lg:w-[22px] lg:h-[22px]"
-                  />
-                </div>
-                <span className="text-xs lg:text-sm font-bold text-gray-900">
-                  Services
-                </span>
-              </button>
-            </Link>
+      <div className="max-w-7xl mx-auto pb-2">
+        {/* Desktop & Tablet Layout - 3-column for fixed center */}
+        <div className="hidden md:grid md:grid-cols-3 md:items-center md:gap-4">
+          {/* Left: Logo */}
+          <div className="flex justify-start">
+            <Logo />
           </div>
 
-          {/* Right Actions - Desktop */}
-          <div className="hidden md:flex items-center gap-2 lg:gap-3">
+          {/* Center: Navigation Tabs - fixed center */}
+          <div className="flex justify-center items-center">
+            <div className="flex items-center gap-3 lg:gap-6">
+              {/* Listings */}
+              <Link href="/">
+                <button className="rounded-2xl shadow-sm hover:shadow-2xl px-3 lg:px-6 py-3 flex flex-col cursor-pointer items-center gap-1">
+                  <div className="w-10 lg:w-11 h-10 lg:h-11 bg-gradient-to-br from-violet-500 via-fuchsia-500 to-pink-500 rounded-xl flex items-center justify-center shadow-lg">
+                    <PackageIcon
+                      size={20}
+                      className="text-white lg:w-[22px] lg:h-[22px]"
+                    />
+                  </div>
+                  <span className="text-xs lg:text-sm font-bold text-gray-900">
+                    Listings
+                  </span>
+                </button>
+              </Link>
+
+              {/* Community */}
+              <Link href="/community">
+                <button className="rounded-2xl shadow-sm hover:shadow-2xl px-3 lg:px-6 py-3 flex flex-col items-center cursor-pointer gap-1">
+                  <div className="w-10 lg:w-11 h-10 lg:h-11 bg-gradient-to-br from-emerald-400 via-teal-500 to-cyan-500 rounded-xl flex items-center justify-center shadow-lg">
+                    <HomeIcon
+                      size={20}
+                      className="text-white lg:w-[22px] lg:h-[22px]"
+                    />
+                  </div>
+                  <span className="text-xs lg:text-sm font-bold text-gray-900">
+                    Community
+                  </span>
+                </button>
+              </Link>
+
+              {/* Services */}
+              <Link href="/services">
+                <button className="rounded-2xl shadow-sm hover:shadow-2xl px-3 lg:px-6 py-3 flex flex-col items-center cursor-pointer gap-1">
+                  <div className="w-10 lg:w-11 h-10 lg:h-11 bg-gradient-to-br from-orange-400 via-amber-500 to-yellow-400 rounded-xl flex items-center justify-center shadow-lg">
+                    <UsersIcon
+                      size={20}
+                      className="text-white lg:w-[22px] lg:h-[22px]"
+                    />
+                  </div>
+                  <span className="text-xs lg:text-sm font-bold text-gray-900">
+                    Services
+                  </span>
+                </button>
+              </Link>
+            </div>
+          </div>
+
+          {/* Right: Actions - Desktop */}
+          <div className="flex justify-end items-center gap-2 lg:gap-4 mr-1">
             {isLogin ? (
               <>
                 <button
                   onClick={() => setShowLang(true)}
-                  className="w-10 h-10 cursor-pointer rounded-full bg-white border border-gray-200 flex items-center justify-center shadow-sm hover:shadow-md transition-shadow"
+                  className="w-11 h-11 cursor-pointer rounded-full bg-white border border-gray-200 flex items-center justify-center shadow-sm hover:shadow-md transition-shadow"
                 >
-                  <Globe className="w-5 h-5 text-gray-600" />
+                  <Globe className="w-6 h-6 text-gray-600" />
                 </button>
 
                 <div className=" text-gray-700">
@@ -152,11 +156,14 @@ export default function Navbar() {
               </>
             )}
           </div>
+        </div>
 
-          {/* Mobile Menu Button */}
+        {/* Mobile header: Logo + hamburger */}
+        <div className="flex md:hidden items-center justify-between">
+          <Logo />
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="md:hidden w-10 h-10 flex flex-col items-center justify-center gap-1.5 cursor-pointer"
+            className="w-10 h-10 flex flex-col items-center justify-center gap-1.5 cursor-pointer"
             aria-label="Toggle menu"
           >
             <span

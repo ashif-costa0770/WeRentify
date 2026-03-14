@@ -102,21 +102,39 @@ export const createListing = async (req, res) => {
   }
 };
 
-//! Get all listings with filters
+//! Get all listings with optional location search
 export const getAllListings = async (req, res) => {
   try {
-    const listings = await Listing.find({  isFeatured: { $ne: true }, status: "active" })
-      .populate("owner","email firstname lastname avatar _id")
-      .populate("category","name")
+    const { location } = req.query;
+
+    // Base filter (your existing conditions)
+    const filter = {
+      isFeatured: { $ne: true },
+      status: "active",
+    };
+
+    // Add location filter if user searched
+    if (location && location.trim() !== "") {
+      filter.$or = [
+        { pickupLocation: { $regex: location.trim(), $options: "i" } },
+        { "coordinates.formattedAddress": { $regex: location.trim(), $options: "i" } },
+      ];
+    }
+
+    const listings = await Listing.find(filter)
+      .populate("owner", "email firstname lastname avatar _id")
+      .populate("category", "name")
       .sort({ createdAt: -1 })
       .lean();
 
-    if (!listings) {
+    if (!listings || listings.length === 0) {
       return errorResponse(res, 404, "No listings found");
     }
-    return successResponse(res, 200, "All listings fetched successfully", {
+
+    return successResponse(res, 200, "Listings fetched successfully", {
       listings,
     });
+
   } catch (error) {
     return errorResponse(res, 500, "Failed to fetch listings", error.message);
   }
@@ -125,11 +143,24 @@ export const getAllListings = async (req, res) => {
 //! Get all featured listings
 export const getAllFeaturedListings = async (req, res) => {
   try {
-    const listings = await Listing.find({
+
+    const { location } = req.query;
+
+    // Base filter (your existing conditions)
+    const filter = {
       isFeatured: true,
       featuredUntil: { $gt: new Date() },
       status: "active",
-    })
+    };
+
+    // Add location filter if user searched
+    if (location && location.trim() !== "") {
+      filter.$or = [
+        { pickupLocation: { $regex: location.trim(), $options: "i" } },
+        { "coordinates.formattedAddress": { $regex: location.trim(), $options: "i" } },
+      ];
+    }
+    const listings = await Listing.find(filter)
       .populate("owner","email firstname lastname avatar _id")
       .populate("category","name")
       .sort({ createdAt: -1 })

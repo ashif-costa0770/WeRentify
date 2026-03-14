@@ -30,11 +30,25 @@ export const createListing = (fields = {}, media = {}) => {
   return api.post("/listings", formData);
 };
 
-/* GET ALL LISTINGS */
-export const getListings = () => api.get("/listings");
+/* GET ALL LISTINGS (optional: { location } for location-based search) */
+export const getListings = (params = {}) => {
+  const query = new URLSearchParams();
+  if (params.location && String(params.location).trim()) {
+    query.set("location", String(params.location).trim());
+  }
+  const qs = query.toString();
+  return api.get(qs ? `/listings?${qs}` : "/listings");
+};
 
-/* GET FEATURED LISTINGS */
-export const getFeaturedListings = () => api.get("/listings/featured");
+/* GET FEATURED LISTINGS (optional: { location } for location-based search) */
+export const getFeaturedListings = (params = {}) => {
+  const query = new URLSearchParams();
+  if (params.location && String(params.location).trim()) {
+    query.set("location", String(params.location).trim());
+  }
+  const qs = query.toString();
+  return api.get(qs ? `/listings/featured?${qs}` : "/listings/featured");
+};
 
 // GET LISTINGS BY USER
 export const getListingsByUser = () =>

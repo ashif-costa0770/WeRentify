@@ -492,23 +492,25 @@ export default function ServiceDetailsPage() {
                   return (
                     <article
                       key={review._id}
-                      className="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm"
+                      className="rounded-2xl border border-gray-100 bg-white px-5 py-3 shadow-sm"
                     >
                       <div className="flex items-start gap-3">
-                        <div className="flex h-9 w-9 items-center justify-center rounded-full bg-indigo-600 text-sm font-semibold text-white">
-                          {initial || "U"}
-                        </div>
                         <div className="flex-1">
                           <div className="flex flex-wrap items-center justify-between gap-2">
-                            <div>
-                              <p className="text-sm font-semibold text-gray-900">
-                                {fullName}
-                              </p>
-                              {review.createdAt && (
-                                <p className="text-xs text-gray-500">
-                                  {timeAgo(review.createdAt)}
+                            <div className="flex flex-wrap items-center justify gap-3">
+                              <div className="flex h-9 w-9 items-center justify-center rounded-full bg-indigo-600 text-sm font-semibold text-white">
+                                {initial || "U"}
+                              </div>
+                              <div>
+                                <p className="text-sm font-semibold text-gray-800">
+                                  {fullName}
                                 </p>
-                              )}
+                                {review.createdAt && (
+                                  <p className="text-[12px] text-gray-600 font-medium">
+                                    {timeAgo(review.createdAt)}
+                                  </p>
+                                )}
+                              </div>
                             </div>
                             <div className="flex items-center gap-1">
                               {Array.from({ length: 5 }).map((_, index) => {
@@ -534,7 +536,7 @@ export default function ServiceDetailsPage() {
                           </div>
 
                           {review.comment && (
-                            <p className="mt-2 text-sm text-gray-700">
+                            <p className="mt-2 text-[14px] text-gray-700  rounded-xl px-2 py-1.5 font-medium leading-6">
                               {review.comment}
                             </p>
                           )}

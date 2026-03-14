@@ -193,6 +193,7 @@ const listingSchema = new mongoose.Schema({
 listingSchema.index({ dailyRate: 1 });
 listingSchema.index({ isFeatured: 1, featuredUntil: 1 });
 listingSchema.index({ createdAt: -1 });
+listingSchema.index({ pickupLocation: 1 });
 listingSchema.index({ itemName: 'text', description: 'text' }); // For text search
 
 // Virtual for calculating average daily rate if weekly rate exists

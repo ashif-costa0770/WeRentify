@@ -12,6 +12,7 @@ export default function ItemGrid({
   onSelect = () => {},
   onOpenFilters = () => {},
   showFilterButton = true,
+  searchLocation = null,
 }) {
   const [listings, setListings] = useState(items ?? allItems ?? []);
   const [loading, setLoading] = useState(false);
@@ -62,7 +63,7 @@ export default function ItemGrid({
   const safeItems = Array.isArray(listings) ? listings : [];
 
   return (
-    <section className="max-w-7xl mx-auto px-4 mt-8">
+    <section className="max-w-7xl mx-auto px-4 mt-6">
       <ListingHeader
         isMobile={isMobile}
         totalItems={safeItems.length}
@@ -98,7 +99,9 @@ export default function ItemGrid({
         </div>
       ) : (
         <div className="py-16 text-center text-gray-500 font-medium">
-          No items found
+          {searchLocation
+            ? `No listings found in ${searchLocation.charAt(0).toUpperCase()}${searchLocation.slice(1).toLowerCase()}.`
+            : "No items found"}
         </div>
       )}
     </section>
