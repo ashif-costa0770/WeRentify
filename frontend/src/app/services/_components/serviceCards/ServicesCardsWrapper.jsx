@@ -13,6 +13,7 @@ export default function ServicesCardsWrapper({
   onSortChange,
   loading = false,
   error = null,
+  searchLocation = null,
 }) {
   const router = useRouter();
 
@@ -109,7 +110,11 @@ export default function ServicesCardsWrapper({
 
       {/* ✅ Category sections */}
       {visibleCategories.length === 0 ? (
-        <p className="text-center text-gray-500 py-12">No services found.</p>
+        <p className="text-center text-gray-500 py-12">
+          {searchLocation
+            ? `No services found in ${searchLocation.charAt(0).toUpperCase()}${searchLocation.slice(1).toLowerCase()}.`
+            : "No services found."}
+        </p>
       ) : (
         visibleCategories.map(([key, group]) => (
           <ServiceCategoryBlock

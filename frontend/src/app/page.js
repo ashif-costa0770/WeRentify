@@ -72,7 +72,14 @@ export default function ListingPage() {
 
       setItems(Array.isArray(list) ? list : []);
     } catch (err) {
-      setBackendError(err?.response?.data?.message || "Failed to load items");
+      const message = err?.response?.data?.message;
+      // Treat \"no listings found\" from backend as a valid empty state, not an error.
+      // The UI will show a friendly, location-aware empty state instead.
+      if (message && /no listings found/i.test(message)) {
+        setBackendError(null);
+      } else {
+        setBackendError(message || "Failed to load items");
+      }
       setItems([]);
     } finally {
       setBackendLoading(false);

@@ -9,15 +9,14 @@ import {
   getServicesByUser,
   getSingleService,
   updateService,
+  getLocationSuggestions,
 } from "../../controllers/service/service.controller.js";
-const router = express.Router();
-import {
-  uploadListingMedia,
-  handleMulterError,
-} from "../../middlewares/upload.middleware.js";
+import { uploadListingMedia, handleMulterError } from "../../middlewares/upload.middleware.js";
 import { protect } from "../../middlewares/auth.middleware.js";
-import { createServiceSchema, updateServiceSchema  } from "../../validations/service.validation.js";
+import { createServiceSchema, updateServiceSchema } from "../../validations/service.validation.js";
 import validate from "../../middlewares/validate.js";
+
+const router = express.Router();
 
 router.post(
   "/",
@@ -31,6 +30,7 @@ router.post(
 router.get("/", getAllServices);
 router.get("/featured", getAllFeaturedServices);
 router.get("/user", protect, getServicesByUser);
+router.get("/location-suggestions", getLocationSuggestions);
 router.get("/:id", getSingleService);
 router.put(
   "/:id",
@@ -52,5 +52,6 @@ router.delete("/:id/videos/:publicId(*)",
   protect,
   deleteServiceVideo
 );
+
 
 export default router;

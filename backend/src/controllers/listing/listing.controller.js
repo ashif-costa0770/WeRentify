@@ -537,3 +537,32 @@ export const getListingsByCategory = async (req, res) => {
     );
   }
 };
+
+
+//! Get location suggestions
+export const getLocationSuggestions = async (req, res) => {
+  try {
+    const { q } = req.query;
+
+    if (!q || q.trim() === "") {
+      return successResponse(res, 200, "No query provided", {
+        locations: [],
+      });
+    }
+
+    const search = q.trim();
+
+    const locations = await Listing.distinct("pickupLocation", {  // distinct returns unique values only.
+      pickupLocation: { $regex: search, $options: "i" },
+      status: "active"
+    });
+
+    return successResponse(res, 200, "Location suggestions fetched", {
+      locations: locations.slice(0, 5),
+    });
+
+  } catch (error) {
+    return errorResponse(res, 500, "Failed to fetch location suggestions", error.message);
+  }
+};
+

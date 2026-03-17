@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState, useCallback } from "react";
 import CommunityFilters from "./_components/CommunityFilters";
 import PostsGrid from "./_components/PostsGrid";
-import { getPosts } from "@/services/post.service"; // ðŸ‘ˆ backend API
+import { getPosts } from "@/services/post.service"; // backend API
 import { useUser } from "@/context/UserContext";
 
 export default function CommunityPage() {
@@ -12,23 +12,63 @@ export default function CommunityPage() {
   const [loading, setLoading] = useState(true);
   const [activeFilter, setActiveFilter] = useState("all");
   const [sortBy, setSortBy] = useState("recent");
+  const [searchLocation, setSearchLocation] = useState(null);
 
-  // ðŸ”¹ Fetch posts from backend
-  const fetchPosts = useCallback(async () => {
+  // Fetch posts from backend (optionally filtered by location)
+  const fetchPosts = useCallback(async (locationParam = null) => {
     try {
       setLoading(true);
-      const res = await getPosts();
+      const loc = locationParam ?? searchLocation ?? "";
+      const res = await getPosts(loc);
       setPosts(res.data.data); // assuming successResponse format
     } catch (error) {
-      console.error("Failed to fetch posts", error);
+      const message = error?.response?.data?.message;
+      // Treat "no posts found" from backend as a valid empty state, not an error
+      if (message && /no posts found/i.test(message)) {
+        setPosts([]);
+      } else {
+        console.error("Failed to fetch posts", error);
+      }
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [searchLocation]);
 
   useEffect(() => {
     fetchPosts();
   }, [fetchPosts]);
+
+  // Sync searchLocation with URL (?location=...) and custom location-search events
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const readFromUrl = () => {
+      const params = new URLSearchParams(window.location.search);
+      const loc = params.get("location");
+      return loc && loc.trim() ? loc.trim() : null;
+    };
+
+    // Initial load
+    setSearchLocation(readFromUrl());
+
+    // Back/forward navigation
+    const onPopState = () => setSearchLocation(readFromUrl());
+    window.addEventListener("popstate", onPopState);
+
+    // Searches triggered from navbar (router.push won't fire popstate)
+    const onLocationSearch = (e) => {
+      const nextLoc = e?.detail?.location;
+      setSearchLocation(
+        nextLoc && String(nextLoc).trim() ? String(nextLoc).trim() : null,
+      );
+    };
+    window.addEventListener("werentify:location-search", onLocationSearch);
+
+    return () => {
+      window.removeEventListener("popstate", onPopState);
+      window.removeEventListener("werentify:location-search", onLocationSearch);
+    };
+  }, []);
 
   // ðŸ”¹ Update a single post in state (for likes/saves)
   const handleUpdatePost = useCallback((updatedPost) => {

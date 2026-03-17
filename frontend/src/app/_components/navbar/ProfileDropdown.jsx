@@ -86,7 +86,7 @@ export default function ProfileDropdown({
       >
         {/* Avatar */}
         <button
-          className="w-11 h-11 rounded-full bg-gradient-to-br from-[#5B4FE9] to-[#E95FC8] text-white cursor-pointer font-bold text-md flex items-center justify-center  hover:scale-105 transition-all border-2 border-white"
+          className="w-10 h-10 rounded-full bg-gradient-to-br from-[#5B4FE9] to-[#E95FC8] text-white cursor-pointer font-bold text-md flex items-center justify-center  hover:scale-105 transition-all border-2 border-white"
           onClick={() => setIsOpen(!isOpen)}
         >
           {avatarInitial}

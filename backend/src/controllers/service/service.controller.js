@@ -121,6 +121,7 @@ export const createService = async (req, res) => {
 //! Get all services
 export const getAllServices = async (req, res) => {
   try {
+    const { location } = req.query;
     const page = Math.max(Number.parseInt(req.query.page, 10) || 1, 1);
     const limit = Math.min(
       Math.max(Number.parseInt(req.query.limit, 10) || 12, 1),
@@ -136,8 +137,21 @@ export const getAllServices = async (req, res) => {
       query.category = req.query.category;
     }
 
+    const filter = {
+      status: "active",
+      isFeatured: { $ne: true },
+    };
+
+    // Add location filter if user searched
+    if (location && location.trim() !== "") {
+      filter.location = {
+        $regex: location.trim(),
+        $options: "i", // case-insensitive
+      };
+    }
+
     const [services, totalItems] = await Promise.all([
-      Service.find({ isFeatured: { $ne: true }, ...query })
+      Service.find(filter)
         .slice("photos", 1)
         .populate("owner", "firstname lastname avatar")
         .populate("category", "name icon")
@@ -145,7 +159,7 @@ export const getAllServices = async (req, res) => {
         .skip(skip)
         .limit(limit)
         .lean(),
-      Service.countDocuments({ isFeatured: { $ne: true }, ...query }),
+      Service.countDocuments(filter),
     ]);
 
     if (!services.length) {
@@ -177,18 +191,30 @@ export const getAllServices = async (req, res) => {
 //! Get all featured services
 export const getAllFeaturedServices = async (req, res) => {
   try {
-    const services = await Service.find({
+
+    const {location} = req.query;
+    const filter = {
       isFeatured: true,
       featuredUntil: { $gt: new Date() },
       status: "active",
-    })
+    }
+
+    if(location && location.trim() !== ""){
+      filter.location = {
+        $regex: location.trim(), //enable partial matching
+        $options: "i", //enable case-insensitive matching
+      }
+    }
+    const services = await Service.find(filter)
       .populate("owner", "email firstname lastname avatar _id")
       .populate("category", "name")
       .sort({ featuredUntil: -1 })
       .lean();
-    if (!services) {
-      return errorResponse(res, 404, "No featured services found");
-    }
+
+      if (!services.length) {
+        return errorResponse(res, 404, "No featured services found");
+      }
+
     return successResponse(
       res,
       200,
@@ -421,6 +447,8 @@ export const deleteService = async (req, res) => {
   }
 };
 
+
+
 //! Delte phote from cloudinary + DB
 export const deleteServicePhoto = async (req, res) => {
   try {
@@ -499,5 +527,32 @@ export const deleteServiceVideo = async (req, res) => {
   } catch (error) {
     console.error("Delete service video error:", error);
     return errorResponse(res, 500, "Failed to delete video", error.message);
+  }
+};
+
+//! Get location suggestions for services
+export const getLocationSuggestions = async (req, res) => {
+  try {
+    const { q } = req.query;
+
+    if (!q || q.trim() === "") {
+      return successResponse(res, 200, "No query provided", {
+        locations: [],
+      });
+    }
+
+    const search = q.trim();
+
+    const locations = await Service.distinct("location", {  // distinct returns unique values only.
+      location: { $regex: search, $options: "i" },
+      status: "active"
+    });
+
+    return successResponse(res, 200, "Location suggestions fetched for services", {
+      locations: locations.slice(0, 5),
+    });
+
+  } catch (error) {
+    return errorResponse(res, 500, "Failed to fetch location suggestions", error.message);
   }
 };

@@ -65,7 +65,7 @@ export default function ServiceCard({ service, onClick }) {
   return (
     <div
       onClick={onClick}
-      className="bg-white rounded-2xl overflow-hidden hover:shadow-lg transition-all duration-300 cursor-pointer border border-gray-200 group w-full max-w-sm"
+      className="bg-white rounded-2xl overflow-hidden hover:shadow-lg transition-all duration-300 cursor-pointer border border-gray-200 group w-full max-w-xs"
     >
       <div className="aspect-[4/3] relative overflow-hidden">
         <Image
@@ -78,7 +78,7 @@ export default function ServiceCard({ service, onClick }) {
         <div className="absolute right-3 top-3 flex gap-2">
           <button
             onClick={handleShareClick}
-            className="flex items-center cursor-pointer justify-center w-9 h-9 bg-white/95 backdrop-blur-sm rounded-full text-gray-700 hover:bg-white hover:scale-110 transition-all duration-200 shadow-lg"
+            className="flex items-center cursor-pointer justify-center w-8 h-8 bg-white/95 backdrop-blur-sm rounded-full text-gray-700 hover:bg-white hover:scale-110 transition-all duration-200 shadow-lg"
           >
             <svg
               width="16"
@@ -97,7 +97,7 @@ export default function ServiceCard({ service, onClick }) {
 
           <button
             onClick={handleFavoriteClick}
-            className="flex cursor-pointer items-center justify-center w-9 h-9 bg-white/95 backdrop-blur-sm rounded-full hover:bg-white hover:scale-110 transition-all duration-200 shadow-lg"
+            className="flex cursor-pointer items-center justify-center w-8 h-8 bg-white/95 backdrop-blur-sm rounded-full hover:bg-white hover:scale-110 transition-all duration-200 shadow-lg"
           >
             <Heart
               size={16}
@@ -111,34 +111,39 @@ export default function ServiceCard({ service, onClick }) {
         {/* ⭐ Featured badge */}
         {service.isFeatured && (
           <Badge
-          className="absolute left-2 top-2 flex items-center gap-1
-                     bg-amber-50/95 text-amber-700
-                     border border-amber-200
-                     px-2 py-0.5 text-[11px] font-semibold
-                     shadow-sm backdrop-blur"
-        >
-          <Star size={12} className="fill-amber-500 text-amber-500" />
-          Featured
-        </Badge>
+            className="absolute left-2 top-2 flex items-center gap-1
+                       border border-amber-200
+                       px-1.5 py-0.5 text-[11px] font-semibold text-amber-700
+                       shadow-sm backdrop-blur bg-amber-50/95 rounded-full"
+          >
+            <span className="text-amber-700">FEATURED</span>
+          </Badge>
         )}
       </div>
 
       <div className="p-4">
-        <h3 className="text-lg font-bold text-gray-900 group-hover:text-blue-600 transition-colors line-clamp-1">
-          {service.name}
-        </h3>
-
+        <div className="flex items-center justify-between gap-1">
+          <h3 className="text-lg font-bold text-gray-900 group-hover:text-blue-600 transition-colors line-clamp-1">
+            {service.name}
+          </h3>
+          <div className="flex items-center gap-1">
+            <Star size={16} className="fill-yellow-400 text-yellow-400" />
+            <span className="text-sm font-semibold text-gray-900">
+              {service.rating}
+            </span>
+            <span className="text-sm text-gray-500">({service.reviews})</span>
+          </div>
+        </div>
         <p className="mt-2 text-base font-semibold text-gray-900">
           ${service.hourlyRate}
           <span className="text-sm font-normal text-gray-500"> / hour</span>
         </p>
 
         <div className="mt-2 flex items-center gap-1.5">
-          <Star size={16} className="fill-yellow-400 text-yellow-400" />
-          <span className="text-sm font-semibold text-gray-900">
-            {service.rating}
+          <span className="text-xs font-medium text-gray-600">
+            {service.location}
           </span>
-          <span className="text-sm text-gray-500">({service.reviews})</span>
+
           {service.verified && (
             <span className="ml-auto flex items-center gap-1 text-xs font-medium text-green-600 bg-green-50 px-2 py-1 rounded-full">
               ✔ Verified

@@ -11,6 +11,7 @@ import {
   deleteListingVideo,
   getListingByUser,
   getAllFeaturedListings,
+  getLocationSuggestions,
 } from "../../controllers/listing/listing.controller.js";
 import {
   uploadListingMedia,
@@ -19,7 +20,6 @@ import {
 import { protect } from "../../middlewares/auth.middleware.js";
 import {
   createListingSchema,
-  ListingByIdSchema,
   updateListingSchema,
 } from "../../validations/listing.validation.js";
 import validate from "../../middlewares/validate.js";
@@ -35,6 +35,7 @@ router.post(
 router.get("/", getAllListings);
 router.get("/featured", getAllFeaturedListings);
 router.get("/user", protect, getListingByUser);
+router.get("/location-suggestions", getLocationSuggestions);
 router.get("/:id", getListingById);
 router.put(
   "/:id",
@@ -47,7 +48,9 @@ router.put(
 router.delete("/:id", deleteListing);
 
 router.get("/category/:category", getListingsByCategory);
+
 router.delete("/:id/photos/:publicId(*)", protect, deleteListingPhoto);
 router.delete("/:id/videos/:publicId(*)", protect, deleteListingVideo);
+
 
 export default router;

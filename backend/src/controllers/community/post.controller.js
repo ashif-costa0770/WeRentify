@@ -41,7 +41,16 @@ export const createPost = async (req, res) => {
 //! Get all post
 export const getAllPost = async (req, res) => {
   try {
-    const posts = await Post.find().populate("author").sort({ createdAt: -1 });
+    const { location } = req.query;
+    const filter = {}
+
+    if (location && location.trim() !== ""){
+      filter.location = {
+        $regex: location.trim(),
+        $options: "i",
+      }
+    }
+    const posts = await Post.find(filter).populate("author").sort({ createdAt: -1 });
     if (!posts) {
       return errorResponse(res, 404, "No post found");
     }
@@ -163,5 +172,31 @@ export const deletePost = async (req, res) => {
   } catch (error) {
     console.log("Error in deleting post", error);
     return errorResponse(res, 500, "Failed to delete post", error.message);
+  }
+};
+
+//! Get location suggestions for posts
+export const getPostLocationSuggestions = async (req, res) => {
+  try {
+    const { q } = req.query;
+
+    if (!q || q.trim() === "") {
+      return successResponse(res, 200, "No query provided", {
+        locations: [],
+      });
+    }
+
+    const search = q.trim();
+
+    const locations = await Post.distinct("location", {  // distinct returns unique values only.
+      location: { $regex: search, $options: "i" },
+    });
+
+    return successResponse(res, 200, "Location suggestions fetched for posts", {
+      locations: locations.slice(0, 5),
+    });
+
+  } catch (error) {
+    return errorResponse(res, 500, "Failed to fetch location suggestions", error.message);
   }
 };

@@ -10,8 +10,14 @@ import { useListBusiness } from "@/context/ListBusinessContext"; // âœ… adde
 import { mapBackendService } from "./_lib/mapBackendService";
 
 export default function ServicesPage() {
-  const { registerSuccessCallback } = useListBusiness(); // âœ…
+  const { registerSuccessCallback } = useListBusiness();
 
+  const [searchLocation, setSearchLocation] = useState(() => {
+    if (typeof window === "undefined") return null;
+    const p = new URLSearchParams(window.location.search);
+    const loc = p.get("location");
+    return loc && loc.trim() ? loc.trim() : null;
+  });
   const [services, setServices] = useState([]);
   const [featuredServices, setFeaturedServices] = useState([]);
   const [servicesLoading, setServicesLoading] = useState(true);
@@ -21,29 +27,34 @@ export default function ServicesPage() {
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [sortBy, setSortBy] = useState("recommended");
 
-  // âœ… Extracted as useCallback so it's stable and can be passed as a callback
-  const fetchServices = useCallback(async () => {
+  const fetchServices = useCallback(async (locationParam = null) => {
+    const loc = locationParam ?? searchLocation;
     try {
       setServicesLoading(true);
       setServicesError(null);
-      const res = await getServices();
+      const res = await getServices(loc ? { location: loc } : {});
       const list = res.data?.data?.services || res.data?.services || [];
       setServices(list.map(mapBackendService));
     } catch (err) {
-      setServicesError(
-        err.response?.data?.message || "Failed to load services",
-      );
+      const message = err?.response?.data?.message;
+      // Treat \"no services found\" from backend as a valid empty state, not an error
+      if (message && /no services found/i.test(message)) {
+        setServicesError(null);
+      } else {
+        setServicesError(message || "Failed to load services");
+      }
       setServices([]);
     } finally {
       setServicesLoading(false);
     }
-  }, []);
+  }, [searchLocation]);
 
-  const fetchFeaturedServices = useCallback(async () => {
+  const fetchFeaturedServices = useCallback(async (locationParam = null) => {
+    const loc = locationParam ?? searchLocation;
     try {
       setFeaturedLoading(true);
       setFeaturedError(null);
-      const res = await getFeaturedServices();
+      const res = await getFeaturedServices(loc ? { location: loc } : {});
       const list =
         res.data?.data?.services ||
         res.data?.services ||
@@ -52,20 +63,47 @@ export default function ServicesPage() {
         [];
       setFeaturedServices(list.map(mapBackendService));
     } catch (err) {
-      setFeaturedError(
-        err.response?.data?.message || "Failed to load featured services",
-      );
+      const message = err?.response?.data?.message;
+      // Treat \"no featured services found\" as a valid empty state, not an error
+      if (message && /no featured services found/i.test(message)) {
+        setFeaturedError(null);
+      } else {
+        setFeaturedError(message || "Failed to load featured services");
+      }
       setFeaturedServices([]);
     } finally {
       setFeaturedLoading(false);
     }
-  }, []);
+  }, [searchLocation]);
 
-  // âœ… Initial fetch on mount
   useEffect(() => {
     fetchServices();
     fetchFeaturedServices();
-  }, [fetchServices, fetchFeaturedServices]);
+  }, [searchLocation]);
+
+  // Sync searchLocation with URL (no useSearchParams): initial, back/forward, and HeroSearch event
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const readFromUrl = () => {
+      const params = new URLSearchParams(window.location.search);
+      const loc = params.get("location");
+      return loc && loc.trim() ? loc.trim() : null;
+    };
+    setSearchLocation(readFromUrl());
+    const onPopState = () => setSearchLocation(readFromUrl());
+    window.addEventListener("popstate", onPopState);
+    const onHeroSearch = (e) => {
+      const nextLoc = e?.detail?.location;
+      setSearchLocation(
+        nextLoc && String(nextLoc).trim() ? String(nextLoc).trim() : null,
+      );
+    };
+    window.addEventListener("werentify:location-search", onHeroSearch);
+    return () => {
+      window.removeEventListener("popstate", onPopState);
+      window.removeEventListener("werentify:location-search", onHeroSearch);
+    };
+  }, []);
 
   // âœ… Register fetchServices so context can call it after a successful submit
   useEffect(() => {
@@ -149,6 +187,7 @@ export default function ServicesPage() {
         onSortChange={setSortBy}
         loading={loading}
         error={error}
+        searchLocation={searchLocation}
       />
       <ListBusinessModal />
     </div>

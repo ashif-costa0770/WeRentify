@@ -33,6 +33,7 @@ import adminRoutes from "./routes/admin.route.js";
 import bookingRoutes from "./routes/booking.route.js";
 import "./jobs/bookingReminderCron.js";
 import reviewRoutes from "./routes/review.route.js";
+import geocodeRoutes from "./routes/geocode.route.js";
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -103,6 +104,7 @@ app.use("/api/connect", connectRoutes);
 app.use("/api/plans", planRoutes);
 app.use("/api/bookings", bookingRoutes);
 app.use("/api/reviews", reviewRoutes);
+app.use("/api/geocode", geocodeRoutes);
 
 /* HEALTH */
 /* -------------------------------------------------- */

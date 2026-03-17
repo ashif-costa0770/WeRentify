@@ -11,7 +11,7 @@ export default function ServiceHorizontalScroll({
   return (
     <div className="flex gap-6 overflow-x-auto scrollbar-hide pb-3">
       {services.map((service) => (
-        <div key={service.id} className="flex-shrink-0 w-[320px]">
+        <div key={service.id} className="flex-shrink-0 w-[280px]">
           <ServiceCard service={service} onClick={() => onServiceClick(service)} />
         </div>
       ))}

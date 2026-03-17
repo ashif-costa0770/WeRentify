@@ -10,7 +10,7 @@ export const updatePost = (id, data) => api.put(`/posts/${id}`, data);
 export const deletePost = (id) => api.delete(`/posts/${id}`);
 
 // GET ALL POSTS
-export const getPosts = () => api.get("/posts");
+export const getPosts = (location) => api.get(`/posts?location=${location}`);
 
 // GET POSTS BY USER
 export const getPostsByUser = () => api.get("/posts/user");
@@ -23,3 +23,6 @@ export const likePost = (postId) => api.post(`/posts/${postId}/like`, {});
 
 // SAVE
 export const savePost = (postId) => api.post(`/posts/${postId}/save`);
+
+// GET LOCATION SUGGESTIONS FOR POSTS
+export const getPostLocationSuggestions = (q) => api.get(`/posts/location-suggestions?q=${q}`);

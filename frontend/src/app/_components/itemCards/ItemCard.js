@@ -1,7 +1,8 @@
-import { Heart, CheckCircle, Star } from "lucide-react";
+import { Heart, Star } from "lucide-react";
 import { useUser } from "@/context/UserContext";
 import Image from "next/image";
 import { toast } from "sonner";
+import { Badge } from "@/components/ui/badge";
 
 export default function ItemCard({ item, onSelect = () => {} }) {
   const { favorites, addFavorite, removeFavorite, isLogin, setShowSignIn } =
@@ -57,117 +58,100 @@ export default function ItemCard({ item, onSelect = () => {} }) {
       onKeyDown={(e) => {
         if (e.key === "Enter") onSelect(item);
       }}
-      className="relative bg-white rounded-lg overflow-hidden hover:shadow-2xl
-                 transition-all cursor-pointer border border-gray-100 group"
+      className="relative bg-white rounded-2xl overflow-hidden hover:shadow-lg
+                 transition-all duration-300 cursor-pointer border border-gray-200 group w-full"
     >
-      {/* Image */}
-      <div className="relative">
-        <div className="aspect-square bg-linear-to-br from-indigo-50 via-purple-50 to-pink-50 overflow-hidden">
-          {item.photos && item.photos.length > 0 && item.photos[0]?.url ? (
-            <Image
-              src={item.photos[0].url}
-              alt={item.itemName || item.name}
-              width={200}
-              height={200}
-              className="w-full h-full object-cover
-                         group-hover:scale-110 transition-transform duration-300"
-            />
-          ) : item.imageUrl ? (
-            <Image
-              src={item.imageUrl}
-              alt={item.name}
-              width={200}
-              height={200}
-              className="w-full h-full object-cover
-                         group-hover:scale-110 transition-transform duration-300"
-            />
-          ) : (
-            <div className="flex items-center justify-center h-full text-2xl">
-              {item.image}
-            </div>
-          )}
-        </div>
+      {/* Image & top actions (styled like service card) */}
+      <div className="aspect-[4/3] relative overflow-hidden">
+        {item.photos && item.photos.length > 0 && item.photos[0]?.url ? (
+          <Image
+            src={item.photos[0].url}
+            alt={item.itemName || item.name}
+            fill
+            className="object-cover transition-transform duration-500 group-hover:scale-110"
+          />
+        ) : item.imageUrl ? (
+          <Image
+            src={item.imageUrl}
+            alt={item.itemName || item.name}
+            fill
+            className="object-cover transition-transform duration-500 group-hover:scale-110"
+          />
+        ) : (
+          <div className="flex items-center justify-center h-full text-2xl bg-gray-100">
+            {item.image}
+          </div>
+        )}
 
-        {/* Favorite button */}
+        {/* Favorite button (match pill style) */}
         <button
           type="button"
           onClick={handleFavoriteClick}
-          className="absolute cursor-pointer top-1.5 right-1.5 bg-white/95
-                     rounded-full p-1.5 shadow-lg hover:scale-105 transition"
+          className="absolute cursor-pointer right-3 top-2 flex items-center justify-center w-7 h-7 bg-white/95 backdrop-blur-sm rounded-full hover:bg-white hover:scale-110 transition-all duration-200 shadow-lg"
         >
           <Heart
             size={16}
             className={
-              isFavorite ? "fill-rose-500 text-rose-500" : "text-gray-600"
+              isFavorite ? "fill-rose-500 text-rose-500" : "text-gray-700"
             }
           />
         </button>
 
-        {/* Featured badge (stays on image) */}
+        {/* Featured badge (match service badge) */}
         {item.isFeatured && (
-          <div
-            className="absolute top-2 left-2 flex items-center gap-1
-                       bg-white/90 backdrop-blur
-                       text-amber-600
-                       px-2 py-0.5 rounded-full
-                       text-[11px] font-semibold
-                       shadow-sm border border-amber-200"
+          <Badge
+            className="absolute left-2 top-2 flex items-center gap-1
+                       border border-amber-200
+                       px-1.5 py-0.5 text-[10px] font-semibold text-amber-700
+                       shadow-sm backdrop-blur bg-amber-50/95 rounded-full"
           >
-            <Star size={12} className="fill-amber-600" /> Featured
-          </div>
+            <span className="text-amber-700">FEATURED</span>
+          </Badge>
         )}
       </div>
 
-      {/* Content */}
-      <div className="p-2">
-        <div className="flex items-start justify-between mb-0.5">
-          <h3 className="font-bold text-[14px] text-gray-900 line-clamp-1">
+      {/* Content (aligned with service card styling) */}
+      <div className="px-3 py-2">
+        <div className="flex items-center justify-between gap-1">
+          <h3 className="text-md font-bold text-gray-800 group-hover:text-blue-600 transition-colors line-clamp-1">
             {item.itemName || item.name}
           </h3>
-
-          <div className="flex items-center gap-1">
-            {item.rating > 0 && (
-              <>
-                <span className="text-gray-600"></span>
-            <Star size={12} className="fill-yellow-400 text-yellow-400" />
-              <span className="text-[12px] font-bold text-gray-700">
-                  {item.rating } {item.reviewCount > 0 && `(${item.reviewCount})`}
+          {item.rating > 0 && (
+            <div className="flex items-center gap-1">
+              <Star size={16} className="fill-yellow-400 text-yellow-400" />
+              <span className="text-sm font-semibold text-gray-900">
+                {item.rating}
+              </span>
+              {item.reviewCount > 0 && (
+                <span className="text-sm text-gray-500">
+                  ({item.reviewCount})
                 </span>
-              </>
-            )}
-          </div>
+              )}
+            </div>
+          )}
         </div>
 
-        
-
-        <div className="my-1">
-          <div className="flex items-center gap-2">
-            <div className="flex items-end gap-1">
-              <span className="text-base font-bold text-indigo-700">${item.hourlyRate || "0"}</span>
-              <span className="text-xs font-medium text-gray-500 mb-0.5">/hr</span>
-            </div>
-            <span className="text-gray-500 text-base font-bold">·</span>
-            <div className="flex items-end gap-1">
-              <span className="text-base font-semibold text-slate-700">${item.dailyRate || "0"}</span>
-              <span className="text-xs font-medium text-gray-400 mb-0.5">/day</span>
-            </div>
-          </div>
-        </div>
-        <p className="text-[12px] text-gray-500 mb-1">
-          {item.pickupLocation}
+        <p className="mt-2 text-base font-semibold text-gray-900">
+          ${item.hourlyRate || "0"}
+          <span className="text-sm font-normal text-gray-500">
+            {" "}
+            / hour
+          </span>
+         
         </p>
-      </div>
 
-      {/* Verified badge: card bottom-right (like service card) */}
-        {item.verified && (
-        <div
-          className="absolute bottom-2 right-2 flex items-center gap-1
-                      text-green-500 px-2 py-1 rounded-full
-                      text-[11px] font-bold "
-        >
-          <CheckCircle size={12}  /> Verified
+        <div className="mt-2 flex items-center gap-1.5">
+          <span className="text-xs font-medium text-gray-600">
+            {item.pickupLocation}
+          </span>
+
+          {item.verified && (
+            <span className="ml-auto flex items-center gap-1 text-xs font-medium text-green-600 bg-green-50 px-2 py-1 rounded-full">
+              ✔ Verified
+            </span>
+          )}
         </div>
-      )}
+      </div>
     </div>
   );
 }

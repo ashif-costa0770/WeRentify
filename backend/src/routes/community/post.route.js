@@ -6,6 +6,7 @@ import {
   updatePost,
   deletePost,
   getPostsByUser,
+  getPostLocationSuggestions,
 } from "../../controllers/community/post.controller.js";
 import {
   uploadListingMedia,
@@ -30,6 +31,7 @@ router.post(
 );
 router.get("/", getAllPost);
 router.get("/user", protect,  getPostsByUser);
+router.get("/location-suggestions", getPostLocationSuggestions);
 router.get("/:id", getSinglePost);
 router.put(
   "/:id",

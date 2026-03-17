@@ -77,3 +77,8 @@ export const deleteListingPhoto = (id, publicId) =>
 /* DELETE LISTING VIDEO */
 export const deleteListingVideo = (id, publicId) =>
   api.delete(`/listings/${id}/videos/${publicId}`);
+
+
+/* GET LOCATION SUGGESTIONS */
+export const getLocationSuggestions = (q) =>
+  api.get(`/listings/location-suggestions?q=${q}`);
