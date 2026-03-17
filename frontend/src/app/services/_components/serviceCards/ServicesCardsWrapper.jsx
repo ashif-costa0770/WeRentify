@@ -14,6 +14,8 @@ export default function ServicesCardsWrapper({
   loading = false,
   error = null,
   searchLocation = null,
+  onOpenFilters,
+  featuredOnly = false,
 }) {
   const router = useRouter();
 
@@ -87,11 +89,12 @@ export default function ServicesCardsWrapper({
               
               Featured Services ({featuredServices.length})
             </h2>
-            {/* Sort control aligned to the right of Featured heading */}
+            {/* Filters button aligned to the right of Featured heading */}
             <GlobalServicesHeader
-              totalCount={totalServicesCount}
-              sortBy={sortBy}
-              onSortChange={onSortChange}
+              totalCount={
+                featuredOnly ? featuredServices.length : totalServicesCount
+              }
+              onOpenFilters={onOpenFilters}
             />
           </div>
           {/* Reuse the same horizontal scroller & cards for consistency */}
@@ -104,26 +107,34 @@ export default function ServicesCardsWrapper({
       )}
 
       {/* ✅ Normal services heading */}
-      <h2 className="mb-4 mt-2 text-xl font-semibold text-gray-900">
-        All Services ({totalServicesCount})
-      </h2>
+      {!featuredOnly && (
+        <>
+          <h2 className="mb-4 mt-2 text-xl font-semibold text-gray-900">
+            All Services ({totalServicesCount})
+          </h2>
 
-      {/* ✅ Category sections */}
-      {visibleCategories.length === 0 ? (
-        <p className="text-center text-gray-500 py-12">
-          {searchLocation
-            ? `No services found in ${searchLocation.charAt(0).toUpperCase()}${searchLocation.slice(1).toLowerCase()}.`
-            : "No services found."}
-        </p>
-      ) : (
-        visibleCategories.map(([key, group]) => (
-          <ServiceCategoryBlock
-            key={key}
-            categoryLabel={group.name}
-            services={group.items}
-            onServiceClick={openServicePage}
-          />
-        ))
+          {/* ✅ Category sections */}
+          {visibleCategories.length === 0 ? (
+            <p className="text-center text-gray-500 py-12">
+              {searchLocation
+                ? `No services found in ${searchLocation
+                    .charAt(0)
+                    .toUpperCase()}${searchLocation
+                    .slice(1)
+                    .toLowerCase()}.`
+                : "No services found."}
+            </p>
+          ) : (
+            visibleCategories.map(([key, group]) => (
+              <ServiceCategoryBlock
+                key={key}
+                categoryLabel={group.name}
+                services={group.items}
+                onServiceClick={openServicePage}
+              />
+            ))
+          )}
+        </>
       )}
     </div>
   );

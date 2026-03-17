@@ -8,6 +8,7 @@ import { getServices, getFeaturedServices } from "@/services/services.service";
 import ListBusinessModal from "./_components/modals/ListBusinessModal";
 import { useListBusiness } from "@/context/ListBusinessContext"; // âœ… added
 import { mapBackendService } from "./_lib/mapBackendService";
+import FilterSlider from "../_components/filter/FilterSlider";
 
 export default function ServicesPage() {
   const { registerSuccessCallback } = useListBusiness();
@@ -26,6 +27,8 @@ export default function ServicesPage() {
   const [featuredError, setFeaturedError] = useState(null);
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [sortBy, setSortBy] = useState("recommended");
+  const [filtersOpen, setFiltersOpen] = useState(false);
+  const [featuredOnly, setFeaturedOnly] = useState(false);
 
   const fetchServices = useCallback(async (locationParam = null) => {
     const loc = locationParam ?? searchLocation;
@@ -120,11 +123,13 @@ export default function ServicesPage() {
       return services.filter((service) => !featuredIds.has(service.id));
     })();
 
+    if (featuredOnly) return [];
+
     if (selectedCategory === "all") return baseServices;
     return baseServices.filter(
       (service) => service.category === selectedCategory,
     );
-  }, [selectedCategory, services, featuredServices]);
+  }, [selectedCategory, services, featuredServices, featuredOnly]);
 
   const sortedServices = useMemo(() => {
     const data = [...filteredServices];
@@ -188,8 +193,17 @@ export default function ServicesPage() {
         loading={loading}
         error={error}
         searchLocation={searchLocation}
+        onOpenFilters={() => setFiltersOpen(true)}
       />
       <ListBusinessModal />
+      <FilterSlider
+        open={filtersOpen}
+        onClose={() => setFiltersOpen(false)}
+        sortBy={sortBy}
+        onSortChange={setSortBy}
+        featuredOnly={featuredOnly}
+        onFeaturedOnlyChange={setFeaturedOnly}
+      />
     </div>
   );
 }

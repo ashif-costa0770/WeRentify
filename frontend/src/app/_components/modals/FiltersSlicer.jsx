@@ -1,6 +1,6 @@
 "use client";
 
-import { X } from "lucide-react";
+import { useState } from "react";
 
 export default function FiltersSlicer({
   showFilters,
@@ -13,122 +13,133 @@ export default function FiltersSlicer({
   setDistanceFilter,
   verifiedOnly,
   setVerifiedOnly,
+  featuredOnly = false,
+  setFeaturedOnly,
   onApply,
-  isMobile = false,
 }) {
+  const [localMin, setLocalMin] = useState(priceRange[0]);
+  const [localMax, setLocalMax] = useState(priceRange[1]);
+
   if (!showFilters) return null;
 
+  const handleApply = () => {
+    setPriceRange([localMin, localMax]);
+    onApply?.();
+  };
+
   return (
-    <div
-      className="fixed inset-0 z-[55] bg-black/50 backdrop-blur-sm animate-fadeIn"
-      onClick={onClose}
-    >
+    <>
+      {/* Overlay (matches services filter) */}
       <div
-        className={`absolute text-gray-800 bg-white shadow-2xl p-6 overflow-y-auto animate-slideIn
-          ${
-            isMobile
-              ? "inset-x-0 bottom-0 rounded-t-3xl max-h-[80vh]"
-              : "right-0 top-0 bottom-0 w-96"
-          }`}
-        onClick={(e) => e.stopPropagation()}
-      >
+        onClick={onClose}
+        className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 cursor-pointer"
+      />
+
+      {/* Drawer (matches services filter) */}
+      <aside className="fixed right-0 top-0 h-full w-full max-w-[400px] bg-white z-60 shadow-2xl flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-black">Filters</h2>
-          <button className="cursor-pointer" onClick={onClose}>
-            <X size={22} />
+        <div className="flex items-center justify-between px-6 py-4 border-b">
+          <h2 className="text-xl font-bold">Filters</h2>
+          <button
+            onClick={onClose}
+            className="text-2xl font-light hover:opacity-60 cursor-pointer"
+          >
+            ✕
           </button>
         </div>
 
-        {/* Sort By */}
-        <div className="mb-6">
-          <label className="block font-bold mb-3">Sort By</label>
-          <select
-            value={sortBy}
-            onChange={(e) => setSortBy(e.target.value)}
-            className="w-full p-3 cursor-pointer border-2 border-gray-300 rounded-xl"
-          > 
-            <option value="nearest">Nearest First</option>
-            <option value="priceLow">Price: Low to High</option>
-            <option value="priceHigh">Price: High to Low</option>
-            <option value="rating">Highest Rated</option>
-          </select>
-        </div>
+        {/* Content */}
+        <div className="flex-1 overflow-y-auto px-6 py-5 space-y-6">
+          {/* Sort By */}
+          <div>
+            <label className="block font-semibold mb-2">Sort By</label>
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
+              className="w-full border rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-purple-500 cursor-pointer"
+            >
+              <option value="nearest">Nearest First</option>
+              <option value="priceLow">Price: Low to High</option>
+              <option value="priceHigh">Price: High to Low</option>
+              <option value="rating">Highest Rated</option>
+            </select>
+          </div>
 
-        {/* Daily Price Range */}
-        <div className="mb-6">
-          <label className="block font-bold mb-3">
-            Daily Price Range
-          </label>
+          {/* Daily Price Range */}
+          <div>
+            <label className="block font-semibold mb-2">Daily Price Range</label>
 
-          <div className="flex gap-4 mb-2">
+            <div className="flex gap-3">
+              <input
+                type="number"
+                value={localMin}
+                onChange={(e) => setLocalMin(Number(e.target.value) || 0)}
+                className="w-1/2 border rounded-lg px-4 py-3"
+                placeholder="0"
+              />
+              <input
+                type="number"
+                value={localMax}
+                onChange={(e) => setLocalMax(Number(e.target.value) || 0)}
+                className="w-1/2 border rounded-lg px-4 py-3"
+                placeholder="100000"
+              />
+            </div>
+
+            <p className="text-sm text-gray-500 mt-1">
+              ${localMin} – ${localMax}
+            </p>
+          </div>
+
+          {/* Distance Slider */}
+          <div>
+            <label className="block font-semibold mb-2">
+              Maximum Distance: {distanceFilter} mi
+            </label>
+
             <input
-              type="number"
-              value={priceRange[0]}
-              onChange={(e) =>
-                setPriceRange([+e.target.value, priceRange[1]])
-              }
-              className="w-1/2 p-2 border-2 border-gray-300 rounded-lg"
-              placeholder="Min"
-            />
-            <input
-              type="number"
-              value={priceRange[1]}
-              onChange={(e) =>
-                setPriceRange([priceRange[0], +e.target.value])
-              }
-              className="w-1/2 p-2  border-2 border-gray-300 rounded-lg"
-              placeholder="Max"
+              type="range"
+              min="1"
+              max="1000"
+              value={distanceFilter}
+              onChange={(e) => setDistanceFilter(+e.target.value)}
+              className="w-full accent-blue-600 cursor-pointer"
             />
           </div>
 
-          <p className="text-sm text-gray-600">
-            ${priceRange[0]} – ${priceRange[1]}
-          </p>
-        </div>
-
-        {/* Distance */}
-        <div className="mb-6">
-          <label className="block font-bold mb-3">
-            Maximum Distance: {distanceFilter} mi
-          </label>
-          <input
-            type="range" 
-            min="1"
-            max="1000"
-            value={distanceFilter}
-            onChange={(e) =>
-              setDistanceFilter(+e.target.value)
-            }
-            className="w-full cursor-pointer"
-          />
-        </div>
-
-        {/* Verified Only */}
-        <div className="mb-6">
-          <label className="flex items-center gap-3 cursor-pointer">
+          {/* Featured only */}
+          <label className="flex items-center gap-3 text-sm font-medium cursor-pointer">
             <input
               type="checkbox"
-              checked={verifiedOnly}
-              onChange={(e) =>
-                setVerifiedOnly(e.target.checked)
-              }
-              className="w-5 cursor-pointer h-5"
+              className="w-4 h-4 cursor-pointer"
+              checked={featuredOnly}
+              onChange={(e) => setFeaturedOnly(e.target.checked)}
             />
-            <span className="font-semibold">
-              Verified owners only
-            </span>
+            Featured items only
+          </label>
+
+          {/* Verified owners */}
+          <label className="flex items-center gap-3 text-sm font-medium cursor-pointer">
+            <input
+              type="checkbox"
+              className="w-4 h-4 cursor-pointer"
+              checked={verifiedOnly}
+              onChange={(e) => setVerifiedOnly(e.target.checked)}
+            />
+            Verified owners only
           </label>
         </div>
 
-        {/* Apply Button */}
-        <button
-          onClick={onApply}
-          className="w-full bg-gradient-to-r cursor-pointer from-indigo-600 to-purple-600 text-white py-3 rounded-xl font-bold"
-        >
-          Apply Filters
-        </button>
-      </div>
-    </div>
+        {/* Footer */}
+        <div className="px-6 py-4 border-t">
+          <button
+            onClick={handleApply}
+            className="w-full py-3 rounded-xl font-bold text-white bg-linear-to-r from-[#5B4FE9] to-[#E95FC8] cursor-pointer"
+          >
+            Apply Filters
+          </button>
+        </div>
+      </aside>
+    </>
   );
 }

@@ -161,20 +161,13 @@ export default function BookingDetailsPage() {
       toast.error(msg);
     } finally {
       setActionLoading(false);
-    };
+    }
   };
 
   const handleContactProvider = () => {
-    // For now, route back to profile messages.
-    router.push("/profile?tab=messages");
+    router.push("/profile/messages");
   };
 
-  const handleDownloadReceipt = () => {
-    if (!booking || String(booking.paymentStatus || "").toLowerCase() !== "paid") {
-      return;
-    }
-    window.print();
-  };
 
   const summary = useMemo(() => {
     if (!booking) return null;
@@ -205,348 +198,162 @@ export default function BookingDetailsPage() {
     if (!booking) return null;
     return {
       name: getCustomerName(booking.customer),
-      address: booking.address || "—",
     };
   }, [booking]);
 
   const priceSection = useMemo(() => {
     if (!booking) return null;
     return {
-      unitPrice: booking.unitPrice,
       quantity: booking.quantity ?? 1,
-      platformFee: booking.platformFee,
-      discountAmount: booking.discountAmount,
-      taxAmount: booking.taxAmount,
       totalPrice: booking.totalPrice,
       currency: booking.currency || "USD",
     };
   }, [booking]);
 
   if (!bookingId) {
-    return (
-      <div className="min-h-screen bg-gray-100 flex items-center justify-center px-4">
-        <div className="max-w-md w-full bg-white rounded-2xl border border-gray-200 shadow-sm p-6 text-center">
-          <p className="text-sm text-gray-600">Missing booking id in URL.</p>
-          <Button
-            type="button"
-            variant="outline"
-            className="mt-4 cursor-pointer"
-            onClick={() => router.push("/profile")}
-          >
-            Back to Profile
-          </Button>
-        </div>
-      </div>
-    );
+    return null;
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 px-4 py-8">
-      <div className="max-w-5xl mx-auto space-y-6">
-        <div className="flex items-center justify-between gap-3">
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() => router.push("/profile")}
-            className="cursor-pointer"
-          >
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Profile
-          </Button>
-          {summary?.id && (
-            <p className="text-xs text-gray-500 truncate">
-              Booking ID: <span className="font-mono">{summary.id}</span>
-            </p>
-          )}
-        </div>
-
-        <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6">
-          {loading ? (
-            <div className="flex items-center justify-center py-10">
-              <Loader2 className="h-6 w-6 animate-spin text-indigo-600" />
-            </div>
-          ) : error ? (
-            <div className="space-y-3">
-              <p className="text-sm text-red-600">{error}</p>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => router.push("/profile")}
-                className="cursor-pointer"
-              >
-                Back to My Bookings
-              </Button>
-            </div>
-          ) : booking ? (
-            <div className="space-y-6">
-              {/* Booking Summary */}
-              <section className="space-y-2">
-                <h1 className="text-2xl font-semibold text-gray-900">
-                  Booking Summary
-                </h1>
-                <p className="text-sm text-gray-500">
-                  Overview of your booking status and payment.
+    <div className="space-y-4">
+      <div className="bg-white rounded-3xl border border-slate-100 shadow-lg shadow-slate-100/60 p-6 sm:p-8">
+        {loading ? (
+          <div className="flex items-center justify-center py-10">
+            <Loader2 className="h-6 w-6 animate-spin text-indigo-600" />
+          </div>
+        ) : error ? (
+          <div className="space-y-3 text-center">
+            <p className="text-sm text-red-600">{error}</p>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => router.push("/profile/my-bookings")}
+              className="cursor-pointer"
+            >
+              Back to My Bookings
+            </Button>
+          </div>
+        ) : booking ? (
+          <div className="space-y-7">
+            <section className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+              <div className="space-y-1.5">
+                <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+                  {summary?.type}
                 </p>
+                <h1 className="text-xl sm:text-2xl font-semibold text-slate-900">
+                  {resourceSection?.title}
+                </h1>
+                <p className="text-sm text-slate-500">
+                  Booked for{" "}
+                  <span className="font-semibold text-slate-900">
+                    {formatShortDate(resourceSection?.bookingDate)}
+                  </span>
+                  {resourceSection?.timeSlot
+                    ? ` · ${resourceSection.timeSlot}`
+                    : ""}
+                </p>
+                <p className="text-sm text-slate-500">
+                  Provider:{" "}
+                  <span className="font-medium text-slate-900">
+                    {resourceSection?.providerName}
+                  </span>
+                </p>
+              </div>
 
-                <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                  <div className="rounded-xl border border-gray-100 bg-gray-50 px-4 py-3">
-                    <p className="text-xs font-medium uppercase text-gray-500">
-                      Booking Type
-                    </p>
-                    <p className="mt-1 text-sm font-semibold text-gray-900">
-                      {summary?.type}
-                    </p>
+              <div className="flex flex-col items-start sm:items-end gap-2">
+                <Badge
+                  className={`capitalize ${getStatusBadgeClass(
+                    booking.status,
+                  )} rounded-full px-3 py-1 text-xs font-semibold`}
+                >
+                  {booking.status || "—"}
+                </Badge>
+                <Badge
+                  className={`capitalize ${getStatusBadgeClass(
+                    booking.paymentStatus,
+                  )} rounded-full px-3 py-1 text-xs font-semibold`}
+                >
+                  {booking.paymentStatus || "—"}
+                </Badge>
+              </div>
+            </section>
+
+            <section className="grid gap-4 sm:grid-cols-2">
+              <div className="rounded-2xl border border-slate-100 bg-slate-50 px-5 py-4 space-y-3">
+                <h2 className="text-sm font-semibold text-slate-900">
+                  Booking details
+                </h2>
+                <dl className="space-y-2.5 text-sm">
+                  <div className="flex items-center justify-between gap-4">
+                    <dt className="text-slate-500">Quantity</dt>
+                    <dd className="text-slate-900 font-medium">
+                      {resourceSection?.quantity}
+                    </dd>
                   </div>
-                  <div className="rounded-xl border border-gray-100 bg-gray-50 px-4 py-3">
-                    <p className="text-xs font-medium uppercase text-gray-500">
-                      Booking Status
-                    </p>
-                    <div className="mt-1">
-                      <Badge
-                        className={`capitalize ${getStatusBadgeClass(booking.status)}`}
-                      >
-                        {booking.status || "—"}
-                      </Badge>
-                    </div>
+                  <div className="flex items-center justify-between gap-4">
+                    <dt className="text-slate-500">Customer</dt>
+                    <dd className="text-slate-900 font-medium">
+                      {customerSection?.name}
+                    </dd>
                   </div>
-                  <div className="rounded-xl border border-gray-100 bg-gray-50 px-4 py-3">
-                    <p className="text-xs font-medium uppercase text-gray-500">
-                      Payment Status
-                    </p>
-                    <div className="mt-1">
-                      <Badge
-                        className={`capitalize ${getStatusBadgeClass(
-                          booking.paymentStatus,
-                        )}`}
-                      >
-                        {booking.paymentStatus || "—"}
-                      </Badge>
-                    </div>
-                  </div>
-                  <div className="rounded-xl border border-gray-100 bg-gray-50 px-4 py-3">
-                    <p className="text-xs font-medium uppercase text-gray-500">
-                      Created At
-                    </p>
-                    <p className="mt-1 text-sm text-gray-900">
+                  <div className="flex items-center justify-between gap-4">
+                    <dt className="text-slate-500">Created</dt>
+                    <dd className="text-slate-900 font-medium">
                       {formatShortDate(summary?.createdAt)}
-                    </p>
-                  </div>
-                </div>
-              </section>
-
-              {/* Resource and Customer */}
-              <section className="grid gap-4 lg:grid-cols-2">
-                <div className="rounded-2xl border border-gray-100 bg-white px-5 py-4">
-                  <h2 className="text-sm font-semibold text-gray-900">
-                    Service / Listing Details
-                  </h2>
-                  <dl className="mt-3 space-y-2 text-sm">
-                    <div className="flex justify-between gap-4">
-                      <dt className="text-gray-500">Title</dt>
-                      <dd className="text-gray-900 text-right">
-                        {resourceSection?.title}
-                      </dd>
-                    </div>
-                    <div className="flex justify-between gap-4">
-                      <dt className="text-gray-500">Provider</dt>
-                      <dd className="text-gray-900 text-right">
-                        {resourceSection?.providerName}
-                      </dd>
-                    </div>
-                    <div className="flex justify-between gap-4">
-                      <dt className="text-gray-500">Booking Date</dt>
-                      <dd className="text-gray-900 text-right">
-                        {formatShortDate(resourceSection?.bookingDate)}
-                      </dd>
-                    </div>
-                    <div className="flex justify-between gap-4">
-                      <dt className="text-gray-500">Time Slot</dt>
-                      <dd className="text-gray-900 text-right">
-                        {resourceSection?.timeSlot || "—"}
-                      </dd>
-                    </div>
-                    <div className="flex justify-between gap-4">
-                      <dt className="text-gray-500">Quantity</dt>
-                      <dd className="text-gray-900 text-right">
-                        {resourceSection?.quantity}
-                      </dd>
-                    </div>
-                    <div className="flex justify-between gap-4">
-                      <dt className="text-gray-500">Address</dt>
-                      <dd className="text-gray-900 text-right max-w-xs">
-                        {resourceSection?.address}
-                      </dd>
-                    </div>
-                  </dl>
-                </div>
-
-                <div className="rounded-2xl border border-gray-100 bg-white px-5 py-4">
-                  <h2 className="text-sm font-semibold text-gray-900">
-                    Customer Details
-                  </h2>
-                  <dl className="mt-3 space-y-2 text-sm">
-                    <div className="flex justify-between gap-4">
-                      <dt className="text-gray-500">Name</dt>
-                      <dd className="text-gray-900 text-right">
-                        {customerSection?.name}
-                      </dd>
-                    </div>
-                    <div className="flex justify-between gap-4">
-                      <dt className="text-gray-500">Address</dt>
-                      <dd className="text-gray-900 text-right max-w-xs">
-                        {customerSection?.address}
-                      </dd>
-                    </div>
-                  </dl>
-
-                  <div className="mt-4 border-t border-gray-100 pt-3">
-                    <h3 className="text-xs font-semibold uppercase text-gray-500">
-                      Payment Details
-                    </h3>
-                    <dl className="mt-2 space-y-2 text-sm">
-                      <div className="flex justify-between gap-4">
-                        <dt className="text-gray-500">Payment Method</dt>
-                        <dd className="text-gray-900 text-right">
-                          {booking.paymentMethod || "—"}
-                        </dd>
-                      </div>
-                      <div className="flex justify-between gap-4">
-                        <dt className="text-gray-500">Provider</dt>
-                        <dd className="text-gray-900 text-right">
-                          {booking.paymentProvider || "—"}
-                        </dd>
-                      </div>
-                      <div className="flex justify-between gap-4">
-                        <dt className="text-gray-500">Payment ID</dt>
-                        <dd className="text-gray-900 text-right max-w-xs truncate">
-                          {booking.paymentId || "—"}
-                        </dd>
-                      </div>
-                      <div className="flex justify-between gap-4">
-                        <dt className="text-gray-500">Currency</dt>
-                        <dd className="text-gray-900 text-right">
-                          {booking.currency || "USD"}
-                        </dd>
-                      </div>
-                    </dl>
-                  </div>
-                </div>
-              </section>
-
-              {/* Price breakdown */}
-              <section className="rounded-2xl border border-gray-100 bg-white px-5 py-4">
-                <h2 className="text-sm font-semibold text-gray-900">
-                  Price Breakdown
-                </h2>
-                <dl className="mt-3 space-y-2 text-sm">
-                  <div className="flex justify-between gap-4">
-                    <dt className="text-gray-500">Unit Price</dt>
-                    <dd className="text-gray-900">
-                      {formatCurrency(priceSection.unitPrice, priceSection.currency)}
                     </dd>
                   </div>
-                  <div className="flex justify-between gap-4">
-                    <dt className="text-gray-500">Quantity</dt>
-                    <dd className="text-gray-900">{priceSection.quantity}</dd>
-                  </div>
-                  <div className="flex justify-between gap-4">
-                    <dt className="text-gray-500">Platform Fee</dt>
-                    <dd className="text-gray-900">
+                </dl>
+              </div>
+
+              <div className="rounded-2xl border border-slate-100 bg-white px-5 py-4 space-y-3">
+                <h2 className="text-sm font-semibold text-slate-900">
+                  Payment summary
+                </h2>
+                <dl className="space-y-2.5 text-sm">
+                  <div className="flex items-center justify-between gap-4">
+                    <dt className="text-slate-500">Total</dt>
+                    <dd className="text-base font-semibold text-slate-900">
                       {formatCurrency(
-                        priceSection.platformFee,
+                        priceSection.totalPrice,
                         priceSection.currency,
                       )}
                     </dd>
                   </div>
-                  <div className="flex justify-between gap-4">
-                    <dt className="text-gray-500">Discount</dt>
-                    <dd className="text-gray-900">
-                      -{formatCurrency(
-                        priceSection.discountAmount,
-                        priceSection.currency,
-                      )}
-                    </dd>
-                  </div>
-                  <div className="flex justify-between gap-4">
-                    <dt className="text-gray-500">Tax</dt>
-                    <dd className="text-gray-900">
-                      {formatCurrency(priceSection.taxAmount, priceSection.currency)}
-                    </dd>
-                  </div>
-                  <div className="mt-2 border-t border-gray-100 pt-3 flex justify-between gap-4">
-                    <dt className="text-sm font-semibold text-gray-900">
-                      Total Price
-                    </dt>
-                    <dd className="text-sm font-semibold text-gray-900">
-                      {formatCurrency(priceSection.totalPrice, priceSection.currency)}
+                  <div className="flex items-center justify-between gap-4">
+                    <dt className="text-slate-500">Quantity</dt>
+                    <dd className="text-slate-900 font-medium">
+                      {priceSection.quantity}
                     </dd>
                   </div>
                 </dl>
-              </section>
+              </div>
+            </section>
 
-              {/* Timeline */}
-              <section className="rounded-2xl border border-gray-100 bg-white px-5 py-4">
-                <h2 className="text-sm font-semibold text-gray-900">
-                  Booking Timeline
-                </h2>
-                <dl className="mt-3 space-y-2 text-sm">
-                  <div className="flex justify-between gap-4">
-                    <dt className="text-gray-500">Created At</dt>
-                    <dd className="text-gray-900">
-                      {formatDate(booking.createdAt)}
-                    </dd>
-                  </div>
-                  <div className="flex justify-between gap-4">
-                    <dt className="text-gray-500">Updated At</dt>
-                    <dd className="text-gray-900">
-                      {formatDate(booking.updatedAt)}
-                    </dd>
-                  </div>
-                </dl>
-              </section>
+            <section className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex flex-wrap gap-3">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handleContactProvider}
+                  className="cursor-pointer rounded-full border-slate-200 text-slate-700 hover:bg-slate-50 hover:border-slate-300 transition-colors"
+                >
+                  <MessageCircle className="mr-2 h-4 w-4" />
+                  Contact provider
+                </Button>
 
-              {/* Actions */}
-              <section className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <div className="flex flex-wrap gap-3">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={handleContactProvider}
-                    className="cursor-pointer"
-                  >
-                    <MessageCircle className="mr-2 h-4 w-4" />
-                    Contact Provider
-                  </Button>
-
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={handleDownloadReceipt}
-                    disabled={
-                      String(booking.paymentStatus || "").toLowerCase() !== "paid"
-                    }
-                    className="cursor-pointer"
-                  >
-                    <Download className="mr-2 h-4 w-4" />
-                    Download Receipt
-                  </Button>
-
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={handleCancelBooking}
-                    disabled={!isCancellable(booking) || actionLoading}
-                    className="cursor-pointer text-red-600 border-red-200 hover:bg-red-50 disabled:text-gray-400 disabled:border-gray-200"
-                  >
-                    <XCircle className="mr-2 h-4 w-4" />
-                    {actionLoading ? "Cancelling..." : "Cancel Booking"}
-                  </Button>
-                </div>
-              </section>
-            </div>
-          ) : null}
-        </div>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={handleCancelBooking}
+                  className="cursor-pointer rounded-full text-rose-600 hover:bg-rose-50"
+                >
+                  <XCircle className="mr-2 h-4 w-4" />
+                  {actionLoading ? "Cancelling..." : "Cancel booking"}
+                </Button>
+              </div>
+            </section>
+          </div>
+        ) : null}
       </div>
     </div>
   );

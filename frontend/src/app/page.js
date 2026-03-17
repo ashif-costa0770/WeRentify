@@ -47,6 +47,7 @@ export default function ListingPage() {
   const [priceRange, setPriceRange] = useState([0, 100000]);
   const [distanceFilter, setDistanceFilter] = useState(1000);
   const [verifiedOnly, setVerifiedOnly] = useState(false);
+  const [featuredOnly, setFeaturedOnly] = useState(false);
 
   /* ---------------- STATE: UI MODALS ---------------- */
   const [showMessages, setShowMessages] = useState(false);
@@ -129,6 +130,11 @@ export default function ListingPage() {
       result = result.filter((item) => Boolean(item?.verified));
     }
 
+    // Featured-only: hide non-featured grid when enabled
+    if (featuredOnly) {
+      return [];
+    }
+
     // Sort
     if (sortBy === "priceLow") {
       result.sort(
@@ -160,6 +166,7 @@ export default function ListingPage() {
     distanceFilter,
     verifiedOnly,
     sortBy,
+    featuredOnly,
   ]);
 
   /* ---------------- FILTER + SORT for featured (same logic) ---------------- */
@@ -317,23 +324,26 @@ export default function ListingPage() {
       )}
 
       {/* Listings Grid */}
-      {backendLoading ? (
-        <div className="py-16 text-center text-gray-500 font-medium">
-          Loading items...
-        </div>
-      ) : backendError ? (
-        <div className="py-16 text-center text-red-500 font-medium">
-          {backendError}
-        </div>
-      ) : (
-        <ItemGrid
-          items={visibleItems}
-          onOpenFilters={featuredItems.length > 0 ? undefined : () => setShowFilters(true)}
-          showFilterButton={featuredItems.length === 0}
-          onSelect={(item) => router.push(`/listing/${item._id || item.id}`)}
-          searchLocation={searchLocation}
-        />
-      )}
+      {!featuredOnly &&
+        (backendLoading ? (
+          <div className="py-16 text-center text-gray-500 font-medium">
+            Loading items...
+          </div>
+        ) : backendError ? (
+          <div className="py-16 text-center text-red-500 font-medium">
+            {backendError}
+          </div>
+        ) : (
+          <ItemGrid
+            items={visibleItems}
+            onOpenFilters={
+              featuredItems.length > 0 ? undefined : () => setShowFilters(true)
+            }
+            showFilterButton={featuredItems.length === 0}
+            onSelect={(item) => router.push(`/listing/${item._id || item.id}`)}
+            searchLocation={searchLocation}
+          />
+        ))}
 
       {/* Filters Drawer */}
       <FiltersSlicer
@@ -347,6 +357,8 @@ export default function ListingPage() {
         setDistanceFilter={setDistanceFilter}
         verifiedOnly={verifiedOnly}
         setVerifiedOnly={setVerifiedOnly}
+        featuredOnly={featuredOnly}
+        setFeaturedOnly={setFeaturedOnly}
         onApply={handleApplyFilters} // Pass apply handler
       />
 

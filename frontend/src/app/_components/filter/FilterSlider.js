@@ -2,27 +2,34 @@
 
 import { useState } from "react";
 
-export default function FilterSlider({ open, onClose }) {
+export default function FilterSlider({
+  open,
+  onClose,
+  sortBy = "recommended",
+  onSortChange,
+  featuredOnly = false,
+  onFeaturedOnlyChange,
+}) {
   const [distance, setDistance] = useState(17);
 
   if (!open) return null;
 
   return (
     <>
-      {/* Overlay */}
+      {/* Overlay (covers header as well) */}
       <div
         onClick={onClose}
-        className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40"
+        className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 cursor-pointer"
       />
 
       {/* Drawer */}
-      <aside className="fixed right-0 top-0 h-full w-full max-w-md bg-white z-50 shadow-2xl flex flex-col">
+      <aside className="fixed right-0 top-0 h-full w-full max-w-[400px] bg-white z-60 shadow-2xl flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b">
           <h2 className="text-xl font-bold">Filters</h2>
           <button
             onClick={onClose}
-            className="text-2xl font-light hover:opacity-60"
+            className="text-2xl font-light hover:opacity-60 cursor-pointer"
           >
             ✕
           </button>
@@ -33,11 +40,15 @@ export default function FilterSlider({ open, onClose }) {
           {/* Sort By */}
           <div>
             <label className="block font-semibold mb-2">Sort By</label>
-            <select className="w-full border rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-purple-500">
-              <option>Recommended</option>
-              <option>Price: Low to High</option>
-              <option>Price: High to Low</option>
-              <option>Newest</option>
+            <select
+              value={sortBy}
+              onChange={(e) => onSortChange && onSortChange(e.target.value)}
+              className="w-full border rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-purple-500"
+            >
+              <option value="recommended">Recommended</option>
+              <option value="highest_rated">Highest Rated</option>
+              <option value="price_low_high">Price: Low to High</option>
+              <option value="price_high_low">Price: High to Low</option>
             </select>
           </div>
 
@@ -75,13 +86,26 @@ export default function FilterSlider({ open, onClose }) {
               max="50"
               value={distance}
               onChange={(e) => setDistance(e.target.value)}
-              className="w-full accent-blue-600"
+              className="w-full accent-blue-600 cursor-pointer"
             />
           </div>
 
-          {/* Checkbox */}
-          <label className="flex items-center gap-3 text-sm font-medium">
-            <input type="checkbox" className="w-4 h-4" />
+          {/* Featured only */}
+          <label className="flex items-center gap-3 text-sm font-medium cursor-pointer">
+            <input
+              type="checkbox"
+              className="w-4 h-4 cursor-pointer"
+              checked={featuredOnly}
+              onChange={(e) =>
+                onFeaturedOnlyChange && onFeaturedOnlyChange(e.target.checked)
+              }
+            />
+            Featured services only
+          </label>
+
+          {/* Verified owners */}
+          <label className="flex items-center gap-3 text-sm font-medium cursor-pointer">
+            <input type="checkbox" className="w-4 h-4 cursor-pointer" />
             Verified owners only
           </label>
         </div>
@@ -90,7 +114,7 @@ export default function FilterSlider({ open, onClose }) {
         <div className="px-6 py-4 border-t">
           <button
             onClick={onClose}
-            className="w-full py-3 rounded-xl font-bold text-white bg-linear-to-r from-[#5B4FE9] to-[#E95FC8]"
+            className="w-full py-3 rounded-xl font-bold text-white bg-linear-to-r from-[#5B4FE9] to-[#E95FC8] cursor-pointer"
           >
             Apply Filters
           </button>
