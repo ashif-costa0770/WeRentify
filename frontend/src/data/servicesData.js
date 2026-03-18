@@ -1,5 +1,5 @@
-// export const services = [
-//         // Photography Services
+// export const services = [     917825698524
+//         // Photography Services e
 //         { id: 's1', name: 'Photo Session with Naomi Jemison', category: 'photography', hourlyRate: 350, rating: 5.0, reviews: 89, distance: 3.1, image: '📷', imageUrl: 'https://images.unsplash.com/photo-1511285560929-80b456fea0bc?w=400&h=300&fit=crop', verified: true, provider: 'Naomi Jemison Photography', type: 'session' },
 //         { id: 's2', name: "Capture Life's Moments with Dreamscape Photography", category: 'photography', hourlyRate: 450, rating: 4.9, reviews: 156, distance: 2.5, image: '📷', imageUrl: 'https://images.unsplash.com/photo-1542038784456-1ea8e935640e?w=400&h=300&fit=crop', verified: true, provider: 'Dreamscape Photography', type: 'session' },
 //         { id: 's3', name: 'Wedding and event portraits by Sterling', category: 'photography', hourlyRate: 250, rating: 4.8, reviews: 203, distance: 4.2, image: '📷', imageUrl: 'https://images.unsplash.com/photo-1519741497674-611481863552?w=400&h=300&fit=crop', verified: true, provider: 'Sterling Photography', type: 'session' },
