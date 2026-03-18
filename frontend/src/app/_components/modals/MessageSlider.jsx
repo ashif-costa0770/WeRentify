@@ -180,7 +180,12 @@ export default function MessageSlider({
     setIsInboxLoading(true);
     try {
       const res = await getConversations();
-      const list = Array.isArray(res?.data?.data) ? res.data.data : [];
+      const payload = res?.data?.data;
+      const list = Array.isArray(payload)
+        ? payload
+        : Array.isArray(payload?.conversations)
+          ? payload.conversations
+          : [];
       const sorted = sortConversations(list);
       setConversations(sorted);
       return sorted;
@@ -200,7 +205,12 @@ export default function MessageSlider({
       setIsMessagesLoading(true);
       try {
         const res = await getMessages(conversationId);
-        const list = Array.isArray(res?.data?.data) ? res.data.data : [];
+        const payload = res?.data?.data;
+        const list = Array.isArray(payload)
+          ? payload
+          : Array.isArray(payload?.messages)
+            ? payload.messages
+            : [];
         setMessages(list);
       } catch (error) {
         toast.error(error?.response?.data?.message || "Failed to load messages");

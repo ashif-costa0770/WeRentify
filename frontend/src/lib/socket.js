@@ -1,11 +1,21 @@
 import { io } from "socket.io-client";
 
-const SOCKET_URL =
-  process.env.NEXT_PUBLIC_SOCKET_URL ||
-  process.env.NEXT_PUBLIC_BACKEND_URL ||
-  "http://localhost:5000";
+// Get the Socket.io server URL from environment variable
+const SOCKET_URL = process.env.NEXT_PUBLIC_API_URL;
 
+// Throw error if the environment variable is not defined
+if (!SOCKET_URL) {
+  throw new Error("NEXT_PUBLIC_API_URL is not defined");
+}
+
+/**
+ * Export a pre-configured socket.io client instance.
+ * - withCredentials: Allows HTTP-only cookie (auth) to be sent
+ * - autoConnect: false means socket will not connect until .connect() is called
+ * - transports: ["websocket"] forces using WebSocket only
+ */
 export const socket = io(SOCKET_URL, {
-  withCredentials: true, // REQUIRED for HTTP-only cookie auth
-  autoConnect: false, // Prevent unwanted early connection
+  withCredentials: true,
+  autoConnect: false,
+  transports: ["websocket"],
 });

@@ -79,7 +79,11 @@ app.use(
     secret: "google_auth_secret",
     resave: false,
     saveUninitialized: false,
-    cookie: { httpOnly: true },
+    cookie: {
+      httpOnly: true,
+      secure: true,        // REQUIRED for HTTPS
+      sameSite: "none",    // REQUIRED for cross-origin
+    }
   })
 );
 
