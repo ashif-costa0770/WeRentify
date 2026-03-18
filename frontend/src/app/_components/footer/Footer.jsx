@@ -1,6 +1,12 @@
+ "use client";
+
+import { usePathname } from "next/navigation";
 import { Facebook, Twitter, Instagram } from "lucide-react";
 
 export default function Footer() {
+  const pathname = usePathname();
+  if (pathname?.startsWith("/admin")) return null;
+
   return (
     <footer className="bg-gray-50 border-t border-gray-200 px-4 pt-8 pb-4">
       <div className="max-w-7xl mx-auto">

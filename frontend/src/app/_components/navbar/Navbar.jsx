@@ -6,10 +6,7 @@ import HomeIcon from "@/app/_components/icons/HomeIcon";
 import UsersIcon from "@/app/_components/icons/UsersIcon";
 import { useEffect, useRef, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import SignUpModal from "@/app/_components/modals/SignUpModal";
-import SignInModal from "@/app/_components/modals/SignInModal";
-import LanguageCurrencyModal from "@/app/_components/modals/LanguageCurrencyModal";
-import MessageSlider from "@/app/_components/modals/MessageSlider";
+import dynamic from "next/dynamic";
 import { useUser } from "@/context/UserContext";
 import ProfileDropdown from "./ProfileDropdown";
 
@@ -18,6 +15,20 @@ import { getLocationSuggestions as getListingLocationSuggestions } from "@/servi
 import { getLocationSuggestions as getServiceLocationSuggestions } from "@/services/services.service";
 import { getPostLocationSuggestions } from "@/services/post.service";
 import api from "@/lib/api";
+
+const SignUpModal = dynamic(() => import("@/app/_components/modals/SignUpModal"), {
+  ssr: false,
+});
+const SignInModal = dynamic(() => import("@/app/_components/modals/SignInModal"), {
+  ssr: false,
+});
+const LanguageCurrencyModal = dynamic(
+  () => import("@/app/_components/modals/LanguageCurrencyModal"),
+  { ssr: false },
+);
+const MessageSlider = dynamic(() => import("@/app/_components/modals/MessageSlider"), {
+  ssr: false,
+});
 
 export default function Navbar() {
   const router = useRouter();
@@ -524,33 +535,38 @@ export default function Navbar() {
         )}
       </div>
       {/* Modals */}
-      <SignUpModal
-        open={showSignUp}
-        onClose={() => setShowSignUp(false)}
-        onSwitchToSignIn={() => {
-          setShowSignUp(false);
-          setShowSignIn(true);
-        }}
-        setIsLogin={setIsLogin}
-      />
-      <SignInModal
-        open={showSignIn}
-        onClose={() => setShowSignIn(false)}
-        onSwitchToSignUp={() => {
-          setShowSignIn(false);
-          setShowSignUp(true);
-        }}
-        setIsLogin={setIsLogin}
-      />
-      <LanguageCurrencyModal
-        open={showLang}
-        onClose={() => setShowLang(false)}
-      />
-      <MessageSlider
-        showMessages={showMessages}
-        setShowMessages={setShowMessages}
-        selectedConversation={selectedConversation}
-      />
+      {showSignUp && (
+        <SignUpModal
+          open={showSignUp}
+          onClose={() => setShowSignUp(false)}
+          onSwitchToSignIn={() => {
+            setShowSignUp(false);
+            setShowSignIn(true);
+          }}
+          setIsLogin={setIsLogin}
+        />
+      )}
+      {showSignIn && (
+        <SignInModal
+          open={showSignIn}
+          onClose={() => setShowSignIn(false)}
+          onSwitchToSignUp={() => {
+            setShowSignIn(false);
+            setShowSignUp(true);
+          }}
+          setIsLogin={setIsLogin}
+        />
+      )}
+      {showLang && (
+        <LanguageCurrencyModal open={showLang} onClose={() => setShowLang(false)} />
+      )}
+      {showMessages && (
+        <MessageSlider
+          showMessages={showMessages}
+          setShowMessages={setShowMessages}
+          selectedConversation={selectedConversation}
+        />
+      )}
     </header>
   );
 }

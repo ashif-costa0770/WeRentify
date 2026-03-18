@@ -4,7 +4,11 @@ const backendTarget = (process.env.BACKEND_URL || "http://localhost:5000").repla
   ""
 );
 
-const nextConfig = {
+const withBundleAnalyzer = (await import("@next/bundle-analyzer")).default({
+  enabled: process.env.ANALYZE === "true",
+});
+
+const nextConfig = withBundleAnalyzer({
   images: {
     remotePatterns: [
       {
@@ -22,6 +26,6 @@ const nextConfig = {
       },
     ];
   },
-};
+});
 
 export default nextConfig;

@@ -312,6 +312,18 @@ export default function MessageSlider({
   ]);
 
   useEffect(() => {
+    if (!showMessages) return;
+
+    if (!socket.connected) {
+      socket.connect();
+    }
+
+    return () => {
+      socket.disconnect();
+    };
+  }, [showMessages]);
+
+  useEffect(() => {
     if (!showMessages || conversations.length === 0) return;
 
     const loadTitles = async () => {

@@ -4,16 +4,50 @@
 // (we rely on useSearchParams and client-side redirects).
 export const dynamic = "force-dynamic";
 
-import { useMemo, useState, useEffect } from "react";
+import { useMemo, useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import nextDynamic from "next/dynamic";
 import NavbarWrapper from "@/app/_components/navbar/NavbarWrapper";
-import ItemCategoriesSection from "@/app/_components/CategoryGrid/ItemCategoriesSection";
-import ItemGrid from "@/app/_components/itemCards/ItemGrid";
-import ItemCard from "@/app/_components/itemCards/ItemCard";
-import { SlidersHorizontal } from "lucide-react";
 import { getListings, getFeaturedListings } from "@/services/item.service";
 
+const ItemCategoriesSection = nextDynamic(
+  () => import("@/app/_components/CategoryGrid/ItemCategoriesSection"),
+  {
+    loading: () => (
+      <section className="max-w-7xl mx-auto px-4 mt-5">
+        <div className="mb-4 h-12 rounded-2xl bg-gray-100 animate-pulse" />
+        <div className="h-20 rounded-2xl bg-gray-100 animate-pulse" />
+      </section>
+    ),
+  },
+);
+const FeaturedListingsSection = nextDynamic(
+  () => import("@/app/_components/itemCards/FeaturedListingsSection"),
+  {
+    loading: () => (
+      <section className="max-w-7xl mx-auto px-4 mt-8">
+        <div className="mb-4 h-6 w-56 rounded bg-gray-100 animate-pulse" />
+        <div className="grid gap-4 mb-2 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+          {Array.from({ length: 5 }).map((_, idx) => (
+            <div key={idx} className="h-56 rounded-2xl bg-gray-100 animate-pulse" />
+          ))}
+        </div>
+      </section>
+    ),
+  },
+);
+const ItemGrid = nextDynamic(() => import("@/app/_components/itemCards/ItemGrid"), {
+  loading: () => (
+    <section className="max-w-7xl mx-auto px-4 mt-6 mb-6">
+      <div className="mb-4 h-6 w-44 rounded bg-gray-100 animate-pulse" />
+      <div className="grid gap-4 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+        {Array.from({ length: 10 }).map((_, idx) => (
+          <div key={idx} className="h-56 rounded-2xl bg-gray-100 animate-pulse" />
+        ))}
+      </div>
+    </section>
+  ),
+});
 const FiltersSlicer = nextDynamic(
   () => import("@/app/_components/modals/FiltersSlicer"),
   {
@@ -57,7 +91,7 @@ export default function ListingPage() {
   const [featuredItems, setFeaturedItems] = useState([]);
 
   /* ---------------- FETCH ITEMS FROM BACKEND (with optional location) ---------------- */
-  const fetchItems = async (locationParam = null) => {
+  const fetchItems = useCallback(async (locationParam = null) => {
     setBackendLoading(true);
     setBackendError(null);
     const loc = locationParam ?? searchLocation;
@@ -85,9 +119,9 @@ export default function ListingPage() {
     } finally {
       setBackendLoading(false);
     }
-  };
+  }, [searchLocation]);
 
-  const fetchFeaturedItems = async (locationParam = null) => {
+  const fetchFeaturedItems = useCallback(async (locationParam = null) => {
     const loc = locationParam ?? searchLocation;
     try {
       const res = await getFeaturedListings(loc ? { location: loc } : {});
@@ -99,7 +133,7 @@ export default function ListingPage() {
     } catch {
       setFeaturedItems([]);
     }
-  };
+  }, [searchLocation]);
 
   /* ---------------- FILTER + SORT (Simple frontend logic) ---------------- */
   const visibleItems = useMemo(() => {
@@ -228,9 +262,8 @@ export default function ListingPage() {
 
   /* ---------------- EFFECTS: fetch when URL location changes ---------------- */
   useEffect(() => {
-    fetchItems();
-    fetchFeaturedItems();
-  }, [searchLocation]);
+    Promise.all([fetchItems(), fetchFeaturedItems()]);
+  }, [fetchItems, fetchFeaturedItems]);
 
   // Keep `searchLocation` in sync without useSearchParams()
   useEffect(() => {
@@ -278,7 +311,7 @@ export default function ListingPage() {
   };
 
   return (
-    <main className="relative">
+    <main className="relative pb-20">
       <NavbarWrapper />
       {/* Category Tabs */}
       <ItemCategoriesSection
@@ -289,38 +322,11 @@ export default function ListingPage() {
 
       {/* Featured Listings */}
       {Array.isArray(featuredItems) && featuredItems.length > 0 && (
-        <section className="max-w-7xl mx-auto px-4 mt-8">
-          <div className="mb-4 flex items-center justify-between">
-            <div>
-              <h2 className="text-lg font-bold text-gray-800 flex items-center gap-1.5">
-                <span>⭐</span> Featured Items ({visibleFeaturedItems.length})
-              </h2>
-            </div>
-            <button
-              type="button"
-              onClick={() => setShowFilters(true)}
-              className="flex cursor-pointer items-center gap-2 rounded-full border-2 border-gray-300 bg-white px-3 py-2 text-xs font-bold text-gray-800 shadow-md hover:bg-gray-50"
-            >
-              <SlidersHorizontal size={14} />
-              Filters
-            </button>
-          </div>
-          <div className="grid gap-4 mb-2 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
-            {visibleFeaturedItems.length > 0 ? (
-              visibleFeaturedItems.map((item) => (
-                <ItemCard
-                  key={item._id || item.id}
-                  item={item}
-                  onSelect={(it) => router.push(`/listing/${it._id || it.id}`)}
-                />
-              ))
-            ) : (
-              <p className="col-span-full py-8 text-center text-sm text-gray-500">
-                No featured items match your current filters.
-              </p>
-            )}
-          </div>
-        </section>
+        <FeaturedListingsSection
+          visibleFeaturedItems={visibleFeaturedItems}
+          onOpenFilters={() => setShowFilters(true)}
+          onSelectItem={(item) => router.push(`/listing/${item._id || item.id}`)}
+        />
       )}
 
       {/* Listings Grid */}
@@ -346,38 +352,44 @@ export default function ListingPage() {
         ))}
 
       {/* Filters Drawer */}
-      <FiltersSlicer
-        showFilters={showFilters}
-        onClose={() => setShowFilters(false)}
-        sortBy={sortBy}
-        setSortBy={setSortBy}
-        priceRange={priceRange}
-        setPriceRange={setPriceRange}
-        distanceFilter={distanceFilter}
-        setDistanceFilter={setDistanceFilter}
-        verifiedOnly={verifiedOnly}
-        setVerifiedOnly={setVerifiedOnly}
-        featuredOnly={featuredOnly}
-        setFeaturedOnly={setFeaturedOnly}
-        onApply={handleApplyFilters} // Pass apply handler
-      />
+      {showFilters && (
+        <FiltersSlicer
+          showFilters={showFilters}
+          onClose={() => setShowFilters(false)}
+          sortBy={sortBy}
+          setSortBy={setSortBy}
+          priceRange={priceRange}
+          setPriceRange={setPriceRange}
+          distanceFilter={distanceFilter}
+          setDistanceFilter={setDistanceFilter}
+          verifiedOnly={verifiedOnly}
+          setVerifiedOnly={setVerifiedOnly}
+          featuredOnly={featuredOnly}
+          setFeaturedOnly={setFeaturedOnly}
+          onApply={handleApplyFilters}
+        />
+      )}
 
-      <MessageSlider
-        showMessages={showMessages}
-        setShowMessages={setShowMessages}
-        selectedConversation={selectedConversation}
-      />
+      {showMessages && (
+        <MessageSlider
+          showMessages={showMessages}
+          setShowMessages={setShowMessages}
+          selectedConversation={selectedConversation}
+        />
+      )}
 
-      <OwnerProfileModal
-        show={showOwnerProfile}
-        onClose={() => setShowOwnerProfile(false)}
-        owner={selectedOwner}
-        items={items}
-        onSelectItem={(item) => {
-          setShowOwnerProfile(false);
-          router.push(`/listing/${item._id || item.id}`);
-        }}
-      />
+      {showOwnerProfile && (
+        <OwnerProfileModal
+          show={showOwnerProfile}
+          onClose={() => setShowOwnerProfile(false)}
+          owner={selectedOwner}
+          items={items}
+          onSelectItem={(item) => {
+            setShowOwnerProfile(false);
+            router.push(`/listing/${item._id || item.id}`);
+          }}
+        />
+      )}
     </main>
   );
 }

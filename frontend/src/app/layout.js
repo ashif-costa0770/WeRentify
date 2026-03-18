@@ -1,9 +1,8 @@
-﻿import "./globals.css";
+import "./globals.css";
 import Footer from "@/app/_components/footer/Footer";
 import { UserProvider } from "@/context/UserContext";
 import { Toaster } from "sonner";
 import Script from "next/script";
-import SocketProvider from "@/lib/socketProvider";
 
 export const metadata = {
   title: "WeRentify",
@@ -20,13 +19,11 @@ export default function RootLayout({ children }) {
     <html lang="en">
       <body suppressHydrationWarning>
         <UserProvider>
-          <SocketProvider>
-            <main>
-              {children}
-              <Toaster position="top-right" richColors />
-            </main>
-            <Footer />
-          </SocketProvider>
+          <main>
+            {children}
+            <Toaster position="top-right" richColors />
+          </main>
+          <Footer />
         </UserProvider>
 
         <Script id="facebook-init" strategy="beforeInteractive">
