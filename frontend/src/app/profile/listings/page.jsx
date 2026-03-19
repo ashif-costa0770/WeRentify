@@ -39,7 +39,7 @@ const formatCurrency = (value, suffix) => {
 };
 
 export default function MyListings() {
-  const { isLogin, setShowSignIn } = useUser();
+  const { isLogin, setShowSignIn, user } = useUser();
   const { openModal, registerSuccessCallback } = useListBusiness();
   const [loading, setLoading] = useState(true);
   const [listings, setListings] = useState([]);
@@ -109,6 +109,7 @@ export default function MyListings() {
 
     return listingBookings + serviceBookings;
   }, [listings, services]);
+  const isHost = user?.mode === "host";
 
   const handleEdit = (type, item) => {
     if (!isLogin) {
@@ -229,14 +230,16 @@ export default function MyListings() {
               {listings.length}
             </span>
           </div>
-          <button
-            type="button"
-            onClick={handleAddListing}
-            className="inline-flex cursor-pointer items-center gap-1.5 rounded-lg border border-indigo-200 bg-indigo-50 px-3 py-1.5 text-xs font-semibold text-indigo-700 transition hover:bg-indigo-100"
-          >
-            <Plus size={13} />
-            Add Listing
-          </button>
+          {isHost ? (
+            <button
+              type="button"
+              onClick={handleAddListing}
+              className="inline-flex cursor-pointer items-center gap-1.5 rounded-lg border border-indigo-200 bg-indigo-50 px-3 py-1.5 text-xs font-semibold text-indigo-700 transition hover:bg-indigo-100"
+            >
+              <Plus size={13} />
+              Add Listing
+            </button>
+          ) : null}
         </div>
 
         {listings.length === 0 ? (
@@ -331,14 +334,16 @@ export default function MyListings() {
               {services.length}
             </span>
           </div>
-          <button
-            type="button"
-            onClick={handleAddService}
-            className="inline-flex cursor-pointer items-center gap-1.5 rounded-lg border border-indigo-200 bg-indigo-50 px-3 py-1.5 text-xs font-semibold text-indigo-700 transition hover:bg-indigo-100"
-          >
-            <Plus size={13} />
-            Add Service
-          </button>
+          {isHost ? (
+            <button
+              type="button"
+              onClick={handleAddService}
+              className="inline-flex cursor-pointer items-center gap-1.5 rounded-lg border border-indigo-200 bg-indigo-50 px-3 py-1.5 text-xs font-semibold text-indigo-700 transition hover:bg-indigo-100"
+            >
+              <Plus size={13} />
+              Add Service
+            </button>
+          ) : null}
         </div>
 
         {services.length === 0 ? (

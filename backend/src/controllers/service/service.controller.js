@@ -37,6 +37,9 @@ const buildHourlySlots = (startTime, endTime) => {
 //! Create Service
 export const createService = async (req, res) => {
   try {
+    if (req.user?.mode !== "host") {
+      return errorResponse(res, 403, "Switch to host mode to add services");
+    }
     //  📸 Validate Photos (Minimum 3 Required)
     if (!req.files?.photos || req.files.photos.length < 3) {
       return errorResponse(res, 400, "Minimum 3 photos are required");
@@ -293,6 +296,9 @@ export const getServicesByUser = async (req, res) => {
 //!Update service
 export const updateService = async (req, res) => {
   try {
+    if (req.user?.mode !== "host") {
+      return errorResponse(res, 403, "Switch to host mode to update services");
+    }
     const { id } = req.params;
 
     const service = await Service.findById(id);

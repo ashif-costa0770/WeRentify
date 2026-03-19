@@ -17,6 +17,9 @@ import stripe from "../../config/stripe.js";
 //! Create listing
 export const createListing = async (req, res) => {
   try {
+    if (req.user?.mode !== "host") {
+      return errorResponse(res, 403, "Switch to host mode to add listings");
+    }
     const { pickupLocation } = req.body;
 
     if (!req.files?.photos || req.files.photos.length < 3) {
@@ -239,6 +242,9 @@ export const getListingByUser = async (req, res) => {
 //! Update listing
 export const updateListing = async (req, res) => {
   try {
+    if (req.user?.mode !== "host") {
+      return errorResponse(res, 403, "Switch to host mode to update listings");
+    }
     const { id } = req.params;
     const { pickupLocation, isAvailable, offerDelivery } = req.body;
     const listing = await Listing.findById(id);

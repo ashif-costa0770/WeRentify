@@ -47,3 +47,9 @@ export const updatePlanSchema = z.object({
     message: "Plan must be basic, plus, or pro",
   }),
 });
+
+export const updateModeSchema = z.object({
+  mode: z.enum(["renter", "host"], {
+    message: "mode must be renter or host",
+  }),
+});

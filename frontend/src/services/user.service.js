@@ -20,3 +20,6 @@ export const deleteAccount = ()=> {
 }
 
 export const updatePlan = (data) => api.patch(`/user/plan`, data);
+
+export const switchToHost = () => api.post(`/user/switch-to-host`);
+export const updateMode = (data) => api.patch(`/user/mode`, data);

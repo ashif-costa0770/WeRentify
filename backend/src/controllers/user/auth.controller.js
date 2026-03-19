@@ -6,7 +6,6 @@ import { successResponse, errorResponse } from "../../utils/response.js";
 import { sendOtpEmail } from "../../utils/mailer.js";
 import argon2 from "argon2";
 import axios from "axios";
-import Plan from "../../models/plan.model.js";
 
 const RESEND_COOLDOWN_SECONDS = 60;
 
@@ -114,15 +113,12 @@ export const createUser = async (req, res) => {
 
     const hashedPassword = await argon2.hash(password);
 
-    const basicPlan = await Plan.findOne({ name: "Basic" });
-
     const user = await User.create({
       firstname,
       email,
       password: hashedPassword,
       isVerified: true,
       lastLoginProvider: "email",
-      plan: basicPlan._id,
     });
     // ✅ AUTO LOGIN LOGIC
     const token = generateToken(user._id);

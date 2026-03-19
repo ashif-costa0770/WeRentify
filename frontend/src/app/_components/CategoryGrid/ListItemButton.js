@@ -8,7 +8,8 @@ import { useUser } from "@/context/UserContext";
 export default function ListItemButton({ onListingCreated }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const {isLogin, setShowSignIn} = useUser();
+  const { isLogin, setShowSignIn, user } = useUser();
+  const isHost = user?.mode === "host";
 
   const handleClick = () =>{
     if(!isLogin){
@@ -17,6 +18,8 @@ export default function ListItemButton({ onListingCreated }) {
     }
     setIsModalOpen(true);
   }
+
+  if (!isHost) return null;
 
   return (
     <>

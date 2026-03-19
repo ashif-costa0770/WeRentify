@@ -5,7 +5,7 @@ import ItemCategoryGrid from './ItemCategoryGrid';
 
 export default function ItemCategoriesSection({selectedCategory, onCategorySelect, onListingCreated}) {
   return (
-    <section className="max-w-7xl mx-auto px-4 mt-5">
+    <section className="max-w-7xl mx-auto px-4 mt-12">
       {/* Top row: List Item button */}
       <div className="mb-4">
         <ListItemButton onListingCreated={onListingCreated} />

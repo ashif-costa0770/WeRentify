@@ -303,13 +303,32 @@ export const verifySession = async (req, res) => {
       return errorResponse(res, 400, "Payment not completed");
     }
 
-    const { userId, planId } = session.metadata;
+    const metadata = session.metadata || {};
+    const userId = String(metadata.userId || "");
+    const planId = String(metadata.planId || "");
 
-    await User.findByIdAndUpdate(userId, {
+    if (!userId || !planId) {
+      return errorResponse(res, 400, "Session metadata is incomplete");
+    }
+
+    if (String(req.user._id) !== userId && req.user.role !== "admin") {
+      return errorResponse(res, 403, "Not authorized to verify this payment session");
+    }
+
+    const user = await User.findByIdAndUpdate(
+      userId,
+      { plan: planId, mode: "host" },
+      { new: true, runValidators: true },
+    ).populate("plan");
+
+    if (!user) {
+      return errorResponse(res, 404, "User not found");
+    }
+
+    return successResponse(res, 200, "Session verified successfully", {
       plan: planId,
+      mode: user.mode,
     });
-
-    return successResponse(res, 200, "Session verified successfully", { plan: planId });
   } catch (error) {
     console.error("Stripe Verification Error:", error);
 

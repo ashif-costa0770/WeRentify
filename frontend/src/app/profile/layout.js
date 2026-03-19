@@ -105,6 +105,7 @@ export default function ProfileLayout({ children }) {
     : "Renter";
   const displayInitial = displayName.charAt(0).toUpperCase();
   const avatarUrl = useMemo(() => user?.avatar?.url || null, [user?.avatar?.url]);
+  const isHost = user?.mode === "host";
   const normalizedPlanName = currentPlanName.toLowerCase();
   const isProPlan = normalizedPlanName === "pro";
   const isPlusPlan = normalizedPlanName === "plus";
@@ -141,9 +142,10 @@ export default function ProfileLayout({ children }) {
                     <h2 className="truncate text-xl font-bold text-gray-900">
                       {displayName}
                     </h2>
-                    <div className=" ms-[-1] flex items-center gap-1 text-sm text-gray-500">
-                      <House size={14} />
-                      <span>{displayMode} Mode</span>
+                    <div className=" ms-[-1] flex items-center gap-1 text-xs text-gray-500">
+                      <House className="text-purple-400 w-4 h-4" />
+                      <span className="text-gray-500 text-xs font-bold">{displayMode.charAt(0).toUpperCase() + displayMode.slice(1)}</span>
+                      <span className="text-gray-500 text-xs font-bold">Mode</span>
                     </div>
                   </div>
                 </div>
@@ -168,12 +170,14 @@ export default function ProfileLayout({ children }) {
                   href="/profile/favorites"
                   active={pathname === "/profile/favorites"}
                 />
-                <SidebarItem
-                  icon={<Crown size={16} />}
-                  label="My Listings"
-                  href="/profile/listings"
-                  active={pathname === "/profile/listings"}
-                />
+                {isHost ? (
+                  <SidebarItem
+                    icon={<Crown size={16} />}
+                    label="My Listings"
+                    href="/profile/listings"
+                    active={pathname === "/profile/listings"}
+                  />
+                ) : null}
                 <SidebarItem
                   icon={<MessageSquare size={16} />}
                   label="My Posts"
@@ -191,38 +195,42 @@ export default function ProfileLayout({ children }) {
               <div className="border-t border-gray-100" />
 
               <nav className="py-2 gap-2">
-                <SidebarItem
-                  icon={<Building2 size={16} className="text-orange-500" />}
-                  label="Switch to Host"
-                  sublabel="List & earn money"
-                  href="/switch-host"
-                />
-                <SidebarItem
-                  icon={
-                    <Crown
-                      size={16}
-                      className={
-                        isProPlan
-                          ? "text-purple-500"
-                          : isPlusPlan
-                            ? "text-yellow-500"
-                            : "text-gray-400"
-                      }
-                    />
-                  }
-                  label={
-                    isProPlan
-                      ? "Pro Member"
-                      : isPlusPlan
-                        ? "Plus Member"
-                        : "Upgrade to Pro"
-                  }
-                  sublabel={!isBasicPlan ? "Active" : "Unlock premium features"}
-                  sublabelClassName={
-                    !isBasicPlan ? "text-green-600" : "text-gray-400"
-                  }
-                  onClick={() => setShowPricing(true)}
-                />
+                {!isHost ? (
+                  <SidebarItem
+                    icon={<Building2 size={16} className="text-orange-500" />}
+                    label="Switch to Host"
+                    sublabel="List & earn money"
+                    onClick={() => setShowPricing(true)}
+                  />
+                ) : null}
+                {isHost ? (
+                  <SidebarItem
+                    icon={
+                      <Crown
+                        size={16}
+                        className={
+                          isProPlan
+                            ? "text-purple-500"
+                            : isPlusPlan
+                              ? "text-yellow-500"
+                              : "text-gray-400"
+                        }
+                      />
+                    }
+                    label={
+                      isProPlan
+                        ? "Pro Member"
+                        : isPlusPlan
+                          ? "Plus Member"
+                          : "Upgrade to Pro"
+                    }
+                    sublabel={!isBasicPlan ? "Active" : "Unlock premium features"}
+                    sublabelClassName={
+                      !isBasicPlan ? "text-green-600" : "text-gray-400"
+                    }
+                    onClick={() => setShowPricing(true)}
+                  />
+                ) : null}
                 <SidebarItem
                   icon={<HelpCircle size={16} />}
                   label="Help Center"

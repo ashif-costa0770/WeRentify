@@ -5,7 +5,8 @@ import { useUser } from "@/context/UserContext";
 
 export default function ListBusinessButton() {
   const { openModal } = useListBusiness();
-  const {isLogin, setShowSignIn} = useUser();
+  const { isLogin, setShowSignIn, user } = useUser();
+  const isHost = user?.mode === "host";
 
   const handleClick = () => {
     if(!isLogin){
@@ -15,6 +16,8 @@ export default function ListBusinessButton() {
     openModal();
   }
 
+  if (!isHost) return null;
+
   return (
     <div className="hidden md:flex justify-end">
       <button
@@ -23,8 +26,7 @@ export default function ListBusinessButton() {
           flex items-center gap-2
           px-6 py-4
           cursor-pointer
-          rounded-xl
-          // mt-[-10px]
+          rounded-xl          
           font-bold text-sm
           text-white
           bg-linear-to-r from-[#5B4FE9] to-[#E95FC8]

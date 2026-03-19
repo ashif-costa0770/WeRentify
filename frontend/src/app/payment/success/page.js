@@ -18,13 +18,13 @@ function SuccessContent() {
         const res = await api.get(`/payments/verify-session/${sessionId}`);
         console.log("✅ Plan upgrade confirmed");
 
-        // Get the plan from the response and update localStorage
-        if (res.data?.plan && typeof window !== "undefined") {
-          localStorage.setItem("userPlan", res.data.plan);
-          // Trigger a custom event to notify other components
+        // Get the plan from the response and update localStorage; dispatch so UserContext refreshes (picks up mode=host)
+        const data = res.data?.data;
+        if (data && typeof window !== "undefined") {
+          if (data.plan) localStorage.setItem("userPlan", data.plan);
           window.dispatchEvent(
             new CustomEvent("plan-updated", {
-              detail: { plan: res.data.plan },
+              detail: { plan: data.plan },
             }),
           );
         }

@@ -5,6 +5,7 @@ import { X, Check, Loader2, Zap, ArrowRight, Crown } from "lucide-react";
 
 import { createPlanCheckoutSession } from "@/services/payments.service";
 import { getAllPlans } from "@/services/plans.service";
+import { switchToHost } from "@/services/user.service";
 
 export default function PricingModal({
   isOpen,
@@ -96,6 +97,7 @@ export default function PricingModal({
       setProcessingPlan(planId);
       setIsProcessing(true);
       if (Number(plan?.price) <= 0) {
+        await switchToHost();
         setSelectedPlan(planId);
         onPlanSelect?.(planId);
         if (typeof window !== "undefined") {
@@ -134,7 +136,10 @@ export default function PricingModal({
       onClick={(e) => e.target === e.currentTarget && onClose?.()}
     >
       {/* Modal shell */}
-      <div className="relative w-full max-w-5xl bg-[#f9fafb] rounded-[28px] shadow-2xl max-h-[92vh] overflow-y-auto">
+      <div className="relative w-full max-w-5xl bg-[#f9fafb] bg-gradient-to-br from-slate-50 via-slate-100 to-slate-50 rounded-[28px] shadow-2xl max-h-[92vh] overflow-hidden border border-slate-200/70">
+
+        {/* Scrollable content */}
+        <div className="max-h-[92vh] overflow-y-auto">
 
         {/* Close */}
         <button
@@ -145,17 +150,20 @@ export default function PricingModal({
         </button>
 
         {/* Header */}
-        <div className="px-8 pt-4 pb-7 text-center">
-          <h2 className="text-[1.9rem] font-extrabold tracking-tight text-gray-900">
-            Simple, transparent pricing
+        <div className="px-10 pt-5 pb-7 text-center">
+          <div className="inline-flex items-center justify-center rounded-full border border-indigo-100 bg-indigo-50/70 px-4 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-indigo-600 mb-3 shadow-sm">
+            Pricing for serious hosts
+          </div>
+          <h2 className="text-[2rem] font-extrabold tracking-tight text-slate-900">
+            Choose the plan that grows with you
           </h2>
-          <p className="mt-1 text-[13px] text-gray-500">
-            No hidden fees. Pay less on every transaction as you grow.
+          <p className="mt-2 text-[13px] text-slate-500">
+            Scale your rentals, reduce fees, and unlock premium tools as you move up.
           </p>
         </div>
 
         {/* Cards grid */}
-        <div className="grid md:grid-cols-3 gap-4 px-6 pb-8 items-stretch">
+        <div className="grid md:grid-cols-3 gap-4 px-8 pb-8 items-stretch">
 
           {isLoadingPlans && (
             <div className="md:col-span-3 flex items-center justify-center py-16 text-gray-500">
@@ -363,41 +371,41 @@ export default function PricingModal({
             return (
               <div
                 key={planId}
-                className="relative flex flex-col rounded-[22px] bg-white border border-gray-200 hover:border-gray-300 hover:shadow-md transition-all duration-200 overflow-hidden"
+                className="relative flex flex-col rounded-3xl bg-white border border-gray-200 shadow-sm  transition-all duration-200 overflow-hidden"
               >
-                {/* top accent line */}
-                <div className="h-[3px] w-full bg-gray-100" />
+                {/* top accent line with subtle color */}
+                <div className="h-[3px] w-full bg-gradient-to-r from-emerald-100 via-gray-200 to-emerald-100" />
 
                 {/* body */}
-                <div className="flex flex-col flex-1 px-6 pt-5 pb-6">
+                <div className="flex flex-col flex-1 px-7 pt-4 pb-6">
 
                   {/* name */}
-                  <h3 className="text-lg font-bold text-gray-900 mb-0.5">{plan.name}</h3>
+                  <h3 className="text-xl font-extrabold text-gray-800 mb-1 tracking-tight">{plan.name}</h3>
 
                   {/* fee */}
                   {fee && (
-                    <p className="text-[12px] text-gray-400 mb-3">{fee}</p>
+                    <p className="text-[13px] text-emerald-600/80 font-semibold">{fee}</p>
                   )}
 
                   {/* price */}
-                  <div className="flex items-end gap-1 my-4">
-                    <span className="text-[2.65rem] font-black leading-none text-gray-900 tracking-tight">
+                  <div className="flex items-end gap-1.5 my-4.5">
+                    <span className="text-[2.85rem] font-black leading-none text-gray-900 tracking-tight drop-shadow-sm">
                       {getPriceLabel(plan)}
                     </span>
-                    <span className="text-sm text-gray-400 mb-1.5">/mo</span>
+                    <span className="text-base text-gray-400 mb-2">/mo</span>
                   </div>
 
                   {/* divider */}
-                  <div className="h-px bg-gray-100 mb-5" />
+                  <div className="h-px bg-emerald-100 mb-5" />
 
                   {/* features */}
                   <ul className="space-y-3 flex-1 mb-7">
                     {plan.features.map((f, i) => (
-                      <li key={i} className="flex items-start gap-2.5">
-                        <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-emerald-50 text-emerald-500">
-                          <Check className="w-3 h-3" strokeWidth={3} />
+                      <li key={i} className="flex items-start gap-3">
+                        <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-emerald-600 shadow-sm">
+                          <Check className="w-3 h-3" strokeWidth={2.8} />
                         </span>
-                        <span className="text-[13.5px] leading-snug text-gray-500">{f}</span>
+                        <span className="text-[14px] leading-snug text-gray-700">{f}</span>
                       </li>
                     ))}
                   </ul>
@@ -406,12 +414,12 @@ export default function PricingModal({
                   <button
                     onClick={() => handleSelectPlan(plan)}
                     disabled={btnState.disabled}
-                    className={`group w-full rounded-xl py-3.5 text-sm font-bold transition-all duration-200 cursor-pointer ${
+                    className={`group w-full rounded-xl py-3.5 text-base font-bold transition-all duration-200 cursor-pointer shadow-none ${
                       isCurrent
                         ? "bg-gray-100 text-gray-400 cursor-default"
                         : isProcessingThis
                           ? "bg-gray-800 text-white cursor-wait"
-                          : "bg-gray-900 text-white hover:bg-gray-800 hover:-translate-y-0.5 active:translate-y-0 hover:shadow-md"
+                          : "bg-gradient-to-r from-emerald-500 to-lime-400 text-white hover:from-emerald-600 hover:to-lime-500 hover:-translate-y-0.5 active:translate-y-0 hover:shadow-lg"
                     }`}
                   >
                     {isProcessingThis ? (
@@ -420,7 +428,7 @@ export default function PricingModal({
                         Processing…
                       </span>
                     ) : (
-                      <span className="flex items-center justify-center gap-1.5">
+                      <span className="flex items-center justify-center gap-2">
                         {btnState.text}
                         {!isCurrent && <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5" />}
                       </span>
@@ -436,6 +444,7 @@ export default function PricingModal({
         <p className="pb-6 text-center text-xs text-gray-400">
           Billed monthly · Cancel anytime · Secure payments via Stripe
         </p>
+        </div>
       </div>
 
       {/* Processing overlay */}

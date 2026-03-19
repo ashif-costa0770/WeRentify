@@ -12,8 +12,49 @@ import OTP from "../../models/users/otp.model.js";
 import { sendOtpEmail } from "../../utils/mailer.js";
 import { generateOtp } from "../../utils/opt.js";
 import argon2 from "argon2";
+import Plan from "../../models/plan.model.js";
 
 const RESEND_COOLDOWN_SECONDS = 60;
+
+export const switchToHost = async (req, res) => {
+  try {
+    const userId = req.user?._id;
+    if (!userId) return errorResponse(res, 401, "Unauthorized");
+
+    const basicPlan = await Plan.findOne({ name: "Basic" });
+    if (!basicPlan) return errorResponse(res, 500, "Basic plan is not configured");
+
+    const user = await User.findByIdAndUpdate(
+      userId,
+      { mode: "host", plan: basicPlan._id },
+      { new: true, runValidators: true },
+    ).populate("plan");
+
+    if (!user) return errorResponse(res, 404, "User not found");
+    return successResponse(res, 200, "Switched to host", user);
+  } catch (error) {
+    return errorResponse(res, 400, "Failed to switch to host", error.message);
+  }
+};
+
+export const updateMyMode = async (req, res) => {
+  try {
+    const userId = req.user?._id;
+    if (!userId) return errorResponse(res, 401, "Unauthorized");
+
+    const { mode } = req.body;
+    const user = await User.findByIdAndUpdate(
+      userId,
+      { mode },
+      { new: true, runValidators: true },
+    ).populate("plan");
+
+    if (!user) return errorResponse(res, 404, "User not found");
+    return successResponse(res, 200, "Mode updated", user);
+  } catch (error) {
+    return errorResponse(res, 400, "Failed to update mode", error.message);
+  }
+};
 
 export const updateProfile = async (req, res) => {
   try {

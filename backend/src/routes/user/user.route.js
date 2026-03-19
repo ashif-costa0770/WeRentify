@@ -8,11 +8,14 @@ import {
   verifyPasswordOtpSchema,
   changePasswordSchema,
   updatePlanSchema,
+  updateModeSchema,
 } from "../../validations/user.validation.js";
 import {
   changePassword,
   updateProfile,
   updateMyPlan,
+  switchToHost,
+  updateMyMode,
   sendPasswordChangeOtp,
   verifyPasswordChangeOtp,
   resendPasswordChangeOtp,
@@ -29,6 +32,9 @@ const router = express.Router();
 
 router.put("/profile", protect, uploadAvatar, handleMulterError,  validate(updateProfileSchema), updateProfile);
 router.patch("/plan", protect, validate(updatePlanSchema), updateMyPlan);
+
+router.post("/switch-to-host", protect, switchToHost);
+router.patch("/mode", protect, validate(updateModeSchema), updateMyMode);
 
 //! Change Passwrod
 router.post("/send-otp", protect, validate(sendOtpForPasswordSchema), sendPasswordChangeOtp);
