@@ -37,7 +37,7 @@ router.post("/switch-to-host", protect, switchToHost);
 router.patch("/mode", protect, validate(updateModeSchema), updateMyMode);
 
 //! Change Passwrod
-router.post("/send-otp", protect, validate(sendOtpForPasswordSchema), sendPasswordChangeOtp);
+router.post("/send-otp",protect, validate(sendOtpForPasswordSchema), sendPasswordChangeOtp);
 router.post("/resend-otp", protect, validate(sendOtpForPasswordSchema), resendPasswordChangeOtp);
 router.post("/verify-otp", protect, validate(verifyPasswordOtpSchema), verifyPasswordChangeOtp);
 router.post("/change-password", protect, validate(changePasswordSchema), changePassword);

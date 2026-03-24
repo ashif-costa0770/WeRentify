@@ -141,7 +141,7 @@ export const createUser = async (req, res) => {
   }
 };
 
-/!* LOGIN ENDPOINT */;
+//! Login
 export const login = async (req, res) => {
   try {
     const { firstname, email, password } = req.body;
@@ -177,6 +177,7 @@ export const login = async (req, res) => {
   }
 };
 
+//! Get user profile
 export const getMe = async (req, res) => {
   try {
     const user = await User.findById(req.user._id).populate("plan");
@@ -192,9 +193,125 @@ export const getMe = async (req, res) => {
   }
 };
 
+//! Logout
 export const logout = async (req, res) => {
   res.clearCookie("token");
   return successResponse(res, 200, "Logged out successfully");
+};
+
+//! Forgot Password
+export const sendForgotPasswordOtp = async (req, res) =>{
+  try {
+    const { email } = req.body;
+    if (!email) return errorResponse(res, 400, "Email is required");
+    
+    const user = await User.findOne({email});
+    if (!user) return errorResponse(res, 400, "User not found");
+
+    const otp = generateOtp();
+    const expiresAt = new Date(Date.now() + 2 * 60 * 1000);
+
+    await OTP.deleteMany({email});
+    await OTP.create({email, otp, expiresAt, isVerified: false});
+
+    await sendOtpEmail(email, otp);
+    return successResponse(res, 200, "OTP sent successfully");
+  } catch (error) {
+    console.error("Send Forgot Password OTP Error:", error.message);
+    return errorResponse(res, 400, "Failed to send OTP", error.message);
+    
+  }
+}
+
+//! Forgot Password Otp resend with cooldown
+export const resendForgotPasswordOtp = async (req, res) => {
+  try {
+    const { email } = req.body;
+    if (!email) return errorResponse(res, 400, "Email is required");
+
+    const existingRecord = await OTP.findOne({ email });
+
+    if (!existingRecord)
+      return errorResponse(res, 400, "Request OTP first");
+
+    const now = Date.now();
+    const lastSent = new Date(existingRecord.lastSentAt).getTime();
+    const diffSeconds = Math.floor((now - lastSent) / 1000);
+
+    if (diffSeconds < RESEND_COOLDOWN_SECONDS) {
+      return errorResponse(res, 429, "Please wait before resending OTP", {
+        retryAfter: RESEND_COOLDOWN_SECONDS - diffSeconds,
+      });
+    }
+
+    const newOtp = generateOtp();
+    const newExpiry = new Date(Date.now() + 2 * 60 * 1000);
+
+    existingRecord.otp = newOtp;
+    existingRecord.expiresAt = newExpiry;
+    existingRecord.lastSentAt = new Date();
+    existingRecord.isVerified = false;
+
+    await existingRecord.save();
+
+    await sendOtpEmail(email, newOtp);
+    return successResponse(res, 200, "OTP resent successfully");
+  } catch (err) {
+    return errorResponse(
+      res,
+      400,
+      "Invalid data, resend otp faild",
+      err.message,
+    );
+  }
+};
+
+//! Forgot Password OTP verification
+export const verifyForgotPasswordOtp = async (req, res) => {
+  try {
+    const { email, otp } = req.body;
+    if (!email || !otp) return errorResponse(res, 400, "Email and OTP are required");
+
+    const record = await OTP.findOne({ email, otp });
+    if (!record) return errorResponse(res, 400, "Invalid OTP");
+    if (record.expiresAt < new Date()) return errorResponse(res, 400, "OTP expired");
+
+    record.isVerified = true;
+    await record.save();
+    return successResponse(res, 200, "OTP verified successfully");
+  } catch (err) {
+    return errorResponse(res, 400, "OTP verification failed", err.message);
+  }
+};
+
+//! Forgot Password Change Password
+export const changeForgotPassword = async (req, res) => {
+  try {
+    const { email, password, confirmPassword } = req.body;
+    if (!email || !password || !confirmPassword) return errorResponse(res, 400, "Email, password and confirm password are required");
+
+    const user = await User.findOne({ email });
+    if (!user) return errorResponse(res, 404, "User not found");
+
+    const otpRecord = await OTP.findOne({ email });
+    if (!otpRecord) return errorResponse(res, 400, "OTP not found");
+    if (!otpRecord.isVerified)
+      return errorResponse(res, 400, "OTP not verified");
+
+    const hashedPassword = await argon2.hash(password);
+
+    user.password = hashedPassword;
+    await user.save();
+
+    await OTP.deleteMany({ email });
+
+    return successResponse(res, 200, "Password changed successfully", {
+      _id: user._id,
+      email: user.email,
+    });
+  } catch (err) {
+    return errorResponse(res, 400, "Password change failed", err.message);
+  }
 };
 
 // ! Facebook auth

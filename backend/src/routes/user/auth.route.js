@@ -10,6 +10,10 @@ import {
   logout,
   login,
   facebookAuth,
+  sendForgotPasswordOtp,
+  resendForgotPasswordOtp,
+  verifyForgotPasswordOtp,
+  changeForgotPassword,
 } from "../../controllers/user/auth.controller.js";
 import { protect } from "../../middlewares/auth.middleware.js";
 import validate from "../../middlewares/validate.js";
@@ -27,7 +31,13 @@ router.post("/login", validate(loginSchema), login);
 router.post("/logout", logout);
 router.get("/me", protect, getMe);
 
-//google auth
+//! Forgot Password
+router.post("/forgot-password/send-otp", sendForgotPasswordOtp);
+router.post("/forgot-password/resend-otp", resendForgotPasswordOtp);
+router.post("/forgot-password/verify-otp", verifyForgotPasswordOtp);
+router.post("/forgot-password/reset", changeForgotPassword);
+
+//! Google auth
 router.get("/google", passport.authenticate("google", {
     scope: ["profile", "email"],
   })

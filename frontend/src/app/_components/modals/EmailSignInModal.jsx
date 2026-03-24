@@ -4,6 +4,8 @@ import { loginAPI } from "@/services/auth.service";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
+import { sendForgotPasswordOtpAPI } from "@/services/auth.service";
+import ForgotPasswrodModal from "@/app/_components/modals/ForgotPasswrodModal";
 
 export default function EmailSignInModal({
   open,
@@ -16,11 +18,31 @@ export default function EmailSignInModal({
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-
+  const [isForgotPassword, setIsForgotPassword] = useState(false)
+  const [isSendingOtp, setIsSendingOtp] = useState(false);
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
   const isValidEmail = /\S+@\S+\.\S+/.test(email.trim());
   const isValidPassword = password.trim().length > 0;
 
   if (!open) return null;
+  const handleForgotPassword = async () => {
+    try{
+      setIsSendingOtp(true);
+      setIsForgotPassword(true);
+      await sendForgotPasswordOtpAPI(email);
+      setShowPasswordModal(true);
+      toast.success("OTP sent to your registered email.");
+    }catch(error){
+      const message =
+      error?.response?.data?.message ||
+      error?.response?.data?.error ||
+      "Failed to send OTP";
+    toast.error(message);
+  } finally {
+    setIsSendingOtp(false);
+    setIsForgotPassword(false);
+  }
+  }
 
   const handleLoginSubmit = async (e) => {
     e.preventDefault();
@@ -105,6 +127,14 @@ export default function EmailSignInModal({
               className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl text-gray-700 placeholder-gray-400 focus:outline-none focus:border-indigo-500 transition-colors"
             />
           </div>
+            <button
+              type="button"
+              onClick={handleForgotPassword}
+              disabled={isForgotPassword}
+              className="text-sm cursor-pointer items-center text-indigo-600 font-semibold disabled:opacity-70 disabled:cursor-not-allowed"
+            >
+              {isForgotPassword ? "Sending OTP..." : "Forgot Password"}
+            </button>
 
           <button
             type="submit"
@@ -130,6 +160,12 @@ export default function EmailSignInModal({
           </span>
         </p>
       </div>
+      <ForgotPasswrodModal
+        isOpen={showPasswordModal}
+        onClose={() => setShowPasswordModal(false)}
+        email={email}
+      />
     </div>
+    
   );
 }

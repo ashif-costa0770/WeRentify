@@ -31,6 +31,12 @@ export const getMe = () =>
 // LOGOUT
 export const logout = () => api.post("/auth/logout");
 
+// FORGOT PASSWORD
+export const sendForgotPasswordOtpAPI = (email) => api.post("/auth/forgot-password/send-otp", { email });
+export const resendForgotPasswordOtpAPI = (email) => api.post("/auth/forgot-password/resend-otp", { email });
+export const verifyForgotPasswordOtpAPI = (email, otp) => api.post("/auth/forgot-password/verify-otp", { email, otp });
+export const changeForgotPasswordAPI = (email, password, confirmPassword) => api.post("/auth/forgot-password/reset", { email, password, confirmPassword });
+
 
 // Facebook Login
 export const facebookAuth = (accessToken ) =>{

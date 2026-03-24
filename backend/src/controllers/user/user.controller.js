@@ -141,12 +141,10 @@ export const sendPasswordChangeOtp = async (req, res) => {
 export const resendPasswordChangeOtp = async (req, res) => {
   try {
     const email = req.user?.email;
-    console.log(email);
-
     const existingRecord = await OTP.findOne({ email });
 
     if (!existingRecord)
-      return res.status(400).json({ message: "Request OTP first" });
+      return errorResponse(res, 400, "Request OTP first");
 
     const now = Date.now();
     const lastSent = new Date(existingRecord.lastSentAt).getTime();
@@ -195,7 +193,7 @@ export const verifyPasswordChangeOtp = async (req, res) => {
     record.isVerified = true;
     await record.save();
 
-    return successResponse(res, 200, "OTP verified successfully");
+    return successResponse(res, 200,  "OTP verified successfully");
   } catch (err) {
     return errorResponse(res, 400, "OTP verification failed", err.message);
   }
