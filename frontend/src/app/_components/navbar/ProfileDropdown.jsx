@@ -107,7 +107,7 @@ export default function ProfileDropdown({
             <div className="flex items-center gap-1 text-xs text-gray-500 mt-1">
               <Home className="text-purple-400 w-4 h-4" />
               <span className="text-gray-500 text-xs font-medium">{displayMode.charAt(0).toUpperCase() + displayMode.slice(1)}</span>
-              <span className="text-gray-500 text-xs font-normal">Mode</span>
+              <span className="text-gray-500 text-xs font-medium">Mode</span>
             </div>
           </div>
 

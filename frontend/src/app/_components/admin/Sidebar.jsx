@@ -12,6 +12,7 @@ const navItems = [
   { label: "Bookings", href: "/admin/bookings" },
   { label: "Posts", href: "/admin/posts" },
   { label: "Plans", href: "/admin/plans" },
+  { label: "Help", href: "/admin/help" },
 ];
 
 export default function Sidebar() {

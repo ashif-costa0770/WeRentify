@@ -1,7 +1,7 @@
 import "dotenv/config";
 import express from "express";
-import http from "http";                  
-import { Server } from "socket.io";      
+import http from "http";
+import { Server } from "socket.io";
 
 import cookieParser from "cookie-parser";
 import cors from "cors";
@@ -11,7 +11,7 @@ import session from "express-session";
 
 import passport from "./config/passport.js";
 import { connectDB } from "./config/index.js";
-import { initSocket } from "./config/socket.js";   
+import { initSocket } from "./config/socket.js";
 
 import listingRoutes from "./routes/listing/listing.route.js";
 import serviceRoutes from "./routes/service/service.route.js";
@@ -34,6 +34,9 @@ import bookingRoutes from "./routes/booking.route.js";
 import "./jobs/bookingReminderCron.js";
 import reviewRoutes from "./routes/review.route.js";
 import geocodeRoutes from "./routes/geocode.route.js";
+import helpRoutes from "./routes/help/help.route.js";
+import HelpCategory from "./models/help/helpCategory.model.js";
+import FaqItem from "./models/help/faqItem.model.js";
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -47,7 +50,6 @@ const configuredOrigins = [
   "http://localhost:3000",
   "https://localhost:3000",
 ].filter(Boolean);
-
 
 /* MIDDLEWARES */
 /* -------------------------------------------------- */
@@ -66,7 +68,7 @@ app.use(
       return callback(new Error(`CORS blocked for origin: ${origin}`));
     },
     credentials: true,
-  })
+  }),
 );
 
 app.use(express.json());
@@ -81,10 +83,10 @@ app.use(
     saveUninitialized: false,
     cookie: {
       httpOnly: true,
-      secure: true,        // REQUIRED for HTTPS
-      sameSite: "none",    // REQUIRED for cross-origin
-    }
-  })
+      secure: true, // REQUIRED for HTTPS
+      sameSite: "none", // REQUIRED for cross-origin
+    },
+  }),
 );
 
 app.use(passport.initialize());
@@ -109,6 +111,7 @@ app.use("/api/plans", planRoutes);
 app.use("/api/bookings", bookingRoutes);
 app.use("/api/reviews", reviewRoutes);
 app.use("/api/geocode", geocodeRoutes);
+app.use("/api/help", helpRoutes);
 
 /* HEALTH */
 /* -------------------------------------------------- */
@@ -127,7 +130,6 @@ app.get("/", (req, res) => {
     message: "Welcome to Rental Marketplace API",
   });
 });
-
 
 /* ERROR HANDLERS */
 /* -------------------------------------------------- */
@@ -149,7 +151,6 @@ app.use((err, req, res, next) => {
   });
 });
 
-
 /* DATABASE */
 await connectDB();
 
@@ -164,10 +165,7 @@ try {
 
 /* Backfill participantsKey for older conversation documents */
 const missingParticipantsKey = await Conversation.find({
-  $or: [
-    { participantsKey: { $exists: false } },
-    { participantsKey: "" },
-  ],
+  $or: [{ participantsKey: { $exists: false } }, { participantsKey: "" }],
 })
   .select("_id participants")
   .lean();
@@ -176,15 +174,16 @@ if (missingParticipantsKey.length > 0) {
   const ops = missingParticipantsKey
     .filter(
       (item) =>
-        Array.isArray(item.participants) &&
-        item.participants.length === 2,
+        Array.isArray(item.participants) && item.participants.length === 2,
     )
     .map((item) => ({
       updateOne: {
         filter: { _id: item._id },
         update: {
           $set: {
-            participantsKey: Conversation.buildParticipantsKey(item.participants),
+            participantsKey: Conversation.buildParticipantsKey(
+              item.participants,
+            ),
           },
         },
       },
@@ -199,13 +198,13 @@ await Promise.all([
   Conversation.syncIndexes(),
   Message.syncIndexes(),
   Service.syncIndexes(),
+  HelpCategory.syncIndexes(),
+  FaqItem.syncIndexes(),
 ]);
-
 
 /* ✅ HTTP SERVER (REQUIRED FOR SOCKET.IO) */
 /* -------------------------------------------------- */
 const server = http.createServer(app);
-
 
 /* ✅ SOCKET.IO INITIALIZATION */
 /* -------------------------------------------------- */
@@ -230,7 +229,6 @@ server.listen(PORT, () => {
 ╚════════════════════════════════════════════╝
   `);
 });
-
 
 /* PROCESS SAFETY */
 /* -------------------------------------------------- */

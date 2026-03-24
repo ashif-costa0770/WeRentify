@@ -150,7 +150,7 @@ export default function PricingModal({
         </button>
 
         {/* Header */}
-        <div className="px-10 pt-5 pb-7 text-center">
+        <div className="px-10 pt-6 pb-7 text-center">
           <div className="inline-flex items-center justify-center rounded-full border border-indigo-100 bg-indigo-50/70 px-4 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-indigo-600 mb-3 shadow-sm">
             Pricing for serious hosts
           </div>
@@ -199,7 +199,7 @@ export default function PricingModal({
               return (
                 <div
                   key={planId}
-                  className="relative flex flex-col rounded-[22px] overflow-hidden
+                  className="relative shadow-sm  flex flex-col rounded-[22px] overflow-hidden
                     bg-gradient-to-br from-[#0f0c29] via-[#302b63] to-[#24243e]
                     shadow-[0_20px_60px_rgba(99,102,241,0.4)] md:-translate-y-2.5 md:scale-[1.02] z-10"
                 >
@@ -288,7 +288,7 @@ export default function PricingModal({
               return (
                 <div
                   key={planId}
-                  className="relative flex flex-col rounded-[22px] overflow-hidden
+                  className="relative shadow-sm  flex flex-col rounded-[22px] overflow-hidden
                     bg-gradient-to-br from-[#1a1208] via-[#2a1f0e] to-[#1c1710]
                     shadow-[0_16px_50px_rgba(180,130,30,0.25)] border border-amber-900/30"
                 >
@@ -419,7 +419,7 @@ export default function PricingModal({
                         ? "bg-gray-100 text-gray-400 cursor-default"
                         : isProcessingThis
                           ? "bg-gray-800 text-white cursor-wait"
-                          : "bg-gradient-to-r from-emerald-500 to-lime-400 text-white hover:from-emerald-600 hover:to-lime-500 hover:-translate-y-0.5 active:translate-y-0 hover:shadow-lg"
+                          : "bg-emerald-500 text-white hover:bg-emerald-600 hover:-translate-y-0.5 active:translate-y-0 hover:shadow-lg"
                     }`}
                   >
                     {isProcessingThis ? (
