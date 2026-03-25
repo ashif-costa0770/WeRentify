@@ -126,15 +126,20 @@ export default function EmailSignInModal({
               placeholder="Enter your password"
               className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl text-gray-700 placeholder-gray-400 focus:outline-none focus:border-indigo-500 transition-colors"
             />
+            <div className="flex justify-start mb-6 mt-2  ps-1">
+              <button
+                type="button"
+                onClick={handleForgotPassword}
+                disabled={isForgotPassword}
+                className="text-sm cursor-pointer items-center text-indigo-600 font-semibold disabled:opacity-70 disabled:cursor-not-allowed hover:underline"
+              >
+                {isForgotPassword ? "Sending OTP..." : "Forgot Password?"}
+              </button>
+            </div>
+            
           </div>
-            <button
-              type="button"
-              onClick={handleForgotPassword}
-              disabled={isForgotPassword}
-              className="text-sm cursor-pointer items-center text-indigo-600 font-semibold disabled:opacity-70 disabled:cursor-not-allowed"
-            >
-              {isForgotPassword ? "Sending OTP..." : "Forgot Password"}
-            </button>
+            {/* Forgot Password button placed at the top left before the title */}
+            
 
           <button
             type="submit"

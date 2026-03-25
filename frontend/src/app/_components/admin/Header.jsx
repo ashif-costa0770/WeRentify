@@ -1,6 +1,19 @@
 "use client";
 
+import dynamic from "next/dynamic";
+import { Globe } from "lucide-react";
+import { useState } from "react";
+
+import GoogleTranslate from "@/app/_components/navbar/GoogleTranslate";
+
+const LanguageCurrencyModal = dynamic(
+  () => import("@/app/_components/modals/LanguageCurrencyModal"),
+  { ssr: false },
+);
+
 export default function Header() {
+  const [showLang, setShowLang] = useState(false);
+
   return (
     <header className="h-20 bg-gradient-to-r from-indigo-600 via-violet-600 to-fuchsia-500 text-white shadow-md px-5 sm:px-6">
       <div className="h-full flex items-center justify-between gap-4">
@@ -35,6 +48,17 @@ export default function Header() {
       </div>
 
         <div className="flex items-center gap-3 sm:gap-4">
+          <GoogleTranslate />
+
+          <button
+            type="button"
+            aria-label="Language and currency"
+            onClick={() => setShowLang(true)}
+            className="rounded-full p-2.5 hover:bg-white/20 transition-colors cursor-pointer"
+          >
+            <Globe className="h-5 w-5" />
+          </button>
+
           <button
             type="button"
             aria-label="Notifications"
@@ -61,6 +85,10 @@ export default function Header() {
           </div>
         </div>
       </div>
+
+      {showLang && (
+        <LanguageCurrencyModal open={showLang} onClose={() => setShowLang(false)} />
+      )}
     </header>
   );
 }

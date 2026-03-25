@@ -15,6 +15,7 @@ import { getLocationSuggestions as getListingLocationSuggestions } from "@/servi
 import { getLocationSuggestions as getServiceLocationSuggestions } from "@/services/services.service";
 import { getPostLocationSuggestions } from "@/services/post.service";
 import api from "@/lib/api";
+import GoogleTranslate from "./GoogleTranslate";
 
 const SignUpModal = dynamic(() => import("@/app/_components/modals/SignUpModal"), {
   ssr: false,
@@ -240,7 +241,7 @@ export default function Navbar() {
   return (
     <header>
       {" "}
-      <div className="max-w-7xl mx-auto pb-1 px-4">
+      <div className="max-w-7xl mx-auto pe-3">
         {/* Desktop & Tablet Layout - logo left, icon tabs, search + actions right */}
         <div className="hidden md:flex items-center gap-4">
           {/* Left: Logo */}
@@ -384,6 +385,7 @@ export default function Navbar() {
 
           {/* Right: Actions - Desktop */}
           <div className="flex items-center gap-2 lg:gap-4 basis-[160px] shrink-0 grow-0 justify-end">
+            <GoogleTranslate />
             {isLogin ? (
               <>
                 <button

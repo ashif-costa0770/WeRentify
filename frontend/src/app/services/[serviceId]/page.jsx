@@ -324,7 +324,7 @@ export default function ServiceDetailsPage() {
 
   if (error || !service) {
     return (
-      <div className="mx-auto w-full max-w-4xl px-4 py-10">
+      <div className="mx-auto w-full max-w-6xl px-4 py-10">
         <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
           {error || "Service not found"}
         </div>
@@ -340,106 +340,131 @@ export default function ServiceDetailsPage() {
         </Suspense>
       </div>
 
-      <div className="mx-auto w-full max-w-5xl px-4 py-10 mb-10">
-        <div className="rounded-3xl">
-          <div className="flex-col items-start gap-4">
-            <div className="mb-8 flex h-25 w-25 items-center justify-center overflow-hidden rounded-xl">
-              {service.image ? (
-                <Image
-                  src={service.image}
-                  alt={service.name}
-                  height={200}
-                  width={200}
-                  className="h-full w-full object-contain"
-                />
+      <div className="mx-auto w-full max-w-7xl px-4 py-10 mb-10">
+        <div className="grid grid-cols-1 gap-8 lg:grid-cols-[6fr_6fr] lg:items-start">
+          {/* Left: Service details */}
+          <div className="overflow-hidden rounded-lg border border-gray-100 bg-white shadow-sm">
+            {/* Unified card: image (top) + details (bottom) */}
+            <div>
+              {service.imageUrl ? (
+                <div className="relative h-[180px] w-full overflow-hidden sm:h-[200px] lg:h-[320px]">
+                  <Image
+                    src={service.imageUrl}
+                    alt={service.name}
+                    fill
+                    sizes="(max-width: 1024px) 100vw, 65vw"
+                    className="object-fill"
+                    priority
+                  />
+                </div>
               ) : (
-                <span className="text-5xl">Service</span>
+                <div className="flex h-[180px] items-center justify-center bg-gray-50 px-4 sm:h-[200px] lg:h-[230px]">
+                  <span className="text-4xl font-semibold text-gray-400">Service</span>
+                </div>
               )}
             </div>
 
-            <div className="px-2">
-              <h1 className="text-2xl font-bold text-gray-900">{service.name}</h1>
-              <p className="text-gray-600">
-                by <span className="font-medium">{service.provider}</span>
+            <div className="p-6">
+              <h1 className="text-2xl font-bold tracking-tight text-gray-900 md:text-3xl">
+                {service.name}
+              </h1>
+              <p className="mt-1 text-md text-gray-600">
+                by <span className="font-medium text-gray-800">{service.provider}</span>
               </p>
 
-              <div className="mt-6 flex flex-wrap items-center justify-between gap-4 text-md text-gray-600">
-                <div className="flex items-center gap-1">
-                  <Star size={16} className="fill-yellow-400 text-yellow-400" />
-                  <span className="font-semibold text-gray-900">{service.rating}</span>
-                  <span>({service.reviewCount} reviews)</span>
-                </div>
+              <div
+                className="mt-4 text-md leading-6 text-gray-600"
+                dangerouslySetInnerHTML={{ __html: service.description }}
+              />
 
-                <div className="flex items-center gap-1">
-                  <MapPin size={16} />
-                  <span>{service.distance} miles away</span>
+              {service.hourlyRate !== undefined &&
+              service.hourlyRate !== null &&
+              Number(service.hourlyRate) > 0 ? (
+                <div className="mt-4 flex items-center gap-2">
+                  <p className="text-3xl font-extrabold text-orange-600">
+                    ${service.hourlyRate}/hour
+                  </p>
                 </div>
+              ) : null}
 
-                {service.verified ? (
-                  <div className="flex items-center gap-1 text-green-600">
-                    <CheckCircle size={16} />
-                    <span className="font-medium">Verified Provider</span>
+
+              <div className="mt-4 rounded-lg py-3">
+                <div className="flex flex-wrap items-center justify-between gap-3 text-md text-gray-600">
+                  <div className="flex items-center gap-1">
+                    <Star
+                      size={16}
+                      className="fill-yellow-400 text-yellow-400"
+                    />
+                    <span className="font-semibold text-gray-900">
+                      {service.rating ?? 0}
+                    </span>
+                    <span className="text-gray-600">
+                      ({service.reviewCount ?? totalReviews} reviews)
+                    </span>
                   </div>
-                ) : (
-                  <div className="flex items-center gap-1 text-red-600">
-                    <XCircle size={16} />
-                    <span className="font-medium">Not Verified</span>
+
+                  <div className="flex items-center gap-2">
+                    <MapPin size={16} className="text-gray-500" />
+                    <span>{service.distance} miles away</span>
                   </div>
-                )}
+
+                  {service.verified ? (
+                    <div className="flex items-center gap-2 text-green-700">
+                      <CheckCircle size={16} />
+                      <span className="font-medium">Verified</span>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-2 text-rose-700">
+                      <XCircle size={16} />
+                      <span className="font-medium">Not Verified</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <button
+                  onClick={handleOpenBooking}
+                  disabled={isOwnService}
+                  title={
+                    isOwnService ? "You cannot book your own service" : undefined
+                  }
+                  className={`flex items-center justify-center gap-2 rounded-xl px-6 py-4 font-semibold text-white transition ${
+                    isOwnService
+                      ? "cursor-not-allowed bg-slate-300"
+                      : "cursor-pointer bg-linear-to-r from-indigo-500 to-pink-500 hover:opacity-90"
+                  }`}
+                >
+                  <Calendar size={18} />
+                  Book Now
+                </button>
+
+                <button
+                  onClick={handleContactProvider}
+                  disabled={isOwnService}
+                  title={
+                    isOwnService ? "You cannot contact your own service" : undefined
+                  }
+                  className={`flex items-center justify-center gap-2 rounded-xl border-2 px-6 py-4 font-semibold transition ${
+                    isOwnService
+                      ? "cursor-not-allowed border-slate-300 text-slate-400"
+                      : "cursor-pointer border-orange-500 text-orange-600 hover:bg-orange-50"
+                  }`}
+                >
+                  <MessageCircle size={18} />
+                  Contact Provider
+                </button>
               </div>
             </div>
           </div>
 
-          <div className="mt-6 rounded-2xl bg-orange-50 p-5">
-            <p className="text-3xl font-extrabold text-orange-600">
-              ${service.hourlyRate}/hour
-            </p>
-            <div
-              className="mt-1 text-sm text-gray-700"
-              dangerouslySetInnerHTML={{ __html: service.description }}
-            />
-          </div>
-
-          <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <button
-              onClick={handleOpenBooking}
-              disabled={isOwnService}
-              title={isOwnService ? "You cannot book your own service" : undefined}
-              className={`flex items-center justify-center gap-2 rounded-xl px-6 py-4 font-semibold text-white transition ${
-                isOwnService
-                  ? "cursor-not-allowed bg-slate-300"
-                  : "cursor-pointer bg-linear-to-r from-indigo-500 to-pink-500 hover:opacity-90"
-              }`}
-            >
-              <Calendar size={18} />
-              Book Now
-            </button>
-
-            <button
-              onClick={handleContactProvider}
-              disabled={isOwnService}
-              title={isOwnService ? "You cannot contact your own service" : undefined}
-              className={`flex items-center justify-center gap-2 rounded-xl border-2 px-6 py-4 font-semibold transition ${
-                isOwnService
-                  ? "cursor-not-allowed border-slate-300 text-slate-400"
-                  : "cursor-pointer border-orange-500 text-orange-600 hover:bg-orange-50"
-              }`}
-            >
-              <MessageCircle size={18} />
-              Contact Provider
-            </button>
-          </div>
-
-          <section className="mt-8 border-b border-gray-200 pt-6 mb-10">
-            <div className="mb-4">
-              <h2 className="text-xl font-bold text-gray-900 mb-2">
-                Reviews Summary
-              </h2>
+          {/* Right: Reviews */}
+          <div className="overflow-hidden rounded-lg border border-gray-100 bg-white shadow-sm lg:sticky lg:top-[88px]">
+            <div className="border-b border-gray-100 bg-gray-50/40 px-6 py-5">
               <div className="flex flex-wrap items-center justify-between gap-3">
-                <ReviewSummary
-                  rating={service.rating ?? 0}
-                  count={service.reviewCount ?? totalReviews}
-                />
+                <h2 className="text-xl font-bold text-gray-900">
+                  Reviews & Ratings
+                </h2>
 
                 {canAddReview && (
                   <button
@@ -455,122 +480,131 @@ export default function ServiceDetailsPage() {
                   </button>
                 )}
               </div>
+
+              <div className="mt-4">
+                <ReviewSummary
+                  rating={service.rating ?? 0}
+                  count={service.reviewCount ?? totalReviews}
+                />
+              </div>
             </div>
 
-            {reviewsLoading ? (
-              <div className="flex items-center gap-2 text-sm text-gray-600">
-                <Loader2 className="size-4 animate-spin text-indigo-600" />
-                <span>Loading reviews...</span>
-              </div>
-            ) : reviewsError ? (
-              <p className="text-sm text-red-600">{reviewsError}</p>
-            ) : reviews.length === 0 ? (
-              <p className="text-sm text-gray-600">
-                No reviews yet.{" "}
-                {canAddReview
-                  ? "Be the first to share your experience."
-                  : "Bookings must be completed before leaving a review."}
-              </p>
-            ) : (
-              <div className="space-y-4">
-                {reviews.map((review) => {
-                  const author = review.author || {};
-                  const fullName =
-                    `${author.firstname || ""} ${author.lastname || ""}`.trim() ||
-                    author.email ||
-                    "Guest";
-                  const initial = fullName.charAt(0).toUpperCase();
-                  const isOwnReview =
-                    user?._id &&
-                    review.author &&
-                    String(
-                      typeof review.author === "string"
-                        ? review.author
-                        : review.author._id || review.author.id,
-                    ) === String(user._id);
+            <div className="px-6 py-5">
+              {reviewsLoading ? (
+                <div className="flex items-center gap-2 text-sm text-gray-600">
+                  <Loader2 className="size-4 animate-spin text-indigo-600" />
+                  <span>Loading reviews...</span>
+                </div>
+              ) : reviewsError ? (
+                <p className="text-sm text-red-600">{reviewsError}</p>
+              ) : reviews.length === 0 ? (
+                <p className="text-sm text-gray-600">
+                  No reviews yet.{" "}
+                  {canAddReview
+                    ? "Be the first to share your experience."
+                    : "Bookings must be completed before leaving a review."}
+                </p>
+              ) : (
+                <div className="max-h-[55vh] space-y-4 overflow-y-auto pr-2 sm:max-h-[65vh]">
+                  {reviews.map((review) => {
+                    const author = review.author || {};
+                    const fullName =
+                      `${author.firstname || ""} ${author.lastname || ""}`.trim() ||
+                      author.email ||
+                      "Guest";
+                    const initial = fullName.charAt(0).toUpperCase();
+                    const isOwnReview =
+                      user?._id &&
+                      review.author &&
+                      String(
+                        typeof review.author === "string"
+                          ? review.author
+                          : review.author._id || review.author.id,
+                      ) === String(user._id);
 
-                  return (
-                    <article
-                      key={review._id}
-                      className="rounded-2xl border border-gray-100 bg-white px-5 py-3 shadow-sm"
-                    >
-                      <div className="flex items-start gap-3">
-                        <div className="flex-1">
-                          <div className="flex flex-wrap items-center justify-between gap-2">
-                            <div className="flex flex-wrap items-center justify gap-3">
-                              <div className="flex h-9 w-9 items-center justify-center rounded-full bg-indigo-600 text-sm font-semibold text-white">
-                                {initial || "U"}
-                              </div>
-                              <div>
-                                <p className="text-sm font-semibold text-gray-800">
-                                  {fullName}
-                                </p>
-                                {review.createdAt && (
-                                  <p className="text-[12px] text-gray-600 font-medium">
-                                    {timeAgo(review.createdAt)}
+                    return (
+                      <article
+                        key={review._id}
+                        className="rounded-lg border border-gray-100 bg-white px-5 py-3 shadow-sm"
+                      >
+                        <div className="flex items-start gap-3">
+                          <div className="flex-1">
+                            <div className="flex flex-wrap items-center justify-between gap-2">
+                              <div className="flex flex-wrap items-center justify gap-3">
+                                <div className="flex h-9 w-9 items-center justify-center rounded-full bg-indigo-600 text-sm font-semibold text-white">
+                                  {initial || "U"}
+                                </div>
+                                <div>
+                                  <p className="text-sm font-semibold text-gray-800">
+                                    {fullName}
                                   </p>
-                                )}
+                                  {review.createdAt && (
+                                    <p className="text-[12px] font-medium text-gray-600">
+                                      {timeAgo(review.createdAt)}
+                                    </p>
+                                  )}
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-1">
+                                {Array.from({ length: 5 }).map((_, index) => {
+                                  const value = index + 1;
+                                  const isActive =
+                                    Number(review.rating || 0) >= value;
+                                  return (
+                                    <Star
+                                      key={value}
+                                      size={16}
+                                      className={
+                                        isActive
+                                          ? "fill-yellow-400 text-yellow-400"
+                                          : "text-gray-200"
+                                      }
+                                    />
+                                  );
+                                })}
+                                <span className="ml-1 text-sm font-medium text-gray-700">
+                                  {Number(review.rating || 0).toFixed(1)}
+                                </span>
                               </div>
                             </div>
-                            <div className="flex items-center gap-1">
-                              {Array.from({ length: 5 }).map((_, index) => {
-                                const value = index + 1;
-                                const isActive =
-                                  Number(review.rating || 0) >= value;
-                                return (
-                                  <Star
-                                    key={value}
-                                    size={16}
-                                    className={
-                                      isActive
-                                        ? "fill-yellow-400 text-yellow-400"
-                                        : "text-gray-200"
-                                    }
-                                  />
-                                );
-                              })}
-                              <span className="ml-1 text-sm font-medium text-gray-700">
-                                {Number(review.rating || 0).toFixed(1)}
-                              </span>
-                            </div>
+
+                            {review.comment && (
+                              <p className="mt-2 rounded-xl px-2 py-1.5 text-[14px] font-medium leading-6 text-gray-700">
+                                {review.comment}
+                              </p>
+                            )}
+
+                            {isOwnReview && (
+                              <div className="mt-3 flex justify-end gap-2">
+                                <button
+                                  type="button"
+                                  onClick={() => handleOpenEditReview(review)}
+                                  className="cursor-pointer inline-flex items-center gap-1 rounded-full border border-indigo-100 bg-indigo-50 px-3 py-1 text-[11px] font-semibold text-indigo-700 hover:bg-indigo-100 hover:border-indigo-200"
+                                  title="Edit review"
+                                >
+                                  <Edit3 size={13} />
+                                  <span>Edit</span>
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => setDeleteReviewTarget(review)}
+                                  className="cursor-pointer inline-flex items-center gap-1 rounded-full border border-rose-100 bg-rose-50 px-3 py-1 text-[11px] font-semibold text-rose-700 hover:bg-rose-100 hover:border-rose-200"
+                                  title="Delete review"
+                                >
+                                  <Trash2 size={13} />
+                                  <span>Delete</span>
+                                </button>
+                              </div>
+                            )}
                           </div>
-
-                          {review.comment && (
-                            <p className="mt-2 text-[14px] text-gray-700  rounded-xl px-2 py-1.5 font-medium leading-6">
-                              {review.comment}
-                            </p>
-                          )}
-
-                          {isOwnReview && (
-                            <div className="mt-3 flex justify-end gap-2">
-                              <button
-                                type="button"
-                                onClick={() => handleOpenEditReview(review)}
-                                className="cursor-pointer inline-flex items-center gap-1 rounded-full border border-indigo-100 bg-indigo-50 px-3 py-1 text-[11px] font-semibold text-indigo-700 hover:bg-indigo-100 hover:border-indigo-200"
-                                title="Edit review"
-                              >
-                                <Edit3 size={13} />
-                                <span>Edit</span>
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => setDeleteReviewTarget(review)}
-                                className="cursor-pointer inline-flex items-center gap-1 rounded-full border border-rose-100 bg-rose-50 px-3 py-1 text-[11px] font-semibold text-rose-700 hover:bg-rose-100 hover:border-rose-200"
-                                title="Delete review"
-                              >
-                                <Trash2 size={13} />
-                                <span>Delete</span>
-                              </button>
-                            </div>
-                          )}
                         </div>
-                      </div>
-                    </article>
-                  );
-                })}
-              </div>
-            )}
-          </section>
+                      </article>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          </div>
         </div>
       </div>
 
