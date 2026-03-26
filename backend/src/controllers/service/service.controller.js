@@ -198,7 +198,6 @@ export const getAllFeaturedServices = async (req, res) => {
     const {location} = req.query;
     const filter = {
       isFeatured: true,
-      featuredUntil: { $gt: new Date() },
       status: "active",
     }
 

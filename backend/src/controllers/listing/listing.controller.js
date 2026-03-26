@@ -110,7 +110,6 @@ export const getAllListings = async (req, res) => {
   try {
     const { location } = req.query;
 
-    // Base filter (your existing conditions)
     const filter = {
       isFeatured: { $ne: true },
       status: "active",
@@ -152,7 +151,6 @@ export const getAllFeaturedListings = async (req, res) => {
     // Base filter (your existing conditions)
     const filter = {
       isFeatured: true,
-      featuredUntil: { $gt: new Date() },
       status: "active",
     };
 
@@ -571,4 +569,3 @@ export const getLocationSuggestions = async (req, res) => {
     return errorResponse(res, 500, "Failed to fetch location suggestions", error.message);
   }
 };
-

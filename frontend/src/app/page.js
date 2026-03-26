@@ -126,6 +126,8 @@ export default function ListingPage() {
     try {
       const res = await getFeaturedListings(loc ? { location: loc } : {});
       const data =
+        res?.data?.data?.listings ??
+        res?.data?.listings ??
         res?.data?.data ??
         res?.data ??
         [];
