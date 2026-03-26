@@ -207,10 +207,35 @@
 }
 
 /* Google Translate: hide injected chrome; translation still applies to content.
-   JS also removes translate iframes (see `installGoogleTranslateBannerHider`). */
-body > iframe.goog-te-banner-frame,
-body > iframe.goog-te-menu-frame,
-body > iframe.goog-te-ftab-frame,
+   JS + early script also collapse UI (see `installGoogleTranslateBannerHider`, `googleTranslateEarlyScript`).
+   Toolbar nodes are direct children of `body`; `#google_translate_element` is nested in the app, so these rules do not hit it. */
+body > .skiptranslate {
+  display: none !important;
+  visibility: hidden !important;
+  height: 0 !important;
+  max-height: 0 !important;
+  min-height: 0 !important;
+  overflow: hidden !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  pointer-events: none !important;
+  border: none !important;
+  opacity: 0 !important;
+}
+
+body > [class*="VIpgJd"] {
+  display: none !important;
+  visibility: hidden !important;
+  height: 0 !important;
+  max-height: 0 !important;
+  overflow: hidden !important;
+  pointer-events: none !important;
+  opacity: 0 !important;
+}
+
+iframe.goog-te-banner-frame,
+iframe.goog-te-menu-frame,
+iframe.goog-te-ftab-frame,
 body > iframe.skiptranslate.goog-te-banner-frame {
   display: none !important;
   visibility: hidden !important;
@@ -220,6 +245,31 @@ body > iframe.skiptranslate.goog-te-banner-frame {
   overflow: hidden !important;
   margin: 0 !important;
   border: none !important;
+  pointer-events: none !important;
+  clip-path: inset(100%) !important;
+  position: absolute !important;
+  left: -9999px !important;
+}
+
+/* Toolbar wrapper when the iframe is nested (newer Translate builds). */
+body > div:has(> iframe.goog-te-banner-frame),
+body > div:has(> iframe.goog-te-menu-frame) {
+  display: none !important;
+  visibility: hidden !important;
+  height: 0 !important;
+  max-height: 0 !important;
+  overflow: hidden !important;
+  pointer-events: none !important;
+}
+
+/* Fallback when class names omit `goog-te-*` but the iframe is clearly the toolbar host. */
+iframe.skiptranslate[src*="translate.google.com"] {
+  display: none !important;
+  visibility: hidden !important;
+  height: 0 !important;
+  width: 0 !important;
+  max-height: 0 !important;
+  overflow: hidden !important;
   pointer-events: none !important;
   clip-path: inset(100%) !important;
   position: absolute !important;
@@ -239,6 +289,7 @@ html.translated-ltr,
 html.translated-rtl {
   margin-top: 0 !important;
   padding-top: 0 !important;
+  top: 0 !important;
 }
 
 /* Floating “original text” tooltip on hover */

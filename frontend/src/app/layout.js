@@ -1,12 +1,16 @@
 import "./globals.css";
 import Footer from "@/app/_components/footer/Footer";
 import { UserProvider } from "@/context/UserContext";
+import { googleTranslateEarlyScript } from "@/lib/googleTranslateEarlyScript";
 import { Toaster } from "sonner";
 import Script from "next/script";
 
 export const metadata = {
   title: "WeRentify",
   description: "Borrow what you need. Lend what you don't.",
+  other: {
+    google: "notranslate",
+  },
 };
 
 export default function RootLayout({ children }) {
@@ -16,8 +20,13 @@ export default function RootLayout({ children }) {
     process.env.NEXT_PUBLIC_FACEBOOK_API_VERSION || "v22.0";
 
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body suppressHydrationWarning>
+        <Script
+          id="werentify-gt-chrome-hide"
+          strategy="beforeInteractive"
+          dangerouslySetInnerHTML={{ __html: googleTranslateEarlyScript }}
+        />
         <UserProvider>
           <main>
             {children}

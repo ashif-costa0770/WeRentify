@@ -114,7 +114,7 @@ export default function PostCard({
       />
 
       {/* Meta */}
-      <div className="flex flex-wrap items-center gap-1.5 text-[11px] mb-4">
+      <div className="flex flex-wrap items-center gap-4 text-[11px] mb-4">
         <span className="bg-gray-100 px-2 py-1 rounded-full flex items-center gap-1">
           📍 {post.location}
         </span>
@@ -125,11 +125,7 @@ export default function PostCard({
 
         <span className="bg-green-100 text-green-700 px-2 py-1 rounded-full font-semibold">
           💰 {post.budget}
-        </span>
-
-        <span className="bg-blue-100 text-blue-700 px-2 py-1 rounded-full font-semibold">
-          📍 {post.distance} mi
-        </span>
+        </span>       
       </div>
 
       {/* Footer */}
