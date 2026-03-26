@@ -33,11 +33,18 @@ import {
   getBookingDetailsByAdmin,
   toggleFeaturedListingByAdmin,
   toggleFeaturedServiceByAdmin,
-} from "../controllers/admin.controller.js";
-import validate from "../middlewares/validate.js";
-import { adminLoginSchema } from "../validations/admin.validation.js";
-import { createPlanSchema, updatePlanSchema } from "../validations/plan.validation.js";
-import { verifyAdmin } from "../middlewares/admin.middleware.js";
+  updateAdminCredentials,
+} from "../../controllers/admin/admin.controller.js";
+import validate from "../../middlewares/validate.js";
+import {
+  adminLoginSchema,
+  updateAdminCredentialsSchema,
+} from "../../validations/admin.validation.js";
+import {
+  createPlanSchema,
+  updatePlanSchema,
+} from "../../validations/plan.validation.js";
+import { verifyAdmin } from "../../middlewares/admin.middleware.js";
 
 const router = express.Router();
 
@@ -74,13 +81,27 @@ router.delete("/posts/:postId", verifyAdmin, deletePostByAdmin);
 //bookings
 router.get("/bookings", verifyAdmin, getAdminBookings);
 router.get("/bookings/:bookingId", verifyAdmin, getBookingDetailsByAdmin);
-router.patch("/bookings/:bookingId/status", verifyAdmin, updateBookingStatusByAdmin);
+router.patch(
+  "/bookings/:bookingId/status",
+  verifyAdmin,
+  updateBookingStatusByAdmin,
+);
 
 //get all plans
 router.get("/plans", verifyAdmin, getAllPlansByAdmin);
-router.post("/plans", verifyAdmin, validate(createPlanSchema), createPlanByAdmin);
+router.post(
+  "/plans",
+  verifyAdmin,
+  validate(createPlanSchema),
+  createPlanByAdmin,
+);
 router.get("/plans/:planId", verifyAdmin, getPlanDetailsByAdmin);
-router.put("/plans/:planId", verifyAdmin, validate(updatePlanSchema), updatePlanByAdmin);
+router.put(
+  "/plans/:planId",
+  verifyAdmin,
+  validate(updatePlanSchema),
+  updatePlanByAdmin,
+);
 router.patch("/plans/:planId/deactivate", verifyAdmin, deactivatePlanByAdmin);
 router.patch("/plans/:planId/activate", verifyAdmin, activatePlanByAdmin);
 
@@ -97,15 +118,39 @@ router.delete("/users/:userId", verifyAdmin, deleteUserByAdmin);
 router.get("/users/:userId", verifyAdmin, getUserDetailsByAdmin);
 
 //toggle listing status
-router.patch("/listings/:listingId/toggle-status", verifyAdmin, toggleListingStatusByAdmin);
+router.patch(
+  "/listings/:listingId/toggle-status",
+  verifyAdmin,
+  toggleListingStatusByAdmin,
+);
 
 //toggle service status
-router.patch("/services/:serviceId/toggle-status", verifyAdmin, toggleServiceStatusByAdmin);
+router.patch(
+  "/services/:serviceId/toggle-status",
+  verifyAdmin,
+  toggleServiceStatusByAdmin,
+);
 
 //toggle featured listing
-router.patch("/listings/:listingId/toggle-featured", verifyAdmin, toggleFeaturedListingByAdmin);
+router.patch(
+  "/listings/:listingId/toggle-featured",
+  verifyAdmin,
+  toggleFeaturedListingByAdmin,
+);
 
 //toggle featured service
-router.patch("/services/:serviceId/toggle-featured", verifyAdmin, toggleFeaturedServiceByAdmin);
+router.patch(
+  "/services/:serviceId/toggle-featured",
+  verifyAdmin,
+  toggleFeaturedServiceByAdmin,
+);
+
+//update admin credentials
+router.put(
+  "/credentials",
+  verifyAdmin,
+  validate(updateAdminCredentialsSchema),
+  updateAdminCredentials,
+);
 
 export default router;

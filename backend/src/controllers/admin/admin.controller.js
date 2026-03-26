@@ -1,19 +1,20 @@
-import Admin from "../models/admin.model.js";
-import { generateToken } from "../utils/token.js";
-import { successResponse, errorResponse } from "../utils/response.js";
+import Admin from "../../models/admin/admin.model.js";
+import { generateToken } from "../../utils/token.js";
+import { successResponse, errorResponse } from "../../utils/response.js";
 import argon2 from "argon2";
-import User from "../models/users/user.model.js";
-import Listing from "../models/listing/listing.model.js";
-import Service from "../models/service/service.model.js";
-import Category from "../models/category.model.js";
-import Plan from "../models/plan.model.js";
-import Post from "../models/community/post.model.js";
-import Comment from "../models/community/comment.model.js";
-import Favorite from "../models/favorite.model.js";
+import User from "../../models/users/user.model.js";
+import Listing from "../../models/listing/listing.model.js";
+import Service from "../../models/service/service.model.js";
+import Category from "../../models/category.model.js";
+import Plan from "../../models/plan.model.js";
+import Post from "../../models/community/post.model.js";
+import Comment from "../../models/community/comment.model.js";
+import Favorite from "../../models/favorite.model.js";
 import mongoose from "mongoose";
-import { deleteMultipleFromCloudinary } from "../config/cloudinary.js";
-import stripe from "../config/stripe.js";
-import Booking from "../models/booking.model.js";
+import { deleteMultipleFromCloudinary } from "../../config/cloudinary.js";
+import stripe from "../../config/stripe.js";
+import Booking from "../../models/booking.model.js";
+import { admin } from "../../middlewares/auth.middleware.js";
 
 const LOCALHOST_HOSTNAMES = new Set(["localhost", "127.0.0.1", "::1"]);
 
@@ -138,6 +139,7 @@ export const getAdminDashboardStats = async (req, res) => {
       totalListings,
       totalServices,
       totalPosts,
+      totalBookings,
       latestListing,
       latestService,
       latestPost,
@@ -147,6 +149,7 @@ export const getAdminDashboardStats = async (req, res) => {
       Listing.countDocuments(),
       Service.countDocuments(),
       Post.countDocuments(),
+      Booking.countDocuments(),
       Listing.findOne()
         .select("itemName status createdAt updatedAt owner")
         .populate("owner", "firstname lastname email")
@@ -169,7 +172,6 @@ export const getAdminDashboardStats = async (req, res) => {
         .lean(),
     ]);
 
-    const totalOrders = 0;
     const revenue = 0;
 
     const recentActivity = [
@@ -221,7 +223,8 @@ export const getAdminDashboardStats = async (req, res) => {
             user:
               `${latestPlanPurchase.firstname || ""} ${latestPlanPurchase.lastname || ""}`.trim() ||
               "Unknown",
-            createdAt: latestPlanPurchase.updatedAt || latestPlanPurchase.createdAt,
+            createdAt:
+              latestPlanPurchase.updatedAt || latestPlanPurchase.createdAt,
           }
         : null,
     ]
@@ -234,7 +237,7 @@ export const getAdminDashboardStats = async (req, res) => {
       totalListings,
       totalServices,
       totalPosts,
-      totalOrders,
+      totalBookings,
       revenue,
       recentActivity,
     });
@@ -277,7 +280,9 @@ export const getAllUsers = async (req, res) => {
             { firstname: { $regex: search, $options: "i" } },
             { lastname: { $regex: search, $options: "i" } },
             { email: { $regex: search, $options: "i" } },
-            ...(matchingPlanIds.length > 0 ? [{ plan: { $in: matchingPlanIds } }] : []),
+            ...(matchingPlanIds.length > 0
+              ? [{ plan: { $in: matchingPlanIds } }]
+              : []),
           ],
         }
       : {};
@@ -953,7 +958,10 @@ export const getPostDetailsByAdmin = async (req, res) => {
     const { postId } = req.params;
 
     const post = await Post.findById(postId)
-      .populate("author", "email firstname lastname avatar _id isActive createdAt")
+      .populate(
+        "author",
+        "email firstname lastname avatar _id isActive createdAt",
+      )
       .lean();
 
     if (!post) {
@@ -986,9 +994,19 @@ export const getPostDetailsByAdmin = async (req, res) => {
       },
     };
 
-    return successResponse(res, 200, "Post details fetched successfully", normalized);
+    return successResponse(
+      res,
+      200,
+      "Post details fetched successfully",
+      normalized,
+    );
   } catch (error) {
-    return errorResponse(res, 500, "Failed to fetch post details", error.message);
+    return errorResponse(
+      res,
+      500,
+      "Failed to fetch post details",
+      error.message,
+    );
   }
 };
 
@@ -1010,7 +1028,11 @@ export const getAllPlansByAdmin = async (req, res) => {
       : {};
 
     const [plans, total] = await Promise.all([
-      Plan.find(searchQuery).sort({ createdAt: -1 }).skip(skip).limit(pageSize).lean(),
+      Plan.find(searchQuery)
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(pageSize)
+        .lean(),
       Plan.countDocuments(searchQuery),
     ]);
 
@@ -1085,7 +1107,12 @@ export const getPlanDetailsByAdmin = async (req, res) => {
 
     return successResponse(res, 200, "Plan details fetched successfully", plan);
   } catch (error) {
-    return errorResponse(res, 500, "Failed to fetch plan details", error.message);
+    return errorResponse(
+      res,
+      500,
+      "Failed to fetch plan details",
+      error.message,
+    );
   }
 };
 
@@ -1130,7 +1157,8 @@ export const updatePlanByAdmin = async (req, res) => {
     }
 
     if (currency !== undefined) plan.currency = currency;
-    if (platformFeePercent !== undefined) plan.platformFeePercent = platformFeePercent;
+    if (platformFeePercent !== undefined)
+      plan.platformFeePercent = platformFeePercent;
     if (features !== undefined) plan.features = features;
     if (popular !== undefined) plan.popular = popular;
     if (isActive !== undefined) plan.isActive = isActive;
@@ -1263,36 +1291,56 @@ export const deleteServiceByAdmin = async (req, res) => {
 };
 
 //!Toggle listing status by admin
-export const toggleListingStatusByAdmin = async (req, res) =>{
+export const toggleListingStatusByAdmin = async (req, res) => {
   try {
-    const {listingId} = req.params;
+    const { listingId } = req.params;
     const listing = await Listing.findById(listingId);
-    if(!listing){
+    if (!listing) {
       return errorResponse(res, 404, "Listing not found");
     }
     listing.status = listing.status === "active" ? "inactive" : "active";
     await listing.save();
-    return successResponse(res, 200, "Listing status updated successfully", listing);
+    return successResponse(
+      res,
+      200,
+      "Listing status updated successfully",
+      listing,
+    );
   } catch (error) {
-    return errorResponse(res, 500, "Failed to update listing status", error.message);    
+    return errorResponse(
+      res,
+      500,
+      "Failed to update listing status",
+      error.message,
+    );
   }
-}
+};
 
 //!Toggle service status by admin
-export const toggleServiceStatusByAdmin = async (req, res) =>{
+export const toggleServiceStatusByAdmin = async (req, res) => {
   try {
-    const {serviceId} = req.params;
+    const { serviceId } = req.params;
     const service = await Service.findById(serviceId);
-    if(!service){
+    if (!service) {
       return errorResponse(res, 404, "Service not found");
     }
     service.status = service.status === "active" ? "inactive" : "active";
     await service.save();
-    return successResponse(res, 200, "Service status updated successfully", service);
+    return successResponse(
+      res,
+      200,
+      "Service status updated successfully",
+      service,
+    );
   } catch (error) {
-    return errorResponse(res, 500, "Failed to update service status", error.message);    
+    return errorResponse(
+      res,
+      500,
+      "Failed to update service status",
+      error.message,
+    );
   }
-}
+};
 
 //! Update booking status (admin)
 export const updateBookingStatusByAdmin = async (req, res) => {
@@ -1300,10 +1348,21 @@ export const updateBookingStatusByAdmin = async (req, res) => {
     const { bookingId } = req.params;
     const { status } = req.body;
 
-    const VALID_STATUSES = ["pending", "accepted", "confirmed", "completed", "cancelled", "rejected"];
+    const VALID_STATUSES = [
+      "pending",
+      "accepted",
+      "confirmed",
+      "completed",
+      "cancelled",
+      "rejected",
+    ];
 
     if (!status || !VALID_STATUSES.includes(status)) {
-      return errorResponse(res, 400, `Invalid status. Must be one of: ${VALID_STATUSES.join(", ")}`);
+      return errorResponse(
+        res,
+        400,
+        `Invalid status. Must be one of: ${VALID_STATUSES.join(", ")}`,
+      );
     }
 
     const booking = await Booking.findById(bookingId);
@@ -1314,18 +1373,28 @@ export const updateBookingStatusByAdmin = async (req, res) => {
     booking.status = status;
     await booking.save();
 
-    return successResponse(res, 200, "Booking status updated successfully", { bookingId, status });
+    return successResponse(res, 200, "Booking status updated successfully", {
+      bookingId,
+      status,
+    });
   } catch (error) {
-    return errorResponse(res, 500, "Failed to update booking status", error.message);
+    return errorResponse(
+      res,
+      500,
+      "Failed to update booking status",
+      error.message,
+    );
   }
 };
 
 //! Get all bookings with pagination (admin)
 export const getAdminBookings = async (req, res) => {
   try {
-
     const page = Math.max(parseInt(req.query.page, 10) || 1, 1);
-    const limit = Math.min(Math.max(parseInt(req.query.limit, 10) || 10, 1), 50);
+    const limit = Math.min(
+      Math.max(parseInt(req.query.limit, 10) || 10, 1),
+      50,
+    );
 
     const skip = (page - 1) * limit;
 
@@ -1347,10 +1416,9 @@ export const getAdminBookings = async (req, res) => {
         total: totalBookings,
         page,
         limit,
-        totalPages: Math.ceil(totalBookings / limit)
-      }
+        totalPages: Math.ceil(totalBookings / limit),
+      },
     });
-
   } catch (error) {
     return errorResponse(res, 500, "Failed to fetch bookings", error.message);
   }
@@ -1380,43 +1448,91 @@ export const getBookingDetailsByAdmin = async (req, res) => {
 //! Toggle featured listing by admin
 export const toggleFeaturedListingByAdmin = async (req, res) => {
   try {
-    const {listingId} = req.params;
+    const { listingId } = req.params;
 
     const listing = await Listing.findById(listingId);
-    if(!listing){
+    if (!listing) {
       return errorResponse(res, 404, "Listing not found");
     }
-    
+
     listing.isFeatured = !listing.isFeatured;
-    listing.featuredUntil = listing.isFeatured ? new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) : null;
+    listing.featuredUntil = listing.isFeatured
+      ? new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+      : null;
 
     await listing.save();
-    return successResponse(res, 200, "Featured listing updated", listing)
-    
+    return successResponse(res, 200, "Featured listing updated", listing);
   } catch (error) {
-    return errorResponse(res, 500, "Failed to toggle featured listing", error.message);
-
-    
+    return errorResponse(
+      res,
+      500,
+      "Failed to toggle featured listing",
+      error.message,
+    );
   }
-}
+};
 
 //! Toggle featured service by admin
 export const toggleFeaturedServiceByAdmin = async (req, res) => {
   try {
-    const {serviceId} = req.params;
+    const { serviceId } = req.params;
 
     const service = await Service.findById(serviceId);
-    if(!service){
+    if (!service) {
       return errorResponse(res, 404, "Service not found");
     }
-    
+
     service.isFeatured = !service.isFeatured;
-    service.featuredUntil = service.isFeatured ? new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) : null;
+    service.featuredUntil = service.isFeatured
+      ? new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+      : null;
 
     await service.save();
-    return successResponse(res, 200, "Featured service updated", service )
-    
+    return successResponse(res, 200, "Featured service updated", service);
   } catch (error) {
-    return errorResponse(res, 500, "Failed to toggle featured service", error.message);    
+    return errorResponse(
+      res,
+      500,
+      "Failed to toggle featured service",
+      error.message,
+    );
   }
-}
+};
+
+//! Update admin credentials
+export const updateAdminCredentials = async (req, res) => {
+  try {
+    const adminId = req.admin._id; // from admin middleware
+    const { email, currentPassword, newPassword } = req.body;
+
+    const admin = await Admin.findById(adminId);
+    if (!admin) {
+      return errorResponse(res, 404, "Admin not found");
+    }
+
+    const isMatch = await argon2.verify(admin.password, currentPassword);
+    if (!isMatch) {
+      return errorResponse(res, 401, "Invalid current password");
+    }
+
+    if (email) {
+      admin.email = email;
+    }
+
+    if (newPassword) {
+      admin.password = await argon2.hash(newPassword);
+    }
+
+    await admin.save();
+    return successResponse(res, 200, "Admin credentials updated successfully", {
+      email: admin.email,
+    });
+  } catch (error) {
+    return errorResponse(
+      res,
+      500,
+      "Failed to update admin credentials",
+      error.message,
+    );
+  }
+};

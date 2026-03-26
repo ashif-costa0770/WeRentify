@@ -73,7 +73,7 @@ export default function AdminDashboardPage() {
     totalListings: 0,
     totalServices: 0,
     totalPosts: 0,
-    totalOrders: 0,
+    totalBookings: 0,
     revenue: 0,
   });
   const [loading, setLoading] = useState(true);
@@ -106,7 +106,7 @@ export default function AdminDashboardPage() {
             totalListings: payload?.data?.totalListings ?? 0,
             totalServices: payload?.data?.totalServices ?? 0,
             totalPosts: payload?.data?.totalPosts ?? 0,
-            totalOrders: payload?.data?.totalOrders ?? 0,
+            totalBookings: payload?.data?.totalBookings ?? 0,
             revenue: payload?.data?.revenue ?? 0,
           });
           setRecentActivity(
@@ -151,8 +151,8 @@ export default function AdminDashboardPage() {
         colorClass: "bg-purple-500",
       },
       {
-        label: "Total Orders",
-        value: stats.totalOrders || 0,
+        label: "Total Bookings",
+        value: stats.totalBookings || 0,
         colorClass: "bg-amber-500",
       },
       {

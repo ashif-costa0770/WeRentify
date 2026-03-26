@@ -69,3 +69,64 @@ export const updateAdminSchema = z.object({
 
   isActive: z.boolean().optional(),
 });
+
+// Update admin credentials schema
+export const updateAdminCredentialsSchema = z
+  .object({
+    email: z
+      .email("Invalid email format")
+      .trim()
+      .toLowerCase()
+      .optional(),
+
+    currentPassword: z.string().trim().min(1, "Current password is required"),
+
+    newPassword: z.string().trim().min(6, "Password must be at least 6 characters").optional(),
+
+    confirmPassword: z.string().trim().optional(),
+  })
+  .refine(
+    (data) => {
+      // If newPassword is provided → confirmPassword must exist
+      if (data.newPassword) {
+        return !!data.confirmPassword;
+      }
+      return true;
+    },
+    {
+      message: "Confirm password is required",
+      path: ["confirmPassword"],
+    }
+  )
+  .refine(
+    (data) => {
+      // If both exist → must match
+      if (data.newPassword && data.confirmPassword) {
+        return data.newPassword === data.confirmPassword;
+      }
+      return true;
+    },
+    {
+      message: "Passwords do not match",
+      path: ["confirmPassword"],
+    }
+  )
+  .refine(
+    (data) => {
+      // Prevent same password
+      if (data.newPassword) {
+        return data.newPassword !== data.currentPassword;
+      }
+      return true;
+    },
+    {
+      message: "New password must be different from current password",
+      path: ["newPassword"],
+    }
+  )
+  .refine(
+    (data) => data.email || data.newPassword,
+    {
+      message: "Provide at least email or new password to update",
+    }
+  );

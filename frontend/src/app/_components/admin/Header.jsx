@@ -1,10 +1,20 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { Globe } from "lucide-react";
-import { useState } from "react";
+import Link from "next/link";
+import { Globe, LogOut, UserRound } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 
 import GoogleTranslate from "@/app/_components/navbar/GoogleTranslate";
+import { adminLogout, getAdminProfile } from "@/services/admin.service";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const LanguageCurrencyModal = dynamic(
   () => import("@/app/_components/modals/LanguageCurrencyModal"),
@@ -12,7 +22,47 @@ const LanguageCurrencyModal = dynamic(
 );
 
 export default function Header() {
+  const router = useRouter();
   const [showLang, setShowLang] = useState(false);
+  const [loggingOut, setLoggingOut] = useState(false);
+  const [adminName, setAdminName] = useState("A");
+  const [profileMenuOpen, setProfileMenuOpen] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadAdmin() {
+      try {
+        const res = await getAdminProfile();
+        const profile = res?.data?.data || {};
+        const nameSource = profile?.name || profile?.email || "A";
+        const initial = String(nameSource).trim().charAt(0).toUpperCase() || "A";
+        if (!cancelled) setAdminName(initial);
+      } catch {
+        if (!cancelled) setAdminName("A");
+      }
+    }
+
+    loadAdmin();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const handleLogout = async () => {
+    if (loggingOut) return;
+
+    setLoggingOut(true);
+    try {
+      await adminLogout();
+    } catch {
+      // Redirect anyway so admin can re-authenticate.
+    } finally {
+      router.replace("/admin/login");
+      router.refresh();
+      setLoggingOut(false);
+    }
+  };
 
   return (
     <header className="h-20 bg-gradient-to-r from-indigo-600 via-violet-600 to-fuchsia-500 text-white shadow-md px-5 sm:px-6">
@@ -80,8 +130,38 @@ export default function Header() {
             </svg>
           </button>
 
-          <div className="h-10 w-10  rounded-full bg-white text-indigo-600 flex items-center justify-center text-lg font-semibold border border-white/40">
-            A
+          <div
+            onMouseEnter={() => setProfileMenuOpen(true)}
+            onMouseLeave={() => setProfileMenuOpen(false)}
+          >
+            <DropdownMenu open={profileMenuOpen} onOpenChange={setProfileMenuOpen}>
+              <DropdownMenuTrigger asChild>
+                <button
+                  type="button"
+                  aria-label="Admin profile menu"
+                  className="h-10 w-10 rounded-full bg-white text-indigo-600 flex items-center justify-center text-lg font-semibold border border-white/40 hover:scale-[1.02] transition-transform cursor-pointer"
+                >
+                  {adminName}
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="min-w-40">
+                <DropdownMenuItem asChild>
+                  <Link href="/admin/profile" className="cursor-pointer">
+                    <UserRound className="h-4 w-4" />
+                    Profile
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  className="text-destructive focus:text-destructive cursor-pointer"
+                  onClick={handleLogout}
+                  disabled={loggingOut}
+                >
+                  <LogOut className="h-4 w-4 text-destructive" />
+                  {loggingOut ? "Logging out..." : "Logout"}
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
       </div>

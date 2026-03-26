@@ -126,3 +126,14 @@ export const uploadAvatar = multer({
     files: 1,
   },
 }).single("avatar");   // field name must match frontend
+
+// Logo upload (single image only)
+export const uploadLogo = multer({
+  storage,
+  fileFilter: (req, file, cb) => {
+    if (!IMAGE_TYPES.includes(file.mimetype)) {
+      return cb(new Error("Only image files are allowed for logo."), false);
+    }
+    cb(null, true);
+  },
+}).single("logo");
