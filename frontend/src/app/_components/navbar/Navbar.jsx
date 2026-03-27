@@ -16,20 +16,31 @@ import { getLocationSuggestions as getServiceLocationSuggestions } from "@/servi
 import { getPostLocationSuggestions } from "@/services/post.service";
 import api from "@/lib/api";
 import GoogleTranslate from "./GoogleTranslate";
+import { getSettings } from "@/services/admin.service";
+import Image from "next/image";
 
-const SignUpModal = dynamic(() => import("@/app/_components/modals/SignUpModal"), {
-  ssr: false,
-});
-const SignInModal = dynamic(() => import("@/app/_components/modals/SignInModal"), {
-  ssr: false,
-});
+const SignUpModal = dynamic(
+  () => import("@/app/_components/modals/SignUpModal"),
+  {
+    ssr: false,
+  },
+);
+const SignInModal = dynamic(
+  () => import("@/app/_components/modals/SignInModal"),
+  {
+    ssr: false,
+  },
+);
 const LanguageCurrencyModal = dynamic(
   () => import("@/app/_components/modals/LanguageCurrencyModal"),
   { ssr: false },
 );
-const MessageSlider = dynamic(() => import("@/app/_components/modals/MessageSlider"), {
-  ssr: false,
-});
+const MessageSlider = dynamic(
+  () => import("@/app/_components/modals/MessageSlider"),
+  {
+    ssr: false,
+  },
+);
 
 export default function Navbar() {
   const router = useRouter();
@@ -41,6 +52,7 @@ export default function Navbar() {
   const [locationSuggestions, setLocationSuggestions] = useState([]);
   const [suggestionsLoading, setSuggestionsLoading] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [logo, setLogo] = useState(null);
   const suggestionBoxRef = useRef(null);
   const justSelectedRef = useRef(false);
   const hasUserTypedRef = useRef(false);
@@ -66,6 +78,15 @@ export default function Navbar() {
     const params = new URLSearchParams(window.location.search);
     const location = params.get("location") || "";
     setLocationQuery(location);
+  }, []);
+
+  //get logo
+  useEffect(() => {
+    const fetchLogo = async () => {
+      const res = await getSettings();
+      setLogo(res.data.data[0].logo.url);
+    };
+    fetchLogo();
   }, []);
 
   useEffect(() => {
@@ -133,7 +154,7 @@ export default function Navbar() {
       },
       (error) => {
         console.error("Location permission denied or failed", error);
-      }
+      },
     );
   };
 
@@ -196,8 +217,8 @@ export default function Navbar() {
         const fetchApi = isServicesPage
           ? getServiceLocationSuggestions
           : isCommunityPage
-          ? getPostLocationSuggestions
-          : getListingLocationSuggestions;
+            ? getPostLocationSuggestions
+            : getListingLocationSuggestions;
         const res = await fetchApi(locationQuery.trim());
         const list =
           res?.data?.data?.suggestions ||
@@ -241,19 +262,30 @@ export default function Navbar() {
   return (
     <header>
       {" "}
-      <div className="max-w-7xl mx-auto pe-3">
+      <div className="max-w-7xl mx-auto pe-3 pb-5 pt-4">
         {/* Desktop & Tablet Layout - logo left, icon tabs, search + actions right */}
         <div className="hidden md:flex items-center gap-4">
           {/* Left: Logo */}
-          <div className="flex items-center">
-            <Logo />
+          <div className="flex items-center w-full">
+            {/* <Logo /> */}
+            {logo && (
+              <Link href="/">
+                <Image
+                  src={logo}
+                  alt="WeRentify logo"
+                  width={300}
+                  height={200}
+                  className="h-10 ms-7 w-auto sm:h-11 md:h-12 lg:h-14 object-contain mix-blend-multiply cursor-pointer select-none transition-transform hover:scale-103"
+                />
+              </Link>
+            )}
           </div>
 
           {/* Center: Icon-card navigation tabs + inline search */}
           <div className="flex-1 flex justify-end">
             <div className="flex items-center gap-2">
               {/* Tabs */}
-              <div className="flex items-center me-5 gap-3 lg:gap-6">
+              <div className="flex items-center me-5  gap-3 lg:gap-6">
                 {/* Listings */}
                 <Link href="/">
                   <button className="rounded-2xl shadow-sm hover:shadow-2xl px-3 lg:px-6 py-2 flex flex-col cursor-pointer items-center gap-1">
@@ -337,7 +369,10 @@ export default function Navbar() {
                       onClick={handleUseCurrentLocation}
                       className="w-full flex items-center gap-2 px-3 py-2 text-xs font-medium text-blue-600 hover:bg-blue-50 border-b border-gray-200 cursor-pointer"
                     >
-                      <MapPin className="w-4 h-4 text-blue-500" strokeWidth={2} />
+                      <MapPin
+                        className="w-4 h-4 text-blue-500"
+                        strokeWidth={2}
+                      />
                       <span className="truncate">Use current location</span>
                     </button>
                     {suggestionsLoading ? (
@@ -364,14 +399,17 @@ export default function Navbar() {
                               // keep input in sync
                               setLocationQuery(label);
                               // close dropdown
-          justSelectedRef.current = true;
-          setShowSuggestions(false);
-          // use selected value directly to avoid stale state
-          handleSearch(undefined, { location: label });
+                              justSelectedRef.current = true;
+                              setShowSuggestions(false);
+                              // use selected value directly to avoid stale state
+                              handleSearch(undefined, { location: label });
                             }}
                             className="w-full flex items-center gap-2 px-3 py-1.5 text-xs text-gray-700 hover:bg-gray-50 cursor-pointer"
                           >
-                            <MapPin className="w-4 h-4 text-gray-400" strokeWidth={2} />
+                            <MapPin
+                              className="w-4 h-4 text-gray-400"
+                              strokeWidth={2}
+                            />
                             <span className="truncate">{label}</span>
                           </button>
                         );
@@ -560,7 +598,10 @@ export default function Navbar() {
         />
       )}
       {showLang && (
-        <LanguageCurrencyModal open={showLang} onClose={() => setShowLang(false)} />
+        <LanguageCurrencyModal
+          open={showLang}
+          onClose={() => setShowLang(false)}
+        />
       )}
       {showMessages && (
         <MessageSlider

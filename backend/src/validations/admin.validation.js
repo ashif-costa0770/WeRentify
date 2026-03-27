@@ -130,3 +130,23 @@ export const updateAdminCredentialsSchema = z
       message: "Provide at least email or new password to update",
     }
   );
+
+
+export const updateSettingsSchema = z.object({
+  contact: z
+    .object({
+      phone: z.string().trim().min(5, "Phone too short").optional(),
+      email: z.email("Invalid email").trim().toLowerCase().optional(),
+      address: z.string().trim().optional(),
+    })
+    .optional(),
+
+  social: z
+    .object({
+      facebook: z.string().trim().url("Invalid Facebook URL").optional(),
+      instagram: z.string().trim().url("Invalid Instagram URL").optional(),
+      twitter: z.string().trim().url("Invalid Twitter URL").optional(),
+      linkedin: z.string().trim().url("Invalid LinkedIn URL").optional(),
+    })
+    .optional(),
+});

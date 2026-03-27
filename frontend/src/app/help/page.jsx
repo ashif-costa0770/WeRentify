@@ -26,7 +26,7 @@ const getIconComponent = (iconName) => {
   if (LucideIcons[raw]) return LucideIcons[raw];
 
   const pascal = normalizeToPascalCase(raw);
-  if (LucideIcons[pascal]) return LucideIcons[pascal];
+  if (LucideIcons[pascal]) return LucideIcons[pascal];  
 
   const lower = raw.toLowerCase();
   const matchedKey = Object.keys(LucideIcons).find(

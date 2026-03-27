@@ -2,6 +2,7 @@
 
 import { usePathname } from "next/navigation";
 import { Facebook, Twitter, Instagram } from "lucide-react";
+import Link from "next/link";
 
 export default function Footer() {
   const pathname = usePathname();
@@ -36,19 +37,31 @@ export default function Footer() {
               Support
             </h3>
             <ul className="space-y-2 text-sm text-gray-500">
-              {[
-                "Help Center",
-                "Safety Center",
-                "Community Guidelines",
-                "Contact Us",
-                "Report a Problem",
-              ].map((item) => (
-                <li key={item}>
-                  <a className="hover:text-[#5B4FE9] transition-colors cursor-pointer">
-                    {item}
-                  </a>
-                </li>
-              ))}
+              <li>
+                <Link href="#" className="hover:text-[#5B4FE9] transition-colors cursor-pointer">
+                  Help Center
+                </Link>
+              </li>
+              <li>
+                <Link href="#" className="hover:text-[#5B4FE9] transition-colors cursor-pointer">
+                  Safety Center
+                </Link>
+              </li>
+              <li>
+                <Link href="#" className="hover:text-[#5B4FE9] transition-colors cursor-pointer">
+                  Community Guidelines
+                </Link>
+              </li>
+              <li>
+                <Link href="/contact" className="hover:text-[#5B4FE9] transition-colors cursor-pointer">
+                  Contact Us
+                </Link>
+              </li>
+              <li>
+                <Link href="#" className="hover:text-[#5B4FE9] transition-colors cursor-pointer">
+                  Report a Problem
+                </Link>
+              </li>
             </ul>
           </div>
 
@@ -58,18 +71,26 @@ export default function Footer() {
               Hosting
             </h3>
             <ul className="space-y-2 text-sm text-gray-500">
-              {[
-                "List Your Item",
-                "Responsible Hosting",
-                "Host Protection",
-                "Insurance & Liability",
-              ].map((item) => (
-                <li key={item}>
-                  <a className="hover:text-[#5B4FE9] transition-colors cursor-pointer">
-                    {item}
-                  </a>
-                </li>
-              ))}
+              <li>
+                <Link href="#" className="hover:text-[#5B4FE9] transition-colors cursor-pointer">
+                  List Your Item
+                </Link>
+              </li>
+              <li>
+                <Link href="#" className="hover:text-[#5B4FE9] transition-colors cursor-pointer">
+                  Responsible Hosting
+                </Link>
+              </li>
+              <li>
+                <Link href="#" className="hover:text-[#5B4FE9] transition-colors cursor-pointer">
+                  Host Protection
+                </Link>
+              </li>
+              <li>
+                <Link href="#" className="hover:text-[#5B4FE9] transition-colors cursor-pointer">
+                  Insurance & Liability
+                </Link>
+              </li>
             </ul>
           </div>
 
@@ -79,19 +100,31 @@ export default function Footer() {
               Legal
             </h3>
             <ul className="space-y-2 text-sm text-gray-500">
-              {[
-                "Terms of Service",
-                "Privacy Policy",
-                "Cookie Policy",
-                "Accessibility",
-                "Your Privacy Choices",
-              ].map((item) => (
-                <li key={item}>
-                  <a className="hover:text-[#5B4FE9] transition-colors cursor-pointer">
-                    {item}
-                  </a>
-                </li>
-              ))}
+              <li>
+                <Link href="/terms" className="hover:text-[#5B4FE9] transition-colors cursor-pointer">
+                  Terms of Service
+                </Link>
+              </li>
+              <li>
+                <Link href="/privacy" className="hover:text-[#5B4FE9] transition-colors cursor-pointer">
+                  Privacy Policy
+                </Link>
+              </li>
+              <li>
+                <Link href="/cookies" className="hover:text-[#5B4FE9] transition-colors cursor-pointer">
+                  Cookie Policy
+                </Link>
+              </li>
+              <li>
+                <Link href="/accessibility" className="hover:text-[#5B4FE9] transition-colors cursor-pointer">
+                  Accessibility
+                </Link>
+              </li>
+              <li>
+                <Link href="/privacy-choices" className="hover:text-[#5B4FE9] transition-colors cursor-pointer">
+                  Your Privacy Choices
+                </Link>
+              </li>
             </ul>
           </div>
         </div>
