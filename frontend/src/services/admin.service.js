@@ -30,7 +30,26 @@ export const getSettings = () => {
   return api.get("/admin/settings");
 }
 
-/* ADMIN SETTINGS */
-export const updateSettings = (data) =>{
-  return api.put("/admin/settings", data);
+/* ADMIN SETTINGS — multipart: logo file + JSON-string contact/social (see backend parseToJson) */
+function buildSettingsFormData({ contact, social, logoFile }) {
+  const formData = new FormData();
+  if (contact && Object.keys(contact).length > 0) {
+    formData.append("contact", JSON.stringify(contact));
+  }
+  if (social && Object.keys(social).length > 0) {
+    formData.append("social", JSON.stringify(social));
+  }
+  if (logoFile instanceof File) {
+    formData.append("logo", logoFile);
+  }
+  return formData;
 }
+
+/** @param {FormData | { contact?: object, social?: object, logoFile?: File }} payload */
+export const updateSettings = (payload) => {
+  const formData =
+    typeof FormData !== "undefined" && payload instanceof FormData
+      ? payload
+      : buildSettingsFormData(payload);
+  return api.put("/admin/settings", formData);
+};

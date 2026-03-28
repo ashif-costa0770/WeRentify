@@ -13,12 +13,15 @@ import {
 import { getSettings } from "@/services/admin.service";
 import { toast } from "sonner";
 import Navbar from "@/app/_components/navbar/Navbar";
+import { sendMessage } from "@/services/contact.service";
+
 
 const ContactPage = () => {
   const [contact, setContact] = useState(null);
   const [social, setSocial] = useState(null);
+  const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
-    name: "",
+    fullName: "",
     email: "",
     message: "",
   });
@@ -39,13 +42,33 @@ const ContactPage = () => {
     fetchSettings();
   }, []);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log("Form submitted:", formData);
+    setLoading(true);
+    try {
+      const res = await sendMessage(formData);
+      if (res.data.success) {
+        toast.success(res.data.message || "Message sent successfully");
+        setFormData({
+          fullName: "",
+          email: "",
+          message: "",
+        });
+      }
+    } catch (error) {
+      toast.error(
+        error.response.data.message ||
+          error.response.data.errors ||
+          "Failed to send message",
+      );
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   const contactInfo = [
@@ -169,7 +192,8 @@ const ContactPage = () => {
                 </label>
                 <input
                   type="text"
-                  name="name"
+                  name="fullName"
+                  value={formData.fullName}
                   required
                   placeholder="Enter your full name"
                   className="w-full px-3.5 py-2.5 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-200 focus:border-[#5B4FE9] text-slate-900 transition-colors bg-white"
@@ -184,6 +208,7 @@ const ContactPage = () => {
                 <input
                   type="email"
                   name="email"
+                  value={formData.email}
                   required
                   placeholder="Enter your email address"
                   className="w-full px-3.5 py-2.5 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-200 focus:border-[#5B4FE9] text-slate-900 transition-colors bg-white"
@@ -197,19 +222,21 @@ const ContactPage = () => {
                 </label>
                 <textarea
                   name="message"
+                  value={formData.message}
                   required
                   rows="4"
                   placeholder="Write your message..."
                   className="w-full px-3.5 py-2.5 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-200 focus:border-[#5B4FE9] text-slate-900 transition-colors resize-none bg-white"
                   onChange={handleChange}
-                ></textarea>
+                />
               </div>
 
               <button
                 type="submit"
+                disabled={loading}
                 className="w-full cursor-pointer bg-[#5B4FE9] text-white font-semibold py-3 px-6 rounded-lg hover:bg-[#5B4FE9] transition-colors uppercase tracking-wide text-sm mt-1"
               >
-                Send
+                {loading ? "Sending..." : "Send"}
               </button>
             </form>
           </div>

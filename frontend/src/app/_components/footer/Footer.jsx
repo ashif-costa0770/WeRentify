@@ -1,12 +1,30 @@
- "use client";
+"use client";
 
 import { usePathname } from "next/navigation";
-import { Facebook, Twitter, Instagram } from "lucide-react";
+import { Facebook, Twitter, Instagram, Linkedin } from "lucide-react";
 import Link from "next/link";
+import { useEffect, useState } from "react";
+import { getSettings } from "@/services/admin.service";
 
 export default function Footer() {
+  const [social, setSocial] = useState(null);
   const pathname = usePathname();
   if (pathname?.startsWith("/admin")) return null;
+
+  useEffect(() => {
+    const fetchSocial = async () => {
+      try {
+        const res = await getSettings();
+        if (res.data.success) {
+          setSocial(res.data.data[0].social);
+        }
+      } catch (error) {
+        console.error("Error fetching social:", error);
+        toast.error(error.response.data.message || "Failed to fetch social");
+      }
+    };
+    fetchSocial();
+  }, []);
 
   return (
     <footer className="bg-gray-50 border-t border-gray-200 px-4 pt-8 pb-4">
@@ -38,27 +56,42 @@ export default function Footer() {
             </h3>
             <ul className="space-y-2 text-sm text-gray-500">
               <li>
-                <Link href="#" className="hover:text-[#5B4FE9] transition-colors cursor-pointer">
+                <Link
+                  href="#"
+                  className="hover:text-[#5B4FE9] transition-colors cursor-pointer"
+                >
                   Help Center
                 </Link>
               </li>
               <li>
-                <Link href="#" className="hover:text-[#5B4FE9] transition-colors cursor-pointer">
+                <Link
+                  href="#"
+                  className="hover:text-[#5B4FE9] transition-colors cursor-pointer"
+                >
                   Safety Center
                 </Link>
               </li>
               <li>
-                <Link href="#" className="hover:text-[#5B4FE9] transition-colors cursor-pointer">
+                <Link
+                  href="#"
+                  className="hover:text-[#5B4FE9] transition-colors cursor-pointer"
+                >
                   Community Guidelines
                 </Link>
               </li>
               <li>
-                <Link href="/contact" className="hover:text-[#5B4FE9] transition-colors cursor-pointer">
+                <Link
+                  href="/contact"
+                  className="hover:text-[#5B4FE9] transition-colors cursor-pointer"
+                >
                   Contact Us
                 </Link>
               </li>
               <li>
-                <Link href="#" className="hover:text-[#5B4FE9] transition-colors cursor-pointer">
+                <Link
+                  href="#"
+                  className="hover:text-[#5B4FE9] transition-colors cursor-pointer"
+                >
                   Report a Problem
                 </Link>
               </li>
@@ -72,22 +105,34 @@ export default function Footer() {
             </h3>
             <ul className="space-y-2 text-sm text-gray-500">
               <li>
-                <Link href="#" className="hover:text-[#5B4FE9] transition-colors cursor-pointer">
+                <Link
+                  href="#"
+                  className="hover:text-[#5B4FE9] transition-colors cursor-pointer"
+                >
                   List Your Item
                 </Link>
               </li>
               <li>
-                <Link href="#" className="hover:text-[#5B4FE9] transition-colors cursor-pointer">
+                <Link
+                  href="#"
+                  className="hover:text-[#5B4FE9] transition-colors cursor-pointer"
+                >
                   Responsible Hosting
                 </Link>
               </li>
               <li>
-                <Link href="#" className="hover:text-[#5B4FE9] transition-colors cursor-pointer">
+                <Link
+                  href="#"
+                  className="hover:text-[#5B4FE9] transition-colors cursor-pointer"
+                >
                   Host Protection
                 </Link>
               </li>
               <li>
-                <Link href="#" className="hover:text-[#5B4FE9] transition-colors cursor-pointer">
+                <Link
+                  href="#"
+                  className="hover:text-[#5B4FE9] transition-colors cursor-pointer"
+                >
                   Insurance & Liability
                 </Link>
               </li>
@@ -101,27 +146,42 @@ export default function Footer() {
             </h3>
             <ul className="space-y-2 text-sm text-gray-500">
               <li>
-                <Link href="/terms" className="hover:text-[#5B4FE9] transition-colors cursor-pointer">
+                <Link
+                  href="/terms"
+                  className="hover:text-[#5B4FE9] transition-colors cursor-pointer"
+                >
                   Terms of Service
                 </Link>
               </li>
               <li>
-                <Link href="/privacy" className="hover:text-[#5B4FE9] transition-colors cursor-pointer">
+                <Link
+                  href="/privacy"
+                  className="hover:text-[#5B4FE9] transition-colors cursor-pointer"
+                >
                   Privacy Policy
                 </Link>
               </li>
               <li>
-                <Link href="/cookies" className="hover:text-[#5B4FE9] transition-colors cursor-pointer">
+                <Link
+                  href="/cookies"
+                  className="hover:text-[#5B4FE9] transition-colors cursor-pointer"
+                >
                   Cookie Policy
                 </Link>
               </li>
               <li>
-                <Link href="/accessibility" className="hover:text-[#5B4FE9] transition-colors cursor-pointer">
+                <Link
+                  href="/accessibility"
+                  className="hover:text-[#5B4FE9] transition-colors cursor-pointer"
+                >
                   Accessibility
                 </Link>
               </li>
               <li>
-                <Link href="/privacy-choices" className="hover:text-[#5B4FE9] transition-colors cursor-pointer">
+                <Link
+                  href="/privacy-choices"
+                  className="hover:text-[#5B4FE9] transition-colors cursor-pointer"
+                >
                   Your Privacy Choices
                 </Link>
               </li>
@@ -213,18 +273,57 @@ export default function Footer() {
               )}
 
               <div className="flex items-center gap-3 ml-2">
-                <Facebook
-                  size={18}
-                  className="hover:text-[#5B4FE9] cursor-pointer"
-                />
-                <Twitter
-                  size={18}
-                  className="hover:text-[#5B4FE9] cursor-pointer"
-                />
-                <Instagram
-                  size={18}
-                  className="hover:text-[#5B4FE9] cursor-pointer"
-                />
+                {social?.facebook && (
+                  <a
+                    href={social.facebook}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    <Facebook
+                      size={18}
+                      className="hover:text-[#5B4FE9] cursor-pointer"
+                    />
+                  </a>
+                )}
+
+                {social?.twitter && (
+                  <a
+                    href={social.twitter}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    <Twitter
+                      size={18}
+                      className="hover:text-[#5B4FE9] cursor-pointer"
+                    />
+                  </a>
+                )}
+
+                {social?.instagram && (
+                  <a
+                    href={social.instagram}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    <Instagram
+                      size={18}
+                      className="hover:text-[#5B4FE9] cursor-pointer"
+                    />
+                  </a>
+                )}
+
+                {social?.linkedin && (
+                  <a
+                    href={social.linkedin}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    <Linkedin
+                      size={18}
+                      className="hover:text-[#5B4FE9] cursor-pointer"
+                    />
+                  </a>
+                )}
               </div>
             </div>
           </div>

@@ -38,6 +38,7 @@ import geocodeRoutes from "./routes/geocode.route.js";
 import helpRoutes from "./routes/help/help.route.js";
 import HelpCategory from "./models/help/helpCategory.model.js";
 import FaqItem from "./models/help/faqItem.model.js";
+import contactRoutes from "./routes/contact.route.js";
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -114,6 +115,7 @@ app.use("/api/bookings", bookingRoutes);
 app.use("/api/reviews", reviewRoutes);
 app.use("/api/geocode", geocodeRoutes);
 app.use("/api/help", helpRoutes);
+app.use("/api/contact", contactRoutes);
 
 /* HEALTH */
 /* -------------------------------------------------- */

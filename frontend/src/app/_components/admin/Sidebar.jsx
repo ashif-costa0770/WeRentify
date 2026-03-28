@@ -3,6 +3,10 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import Logo from "@/app/_components/navbar/Logo";
+import { useEffect, useState } from "react";
+import { getSettings } from "@/services/admin.service";
+import { toast } from "sonner";
+import Image from "next/image";
 
 const navItems = [
   { label: "Dashboard", href: "/admin/dashboard" },
@@ -13,19 +17,42 @@ const navItems = [
   { label: "Posts", href: "/admin/posts" },
   { label: "Plans", href: "/admin/plans" },
   { label: "Help", href: "/admin/help" },
+  { label: "Settings", href: "/admin/settings" },
 ];
 
 export default function Sidebar() {
+  const [logo, setLogo] = useState(null);
   const pathname = usePathname();
+  useEffect(() => {
+    const fetchLogo = async () => {
+      try {
+        const res = await getSettings();
+      if (res.data.success) {
+        setLogo(res.data.data[0].logo.url);
+        }
+      } catch (error) {
+        console.error("Error fetching logo:", error);
+        toast.error(error.response.data.message || "Failed to fetch settings");
+      }
+    };
+    fetchLogo();
+  }, []);
 
   return (
     <aside className="w-60 min-h-screen bg-slate-100 border-r border-slate-200">
       <div className="h-20 flex items-center  px-1 border-b border-slate-200">
         <div className="w-full max-w-[170px]">
-          <Logo
-            href="/admin/dashboard"
-            className="h-8 w-full sm:h-8 md:h-8 lg:h-8 drop-shadow-none hover:scale-100"
-          />
+        {logo && (
+              <Link href="/admin/dashboard">
+                <Image
+                  src={logo}
+                  alt="WeRentify logo"
+                  width={300}
+                  height={200}
+                  className="h-10 ms-6 w-auto sm:h-8 md:h-8 lg:h-10 object-contain mix-blend-multiply cursor-pointer select-none transition-transform hover:scale-103"
+                />
+              </Link>
+            )}
         </div>
       </div>
 

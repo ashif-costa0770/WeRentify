@@ -1,7 +1,7 @@
 import express from "express";
 import { createCategory, deleteCategory, getAllCategory, getSingleCategory, updateCategory } from "../controllers/category.controller.js";
 const router = express.Router();
-import { protect, admin } from "../middlewares/auth.middleware.js";
+import { protect } from "../middlewares/auth.middleware.js";
 import validate from "../middlewares/validate.js";
 import {createCategorySchema, updateCategorySchema} from "../validations/category.validation.js"
 import {

@@ -86,3 +86,12 @@ export const sendBookingReminderEmail = async ({ to, subject, html }) => {
     html
   });
 };
+
+export const sendContactEmail = async ({ to, subject, html }) => {
+  await transporter.sendMail({
+    from: process.env.EMAIL_USER,
+    to,
+    subject,
+    html
+  });
+};

@@ -14,7 +14,6 @@ import mongoose from "mongoose";
 import { deleteMultipleFromCloudinary } from "../../config/cloudinary.js";
 import stripe from "../../config/stripe.js";
 import Booking from "../../models/booking.model.js";
-import { admin } from "../../middlewares/auth.middleware.js";
 
 const LOCALHOST_HOSTNAMES = new Set(["localhost", "127.0.0.1", "::1"]);
 

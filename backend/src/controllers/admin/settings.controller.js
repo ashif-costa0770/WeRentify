@@ -48,9 +48,10 @@ export const updateSettings = async (req, res) => {
     }
 
     if (req.file) {
-      const settings = await Settings.find();
-      if (settings?.logo?.public_id) {
-        await deleteFromCloudinary(settings.logo.public_id, "image");
+      const existing = await Settings.find();
+      const prev = existing?.[0];
+      if (prev?.logo?.public_id) {
+        await deleteFromCloudinary(prev.logo.public_id, "image");
       }
       const uploaded = await uploadBufferToCloudinary(
         req.file.buffer,
