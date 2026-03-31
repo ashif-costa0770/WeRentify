@@ -137,3 +137,14 @@ export const uploadLogo = multer({
     cb(null, true);
   },
 }).single("logo");
+
+// Blog thumbnail upload (single image only)
+export const uploadBlogThumbnail = multer({
+  storage,
+  fileFilter: (req, file, cb) => {
+    if (!IMAGE_TYPES.includes(file.mimetype)) {
+      return cb(new Error("Only image files are allowed for blog thumbnail."), false);
+    }
+    cb(null, true);
+  },
+}).single("thumbnail");
