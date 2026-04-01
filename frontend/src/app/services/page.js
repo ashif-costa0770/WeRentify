@@ -1,7 +1,6 @@
 "use client";
 
 import { useMemo, useState, useEffect, useCallback } from "react"; // âœ… useCallback added
-import ServicesNavbarWrapper from "./_components/navbar/SearchNavbarWrapper";
 import ServicesGridWrapper from "./_components/serviceGrid/ServiceGridWrapper";
 import ServicesCardsWrapper from "./_components/serviceCards/ServicesCardsWrapper";
 import { getServices, getFeaturedServices } from "@/services/services.service";
@@ -179,7 +178,6 @@ export default function ServicesPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 font-sans">
-      <ServicesNavbarWrapper />
       <ServicesGridWrapper
         selectedCategory={selectedCategory}
         onSelectCategory={setSelectedCategory}

@@ -1,0 +1,162 @@
+"use client";
+
+import {
+  flexRender,
+  getCoreRowModel,
+  getSortedRowModel,
+  useReactTable,
+} from "@tanstack/react-table";
+import { ArrowUpDown, ChevronDown, ChevronUp } from "lucide-react";
+
+import { Button } from "@/components/ui/button";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+
+export default function BlogsTable({
+  columns,
+  data,
+  loading,
+  sorting,
+  onSortingChange,
+  currentPage,
+  totalPages,
+  canGoPrevious,
+  canGoNext,
+  onPreviousPage,
+  onNextPage,
+}) {
+  const table = useReactTable({
+    data,
+    columns,
+    state: { sorting },
+    onSortingChange,
+    getCoreRowModel: getCoreRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+  });
+
+  const rows = table.getRowModel().rows;
+
+  return (
+    <div className="space-y-4">
+      <div className="overflow-hidden rounded-xl border bg-white shadow-sm">
+        <Table>
+          <TableHeader>
+            {table.getHeaderGroups().map((headerGroup) => (
+              <TableRow key={headerGroup.id}>
+                {headerGroup.headers.map((header) => (
+                  <TableHead
+                    key={header.id}
+                    className="px-4 py-3 first:pl-6 last:pr-6"
+                  >
+                    {header.isPlaceholder
+                      ? null
+                      : header.column.getCanSort()
+                        ? (
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              onClick={header.column.getToggleSortingHandler()}
+                              className="-ml-2 h-8 cursor-pointer px-2"
+                            >
+                              {flexRender(
+                                header.column.columnDef.header,
+                                header.getContext(),
+                              )}
+                              {header.column.getIsSorted() === "asc" ? (
+                                <ChevronUp className="size-4" />
+                              ) : header.column.getIsSorted() === "desc" ? (
+                                <ChevronDown className="size-4" />
+                              ) : (
+                                <ArrowUpDown className="size-4 opacity-50" />
+                              )}
+                            </Button>
+                          )
+                        : (
+                            flexRender(
+                              header.column.columnDef.header,
+                              header.getContext(),
+                            )
+                          )}
+                  </TableHead>
+                ))}
+              </TableRow>
+            ))}
+          </TableHeader>
+
+          <TableBody>
+            {loading ? (
+              <TableRow>
+                <TableCell
+                  colSpan={columns.length}
+                  className="h-24 text-center text-slate-500"
+                >
+                  Loading blogs...
+                </TableCell>
+              </TableRow>
+            ) : rows.length ? (
+              rows.map((row) => (
+                <TableRow key={row.id}>
+                  {row.getVisibleCells().map((cell) => (
+                    <TableCell
+                      key={cell.id}
+                      className="px-4 py-3 first:pl-6 last:pr-6"
+                    >
+                      {flexRender(
+                        cell.column.columnDef.cell,
+                        cell.getContext(),
+                      )}
+                    </TableCell>
+                  ))}
+                </TableRow>
+              ))
+            ) : (
+              <TableRow>
+                <TableCell
+                  colSpan={columns.length}
+                  className="h-24 text-center text-slate-500"
+                >
+                  No blogs found
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
+      </div>
+
+      <div className="flex items-center justify-between rounded-xl bg-white px-4 py-3 shadow-md">
+        <p className="text-sm text-slate-600">
+          Page {currentPage} of {totalPages}
+        </p>
+        <div className="flex items-center gap-2">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={onPreviousPage}
+            disabled={!canGoPrevious || loading}
+            className="cursor-pointer"
+          >
+            Previous
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={onNextPage}
+            disabled={!canGoNext || loading}
+            className="cursor-pointer"
+          >
+            Next
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}

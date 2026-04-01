@@ -1,5 +1,6 @@
 import "./globals.css";
 import Footer from "@/app/_components/footer/Footer";
+import NavbarWrapper from "@/app/_components/navbar/NavbarWrapper";
 import { UserProvider } from "@/context/UserContext";
 import { googleTranslateEarlyScript } from "@/lib/googleTranslateEarlyScript";
 import { Toaster } from "sonner";
@@ -28,6 +29,7 @@ export default function RootLayout({ children }) {
           dangerouslySetInnerHTML={{ __html: googleTranslateEarlyScript }}
         />
         <UserProvider>
+          <NavbarWrapper />
           <main>
             {children}
             <Toaster position="top-right" richColors />

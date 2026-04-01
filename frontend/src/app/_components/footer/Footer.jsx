@@ -27,8 +27,8 @@ export default function Footer() {
   }, []);
 
   return (
-    <footer className="bg-gray-50 border-t border-gray-200 px-4 pt-8 pb-4">
-      <div className="max-w-7xl mx-auto">
+    <footer className="bg-gray-50 border-t border-gray-200 px-8 pt-8 pb-4">
+      <div className="max-w-7xl mx-auto px-6">
         {/* Main Footer Links */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-8">
           {/* Company */}
@@ -37,15 +37,46 @@ export default function Footer() {
               Company
             </h3>
             <ul className="space-y-2 text-sm text-gray-500">
-              {["About Us", "Careers", "Press", "Blog", "Investors"].map(
-                (item) => (
-                  <li key={item}>
-                    <a className="hover:text-[#5B4FE9] transition-colors cursor-pointer">
-                      {item}
-                    </a>
-                  </li>
-                ),
-              )}
+              <li>
+                <Link
+                  href="/about"
+                  className="hover:text-[#5B4FE9] transition-colors cursor-pointer"
+                >
+                  About Us
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/careers"
+                  className="hover:text-[#5B4FE9] transition-colors cursor-pointer"
+                >
+                  Careers
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/press"
+                  className="hover:text-[#5B4FE9] transition-colors cursor-pointer"
+                >
+                  Press
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/investors"
+                  className="hover:text-[#5B4FE9] transition-colors cursor-pointer"
+                >
+                  Investors
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/blogs"
+                  className="hover:text-[#5B4FE9] transition-colors cursor-pointer"
+                >
+                  Blog
+                </Link>
+              </li>
             </ul>
           </div>
 

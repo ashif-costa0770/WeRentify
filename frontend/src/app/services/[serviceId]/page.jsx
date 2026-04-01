@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Suspense } from "react";
 import Image from "next/image";
 import { useParams } from "next/navigation";
 import { toast } from "sonner";
@@ -16,7 +15,6 @@ import {
   Edit3,
   Trash2,
 } from "lucide-react";
-import Navbar from "@/app/_components/navbar/Navbar";
 import { useUser } from "@/context/UserContext";
 import { getServiceById } from "@/services/services.service";
 import {
@@ -334,12 +332,6 @@ export default function ServiceDetailsPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="sticky top-0 z-50 mx-auto bg-gray-100 shadow-lg">
-        <Suspense fallback={null}>
-          <Navbar />
-        </Suspense>
-      </div>
-
       <div className="mx-auto w-full max-w-7xl px-4 py-10 mb-10">
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-[6fr_6fr] lg:items-start">
           {/* Left: Service details */}

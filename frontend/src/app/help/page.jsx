@@ -2,9 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Suspense } from "react";
 import * as LucideIcons from "lucide-react";
-import Navbar from "@/app/_components/navbar/Navbar";
 import { getHelpCategories } from "@/services/help.service";
 
 const defaultDescription = "Find answers to common questions in this category.";
@@ -77,12 +75,6 @@ export default function HelpPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="sticky top-0 z-50 bg-gray-100 shadow-lg">
-        <Suspense fallback={null}>
-          <Navbar />
-        </Suspense>
-      </div>
-
       <main className="mx-auto w-full max-w-6xl px-4 py-10">
         <header className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900">Help Center</h1>

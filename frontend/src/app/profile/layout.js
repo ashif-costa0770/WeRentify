@@ -2,12 +2,11 @@
 
 /* eslint-disable react-hooks/set-state-in-effect */
 
-import { Suspense, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import { usePathname, useRouter } from "next/navigation";
-import Navbar from "@/app/_components/navbar/Navbar";
 import { ListBusinessProvider } from "@/context/ListBusinessContext";
 import { useUser } from "@/context/UserContext";
 import { logout } from "@/services/auth.service";
@@ -113,11 +112,6 @@ export default function ProfileLayout({ children }) {
 
   return (
     <ListBusinessProvider>
-      <div className="sticky top-0 z-50 bg-gray-100 pb-4 shadow-lg">
-        <Suspense fallback={null}>
-          <Navbar />
-        </Suspense>
-      </div>
       <div className="min-h-screen bg-gray-100 overflow-x-hidden">
         <div className="max-w-7xl mx-auto px-4 py-10 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-6 items-start">

@@ -1,10 +1,9 @@
 "use client";
 
-import { Suspense, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
-import Navbar from "@/app/_components/navbar/Navbar";
 import FaqAccordion from "@/app/_components/help/FaqAccordion";
 import { getFaqsByCategorySlug } from "@/services/help.service";
 
@@ -58,12 +57,6 @@ export default function HelpCategoryPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="sticky top-0 z-50 bg-gray-100 shadow-lg">
-        <Suspense fallback={null}>
-          <Navbar />
-        </Suspense>
-      </div>
-
       <main className="mx-auto w-full max-w-4xl px-4 py-10">
         <Link
           href="/help"

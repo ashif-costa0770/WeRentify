@@ -7,7 +7,6 @@ export const dynamic = "force-dynamic";
 import { useMemo, useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import nextDynamic from "next/dynamic";
-import NavbarWrapper from "@/app/_components/navbar/NavbarWrapper";
 import { getListings, getFeaturedListings } from "@/services/item.service";
 
 const ItemCategoriesSection = nextDynamic(
@@ -314,7 +313,6 @@ export default function ListingPage() {
 
   return (
     <main className="relative pb-20">
-      <NavbarWrapper />
       {/* Category Tabs */}
       <ItemCategoriesSection
         selectedCategory={selectedCategory}

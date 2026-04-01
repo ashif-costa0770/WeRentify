@@ -18,7 +18,6 @@ import {
 } from "@/services/review.service";
 import { getMyBookings } from "@/services/booking.service";
 import { timeAgo } from "@/utils/timeAgo";
-import NavbarWrapper from "@/app/_components/navbar/NavbarWrapper";
 import ListingBookingModal from "./components/listing-booking-modal";
 import ReviewSummary from "@/app/_components/reviews/ReviewSummary";
 import ReviewModal from "@/app/_components/reviews/ReviewModal";
@@ -242,7 +241,6 @@ export default function ListingPage() {
   if (loading) {
     return (
       <main className="min-h-screen bg-gray-50">
-        <NavbarWrapper />
         <div className="max-w-7xl mx-auto px-4 py-16 flex flex-col items-center justify-center gap-4">
           <Loader2 className="size-10 animate-spin text-indigo-600" />
           <p className="text-gray-600 font-medium">Loading listing...</p>
@@ -254,7 +252,6 @@ export default function ListingPage() {
   if (notFound || !listing) {
     return (
       <main className="min-h-screen bg-gray-50">
-        <NavbarWrapper />
         <div className="max-w-7xl mx-auto px-4 py-16 text-center">
           <h1 className="text-2xl font-bold text-gray-900 mb-2">
             Listing not found
@@ -453,8 +450,6 @@ export default function ListingPage() {
 
   return (
     <main className="min-h-screen bg-gray-50">
-      <NavbarWrapper />
-
       <div className="max-w-7xl mx-auto px-6 sm:px-8 py-12">
         {/* Photo gallery - single row, images shrink as count increases, no horizontal scroll */}
         <div className="mb-10">

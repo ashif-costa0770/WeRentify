@@ -1,7 +1,10 @@
 import { errorResponse, successResponse } from "../../utils/response.js";
 import slugify from "slugify";
 import Blog from "../../models/admin/blog.model.js";
-import { deleteFromCloudinary, uploadBufferToCloudinary } from "../../config/cloudinary.js";
+import {
+  deleteFromCloudinary,
+  uploadBufferToCloudinary,
+} from "../../config/cloudinary.js";
 
 //! Create Blog
 export const createBlog = async (req, res) => {
@@ -48,9 +51,7 @@ export const createBlog = async (req, res) => {
 //! Get all blogs
 export const getAllBlogs = async (req, res) => {
   try {
-    const blogs = await Blog.find({ status: "published" }).sort({
-      createdAt: -1,
-    });
+    const blogs = await Blog.find({ status: "published" }).lean();
     if (!blogs || blogs.length === 0) {
       return errorResponse(res, 404, "No blogs found");
     }
@@ -64,12 +65,31 @@ export const getAllBlogs = async (req, res) => {
   }
 };
 
+//! Get all blogs for admin
+export const getBlogsForAdmin = async (req, res) => {
+  try {
+    const blogs = await Blog.find().lean();
+    if (!blogs || blogs.length === 0) {
+      return errorResponse(res, 404, "No blogs found");
+    }
+    return successResponse(res, 200, "All blogs fetched successfully", blogs);
+  } catch (error) {
+    console.log("Error in getting all blogs for admin", error.message);
+    return errorResponse(
+      res,
+      500,
+      "Failed to get all blogs for admin",
+      error.message,
+    );
+  }
+};
+
 //! Get blog by slug
 export const getBlogBySlug = async (req, res) => {
   try {
     const { slug } = req.params;
 
-    const blog = await Blog.findOne({ slug, status: "published" });
+    const blog = await Blog.findOne({ slug, status: "published" }).lean();
 
     if (!blog) {
       return errorResponse(res, 404, "Blog not found");
@@ -93,7 +113,7 @@ export const updateBlog = async (req, res) => {
     if (!blog) {
       return errorResponse(res, 404, "Blog not found");
     }
-    
+
     if (title) {
       const slug = slugify(title, { lower: true });
       const existingBlog = await Blog.findOne({ slug });
@@ -135,21 +155,45 @@ export const updateBlog = async (req, res) => {
 
 //! Delete blog
 export const deleteBlog = async (req, res) => {
-    try {
-        const { id } = req.params;
-        const blog = await Blog.findById(id);
-        if(!blog) {
-            return errorResponse(res, 404, "Blog not found");
-        }
-        if(blog.thumbnail?.public_id) {
-            await deleteFromCloudinary(blog.thumbnail.public_id, "image");
-        }
-
-        await Blog.findByIdAndDelete(id);
-        return successResponse(res, 200, "Blog deleted successfully");
-    } catch (error) {
-        console.log("Error in deleting blog", error.message);
-        return errorResponse(res, 500, "Failed to delete blog", error.message);
-        
+  try {
+    const { id } = req.params;
+    const blog = await Blog.findById(id).lean();
+    if (!blog) {
+      return errorResponse(res, 404, "Blog not found");
     }
-}
+    if (blog.thumbnail?.public_id) {
+      await deleteFromCloudinary(blog.thumbnail.public_id, "image");
+    }
+
+    await Blog.findByIdAndDelete(id);
+    return successResponse(res, 200, "Blog deleted successfully");
+  } catch (error) {
+    console.log("Error in deleting blog", error.message);
+    return errorResponse(res, 500, "Failed to delete blog", error.message);
+  }
+};
+
+//! toggle blog status
+export const toggleBlogStatus = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const blog = await Blog.findById(id);
+    if (!blog) {
+      return errorResponse(res, 404, "Blog not found");
+    }
+
+    blog.status = blog.status === "published" ? "draft" : "published";
+    await blog.save();
+
+    return successResponse(res, 200, "Blog status updated successfully", blog);
+  } catch (error) {
+    console.log("Error in toggling blog status : ", error.message);
+    return errorResponse(
+      res,
+      500,
+      "Failed to toggle blog status",
+      error.message,
+    );
+  }
+};

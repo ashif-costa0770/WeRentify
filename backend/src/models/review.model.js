@@ -53,8 +53,6 @@ const reviewSchema = new mongoose.Schema(
 
 /* Indexes */
 
-reviewSchema.index({ booking: 1 }, { unique: true });
-
 reviewSchema.index({ target: 1, targetModel: 1 });
 
 reviewSchema.index({ target: 1, targetModel: 1, createdAt: -1 });

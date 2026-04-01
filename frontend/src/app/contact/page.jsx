@@ -1,6 +1,5 @@
 "use client";
 import React, { useEffect, useState } from "react";
-import { Suspense } from "react";
 import {
   Home,
   Phone,
@@ -12,7 +11,6 @@ import {
 } from "lucide-react";
 import { getSettings } from "@/services/admin.service";
 import { toast } from "sonner";
-import Navbar from "@/app/_components/navbar/Navbar";
 import { sendMessage } from "@/services/contact.service";
 
 
@@ -119,11 +117,6 @@ const ContactPage = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white">
-      <div className="sticky top-0 z-50 bg-gray-100 shadow-lg">
-        <Suspense fallback={null}>
-          <Navbar />
-        </Suspense>
-      </div>
       <div className="w-full max-w-5xl mx-auto py-18 px-6 md:px-10 lg:px-16">
         {/* Content Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-10 items-start">
