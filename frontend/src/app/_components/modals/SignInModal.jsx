@@ -9,7 +9,6 @@ import { toast } from "sonner";
 
 const GOOGLE_AUTH_INTENT_KEY = "google_auth_intent";
 
-
 export default function SignInModal({
   open,
   onClose,
@@ -73,7 +72,7 @@ export default function SignInModal({
   return (
     <>
       <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[10000] p-4">
-        <div className="relative max-w-xl w-full bg-white rounded-3xl shadow-2xl p-8 animate-slideUp">
+        <div className="relative max-w-lg w-full bg-white rounded-3xl shadow-2xl p-8 animate-slideUp">
           {/* Close Button */}
           <button
             onClick={onClose}
@@ -93,9 +92,9 @@ export default function SignInModal({
           </button>
 
           {/* Title */}
-          <h1 className="text-4xl font-black text-gray-900 mb-2">
+          <h2 className="text-3xl font-black text-gray-900 mb-2">
             Welcome back
-          </h1>
+          </h2>
 
           {/* Subtitle */}
           <p className="text-gray-600 mb-8">
@@ -166,42 +165,7 @@ export default function SignInModal({
               </svg>
               Continue with Facebook
             </button>
-
-            {/* Apple */}
-            <button
-              // onClick={() => {setIsLogin(true); onClose()}}
-              className="w-full flex cursor-pointer items-center justify-center gap-3 px-4 py-3 rounded-xl font-semibold text-white bg-black"
-            >
-              <svg
-                width="20"
-                height="20"
-                viewBox="0 0 24 24"
-                fill="currentColor"
-              >
-                <path d="M16.365 1.43c0 1.14-.415 2.277-1.226 3.07-.812.812-2.055 1.29-3.3 1.205-.11-1.21.427-2.39 1.206-3.17.78-.78 2.13-1.35 3.32-1.1z" />
-                <path d="M20.09 17.435c-.496 1.125-.734 1.63-1.376 2.623-.894 1.365-2.155 3.07-3.74 3.09-1.41.02-1.776-.92-3.67-.91-1.89.01-2.3.93-3.71.91-1.586-.02-2.79-1.57-3.685-2.93-2.5-3.83-2.77-8.33-1.22-10.73.98-1.54 2.53-2.45 3.98-2.45 1.51 0 2.46.99 3.71.99 1.21 0 1.94-.99 3.69-.99 1.29 0 2.66.7 3.64 1.91-3.21 1.76-2.69 6.35.38 8.51z" />
-              </svg>
-              Continue with Apple
-            </button>
           </div>
-
-          {/* Legal */}
-          <p className="text-xs text-gray-500 mt-6 text-center leading-relaxed">
-            By continuing, you agree to WeRentify&apos;s{" "}
-            <span className="text-indigo-600 font-semibold cursor-pointer">
-              Terms of Service
-            </span>{" "}
-            and acknowledge{" "}
-            <span className="text-indigo-600 font-semibold cursor-pointer">
-              Privacy Policy
-            </span>
-            .
-          </p>
-
-          <p className="text-xs text-gray-500 mt-3 text-center">
-            This site is protected by reCAPTCHA and the Google Privacy Policy
-            and Terms of Service apply.
-          </p>
 
           {/* Footer */}
           <p className="text-sm text-gray-600 mt-6 text-center">

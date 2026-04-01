@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import Logo from "@/app/_components/navbar/Logo";
 import { useEffect, useState } from "react";
 import { getSettings } from "@/services/admin.service";
 import { toast } from "sonner";

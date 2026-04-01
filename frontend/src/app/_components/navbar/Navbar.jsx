@@ -1,6 +1,5 @@
 "use client";
 import Link from "next/link";
-import Logo from "@/app/_components/navbar/Logo";
 import PackageIcon from "@/app/_components/icons/PackageIcon";
 import HomeIcon from "@/app/_components/icons/HomeIcon";
 import UsersIcon from "@/app/_components/icons/UsersIcon";
@@ -459,7 +458,11 @@ export default function Navbar() {
 
         {/* Mobile header: Logo + hamburger */}
         <div className="flex md:hidden items-center justify-between">
-          <Logo />
+          {logo && (
+            <Link href="/">
+              <Image src={logo} alt="WeRentify logo" width={300} height={200} className="h-10 ms-7 w-auto sm:h-11 md:h-12 lg:h-14 object-contain mix-blend-multiply cursor-pointer select-none transition-transform hover:scale-103" />
+            </Link>
+          )}
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             className="w-10 h-10 flex flex-col items-center justify-center gap-1.5 cursor-pointer"
