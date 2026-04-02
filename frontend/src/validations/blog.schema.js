@@ -10,20 +10,10 @@ const htmlToText = (value) =>
 
 export const createBlogSchema = z.object({
   title: z.string().min(3, "Title must be at least 3 characters"),
-  content: z.string().refine((val) => htmlToText(val).length >= 10, {
-    message: "Content must be at least 10 characters",
-  }),
-  status: z.enum(["draft", "published"]),
-});
-
-
-export const updateBlogSchema = z.object({
-  title: z.string().min(3, "Title must be at least 3 characters").optional(),
   content: z
     .string()
     .refine((val) => htmlToText(val).length >= 10, {
       message: "Content must be at least 10 characters (plain text)",
-    })
-    .optional(),
-  status: z.enum(["draft", "published"]).optional(),
+    }),
+  status: z.enum(["draft", "published"]),
 });

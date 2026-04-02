@@ -89,7 +89,7 @@ export const getBlogBySlug = async (req, res) => {
   try {
     const { slug } = req.params;
 
-    const blog = await Blog.findOne({ slug, status: "published" }).lean();
+    const blog = await Blog.findOne({ slug }).lean();
 
     if (!blog) {
       return errorResponse(res, 404, "Blog not found");
@@ -114,7 +114,7 @@ export const updateBlog = async (req, res) => {
       return errorResponse(res, 404, "Blog not found");
     }
 
-    if (title) {
+    if (title && title !== blog.title) {
       const slug = slugify(title, { lower: true });
       const existingBlog = await Blog.findOne({ slug });
       if (existingBlog) {
@@ -123,10 +123,10 @@ export const updateBlog = async (req, res) => {
       blog.title = title;
       blog.slug = slug;
     }
-    if (content) {
+    if (content && content !== blog.content) {
       blog.content = content;
     }
-    if (status) {
+    if (status && status !== blog.status) {
       blog.status = status;
     }
 

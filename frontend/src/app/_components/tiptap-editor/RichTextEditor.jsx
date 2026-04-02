@@ -4,12 +4,15 @@ import { useEffect } from "react";
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Placeholder from "@tiptap/extension-placeholder";
+import InlineHeading from "./inlineHeadingMark";
 import {
   Bold,
   Italic,
   List,
   ListOrdered,
+  Heading1,
   Heading2,
+  Heading3,
   Undo,
   Redo,
 } from "lucide-react";
@@ -19,6 +22,7 @@ export default function RichTextEditor({ value, onChange, placeholder }) {
     immediatelyRender: false,
     extensions: [
       StarterKit,
+      InlineHeading,
       Placeholder.configure({
           placeholder:
             placeholder || "Describe your item, its condition, and any special features...",
@@ -31,7 +35,7 @@ export default function RichTextEditor({ value, onChange, placeholder }) {
     editorProps: {
       attributes: {
         class:
-          "prose prose-sm focus:outline-none min-h-[150px] max-h-[300px] overflow-y-auto px-4 py-3", // Added max-h and overflow
+          "prose prose-sm focus:outline-none min-h-[150px] max-h-[300px] overflow-y-auto px-4 py-3 [&_.inline-h1]:text-3xl [&_.inline-h1]:font-black [&_.inline-h1]:leading-tight [&_.inline-h1]:text-gray-900 [&_.inline-h2]:text-2xl [&_.inline-h2]:font-extrabold [&_.inline-h2]:leading-snug [&_.inline-h2]:text-gray-900 [&_.inline-h3]:text-xl [&_.inline-h3]:font-bold [&_.inline-h3]:text-gray-900",
       },
     },
   });
@@ -85,16 +89,46 @@ export default function RichTextEditor({ value, onChange, placeholder }) {
         <button
           type="button"
           onClick={() =>
-            editor.chain().focus().toggleHeading({ level: 2 }).run()
+            editor.chain().focus().toggleInlineHeading({ level: 1 }).run()
           }
           className={`p-2 rounded hover:bg-gray-200 transition-colors ${
-            editor.isActive("heading", { level: 2 })
+            editor.isActive("inlineHeading", { level: 1 })
               ? "bg-gray-300 text-[#5B4FE9]"
               : "text-gray-700"
           }`}
-          title="Heading"
+          title="H1 style (inline)"
+        >
+          <Heading1 className="w-4 h-4" />
+        </button>
+
+        <button
+          type="button"
+          onClick={() =>
+            editor.chain().focus().toggleInlineHeading({ level: 2 }).run()
+          }
+          className={`p-2 rounded hover:bg-gray-200 transition-colors ${
+            editor.isActive("inlineHeading", { level: 2 })
+              ? "bg-gray-300 text-[#5B4FE9]"
+              : "text-gray-700"
+          }`}
+          title="H2 style (inline)"
         >
           <Heading2 className="w-4 h-4" />
+        </button>
+
+        <button
+          type="button"
+          onClick={() =>
+            editor.chain().focus().toggleInlineHeading({ level: 3 }).run()
+          }
+          className={`p-2 rounded hover:bg-gray-200 transition-colors ${
+            editor.isActive("inlineHeading", { level: 3 })
+              ? "bg-gray-300 text-[#5B4FE9]"
+              : "text-gray-700"
+          }`}
+          title="H3 style (inline)"
+        >
+          <Heading3 className="w-4 h-4" />
         </button>
 
         <div className="w-px h-6 bg-gray-300 mx-1 self-center" />

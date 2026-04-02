@@ -47,7 +47,7 @@ export default function BlogsRowActions({
 
       <DropdownMenuContent align="end">
         <DropdownMenuItem asChild className="cursor-pointer">
-          <Link href={`/admin/blogs/edit/${blog._id}`}>Edit</Link>
+          <Link href={`/admin/blogs/edit/${blog.slug}`}>Edit</Link>
         </DropdownMenuItem>
         <DropdownMenuItem
           onClick={() => onToggleStatus?.(blog._id)}
